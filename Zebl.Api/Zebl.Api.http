@@ -1,0 +1,6 @@
+@Zebl.Api_HostAddress = http://localhost:5226
+
+GET {{Zebl.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

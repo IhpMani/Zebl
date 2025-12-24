@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Zebl.Api/Zebl.Api.csproj" />
+  <Project Path="Zebl.Application/Zebl.Application.csproj" />
+  <Project Path="Zebl.Infrastructure/Zebl.Infrastructure.csproj" />
+</Solution>

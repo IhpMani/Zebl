@@ -1,0 +1,17 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+
+# User files
+*.user
+*.suo
+*.cache
+*.log
+
+# ASP.NET
+appsettings.Development.json
+
+# OS
+.DS_Store
+Thumbs.db
