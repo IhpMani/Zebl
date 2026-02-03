@@ -1,32 +1,33 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Zebl.Application.Dtos.Common;
-using Zebl.Application.Dtos.Payments;
+using Zebl.Application.Dtos.Disbursements;
 using Zebl.Infrastructure.Persistence.Context;
 
 namespace Zebl.Api.Controllers
 {
     [ApiController]
-    [Route("api/payments")]
+    [Route("api/disbursements")]
     [Authorize(Policy = "RequireAuth")]
-    public class PaymentsController : ControllerBase
+    public class DisbursementsController : ControllerBase
     {
         private readonly ZeblDbContext _db;
-        private readonly ILogger<PaymentsController> _logger;
+        private readonly ILogger<DisbursementsController> _logger;
 
-        public PaymentsController(ZeblDbContext db, ILogger<PaymentsController> logger)
+        public DisbursementsController(ZeblDbContext db, ILogger<DisbursementsController> logger)
         {
             _db = db;
             _logger = logger;
         }
 
         // =========================================================
-        // 🔴 CLAIM DETAILS PAYMENTS (FAST + SAFE)
+        // 🔴 CLAIM DETAILS DISBURSEMENTS (FAST + SAFE)
         // Claim Details MUST CALL ONLY THIS
         // =========================================================
         [HttpGet("claims/{claId:int}")]
-        public async Task<IActionResult> GetPaymentsForClaim(int claId)
+        public async Task<IActionResult> GetDisbursementsForClaim(int claId)
         {
             if (claId <= 0)
             {
@@ -37,7 +38,7 @@ namespace Zebl.Api.Controllers
                 });
             }
 
-            // Resolve patient from claim (1 cheap query)
+            // Resolve patient from claim
             var patientId = await _db.Claims
                 .AsNoTracking()
                 .Where(c => c.ClaID == claId)
@@ -47,40 +48,41 @@ namespace Zebl.Api.Controllers
             if (patientId == 0)
                 return NotFound();
 
-            // Pull payments for patient (NO includes, NO joins)
-            var payments = await _db.Payments
+            // Pull disbursements via payments → patient
+            var disbursements = await _db.Disbursements
                 .AsNoTracking()
-                .Where(p => p.PmtPatFID == patientId)
-                .OrderByDescending(p => p.PmtDate)
-                .Select(p => new PaymentDto
+                .Where(d => d.DisbPmtF != null && d.DisbPmtF.PmtPatFID == patientId)
+                .OrderByDescending(d => d.DisbID)
+                .Select(d => new DisbursementListItemDto
                 {
-                    PmtID = p.PmtID,
-                    PmtDate = p.PmtDate == default
-                        ? (DateTime?)null
-                        : p.PmtDate.ToDateTime(TimeOnly.MinValue),
-                    PmtAmount = p.PmtAmount,
-                    PmtMethod = p.PmtMethod,
-                    PmtRemainingCC = p.PmtRemainingCC,
-                    PmtNote = p.PmtNote
+                    DisbID = d.DisbID,
+                    DisbDateTimeCreated = d.DisbDateTimeCreated,
+                    DisbAmount = d.DisbAmount,
+                    DisbPmtFID = d.DisbPmtFID,
+                    DisbSrvFID = d.DisbSrvFID,
+                    DisbCode = d.DisbCode,
+                    DisbNote = d.DisbNote,
+                    AdditionalColumns = new Dictionary<string, object?>()
                 })
                 .Take(200) // 🔴 HARD LIMIT
                 .ToListAsync();
 
-            return Ok(new ApiResponse<List<PaymentDto>>
+            return Ok(new ApiResponse<List<DisbursementListItemDto>>
             {
-                Data = payments
+                Data = disbursements
             });
         }
 
         // =========================================================
-        // 🟡 GLOBAL PAYMENTS SEARCH (FIND → PAYMENTS)
+        // 🟡 GLOBAL DISBURSEMENTS SEARCH (Find → Disbursements)
         // NOT USED BY CLAIM DETAILS
         // =========================================================
         [HttpGet("list")]
-        public async Task<IActionResult> GetPayments(
+        public async Task<IActionResult> GetDisbursements(
             int page = 1,
             int pageSize = 25,
-            int? patientId = null)
+            int? paymentId = null,
+            int? serviceId = null)
         {
             if (page < 1 || pageSize < 1 || pageSize > 100)
             {
@@ -91,37 +93,35 @@ namespace Zebl.Api.Controllers
                 });
             }
 
-            var query = _db.Payments.AsNoTracking();
+            var query = _db.Disbursements.AsNoTracking();
 
-            if (patientId.HasValue)
-            {
-                query = query.Where(p => p.PmtPatFID == patientId.Value);
-            }
+            if (paymentId.HasValue)
+                query = query.Where(d => d.DisbPmtFID == paymentId.Value);
 
-            query = query.OrderByDescending(p => p.PmtID);
+            if (serviceId.HasValue)
+                query = query.Where(d => d.DisbSrvFID == serviceId.Value);
+
+            query = query.OrderByDescending(d => d.DisbID);
 
             var totalCount = await query.CountAsync();
 
             var data = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(p => new PaymentListItemDto
+                .Select(d => new DisbursementListItemDto
                 {
-                    PmtID = p.PmtID,
-                    PmtDateTimeCreated = p.PmtDateTimeCreated,
-                    PmtDate = p.PmtDate,
-                    PmtAmount = p.PmtAmount,
-                    PmtPatFID = p.PmtPatFID,
-                    PmtPayFID = p.PmtPayFID,
-                    PmtMethod = p.PmtMethod,
-                    Pmt835Ref = p.Pmt835Ref,
-                    PmtDisbursedTRIG = p.PmtDisbursedTRIG,
-                    PmtRemainingCC = p.PmtRemainingCC,
+                    DisbID = d.DisbID,
+                    DisbDateTimeCreated = d.DisbDateTimeCreated,
+                    DisbAmount = d.DisbAmount,
+                    DisbPmtFID = d.DisbPmtFID,
+                    DisbSrvFID = d.DisbSrvFID,
+                    DisbCode = d.DisbCode,
+                    DisbNote = d.DisbNote,
                     AdditionalColumns = new Dictionary<string, object?>()
                 })
                 .ToListAsync();
 
-            return Ok(new ApiResponse<List<PaymentListItemDto>>
+            return Ok(new ApiResponse<List<DisbursementListItemDto>>
             {
                 Data = data,
                 Meta = new PaginationMetaDto
@@ -139,7 +139,7 @@ namespace Zebl.Api.Controllers
         [HttpGet("available-columns")]
         public IActionResult GetAvailableColumns()
         {
-            var columns = RelatedColumnConfig.GetAvailableColumns()["Payment"];
+            var columns = RelatedColumnConfig.GetAvailableColumns()["Disbursement"];
 
             return Ok(new ApiResponse<List<RelatedColumnDefinition>>
             {
