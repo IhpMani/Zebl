@@ -287,7 +287,7 @@ public partial class ZeblDbContext : DbContext
                 .HasMaxLength(1)
                 .IsUnicode(false);
             entity.Property(e => e.ClaICDIndicator)
-                .HasMaxLength(1)
+                .HasMaxLength(2)
                 .IsUnicode(false);
             entity.Property(e => e.ClaIDENumber)
                 .HasMaxLength(20)
@@ -893,6 +893,9 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.PatZip)
                 .HasMaxLength(20)
                 .IsUnicode(false);
+
+            // Ignore PatEZClaimPayConsent - column does not exist in database
+            entity.Ignore(e => e.PatEZClaimPayConsent);
 
             entity.HasOne(d => d.PatBillingPhyF).WithMany(p => p.PatientPatBillingPhyFs)
                 .HasForeignKey(d => d.PatBillingPhyFID)

@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using Zebl.Api.Configuration;
 using Zebl.Api.Middleware;
 using Zebl.Infrastructure.Persistence.Context;
@@ -128,6 +130,11 @@ builder.Services.AddAuthorization(options =>
 });
 #endregion
 
+#region Services
+builder.Services.AddScoped<Zebl.Api.Services.Hl7ParserService>();
+builder.Services.AddScoped<Zebl.Api.Services.Hl7ImportService>();
+#endregion
+
 #region Controllers
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -139,7 +146,18 @@ builder.Services.AddControllers()
 
 #region Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Zebl API",
+        Version = "v1",
+        Description = "API for Zebl Medical Billing System"
+    });
+    
+    // Configure file upload support for Swagger
+    c.OperationFilter<Zebl.Api.Configuration.SwaggerFileUploadOperationFilter>();
+});
 #endregion
 
 var app = builder.Build();
