@@ -26,8 +26,8 @@ namespace Zebl.Api.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetPhysicians(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 25,
+            [FromQuery] int? page = 1,
+            [FromQuery] int? pageSize = 25,
             [FromQuery] string? searchText = null,
             [FromQuery] bool? inactive = null,
             [FromQuery] string? type = null,
@@ -37,12 +37,16 @@ namespace Zebl.Api.Controllers
             [FromQuery] int? maxPhysicianId = null,
             [FromQuery] string? additionalColumns = null)
         {
-            if (page < 1 || pageSize < 1 || pageSize > 100)
+            var effectivePage = page.GetValueOrDefault(1);
+            var effectivePageSize = pageSize.GetValueOrDefault(25);
+
+            if (effectivePage < 1 || effectivePageSize < 1)
             {
+                _logger.LogWarning("GetPhysicians called with invalid paging arguments: page={Page}, pageSize={PageSize}", page, pageSize);
                 return BadRequest(new ErrorResponseDto
                 {
                     ErrorCode = "INVALID_ARGUMENT",
-                    Message = "Page must be at least 1 and page size must be between 1 and 100"
+                    Message = "Page and pageSize must be at least 1"
                 });
             }
 
@@ -146,7 +150,7 @@ namespace Zebl.Api.Controllers
                     }
                     catch
                     {
-                        totalCount = pageSize * (page + 10);
+                        totalCount = effectivePageSize * (effectivePage + 10);
                     }
                 }
                 catch (Exception ex)
@@ -158,14 +162,14 @@ namespace Zebl.Api.Controllers
                     }
                     catch
                     {
-                        totalCount = pageSize * (page + 10);
+                        totalCount = effectivePageSize * (effectivePage + 10);
                     }
                 }
             }
 
             var data = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Skip((effectivePage - 1) * effectivePageSize)
+                .Take(effectivePageSize)
                 .Select(p => new PhysicianListItemDto
                 {
                     PhyID = p.PhyID,
@@ -173,6 +177,8 @@ namespace Zebl.Api.Controllers
                     PhyFirstName = p.PhyFirstName,
                     PhyLastName = p.PhyLastName,
                     PhyFullNameCC = p.PhyFullNameCC,
+                    PhyName = p.PhyName,
+                    PhyPrimaryCodeType = p.PhyPrimaryCodeType,
                     PhyNPI = p.PhyNPI,
                     PhyType = p.PhyType,
                     PhyInactive = p.PhyInactive,
@@ -188,8 +194,8 @@ namespace Zebl.Api.Controllers
                 Data = data,
                 Meta = new PaginationMetaDto
                 {
-                    Page = page,
-                    PageSize = pageSize,
+                    Page = effectivePage,
+                    PageSize = effectivePageSize,
                     TotalCount = totalCount
                 }
             });
@@ -203,6 +209,272 @@ namespace Zebl.Api.Controllers
             {
                 Data = availableColumns
             });
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPhysicianById(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "Invalid physician ID"
+                });
+            }
+
+            var physician = await _db.Physicians
+                .AsNoTracking()
+                .Where(p => p.PhyID == id)
+                .Select(p => new PhysicianDetailDto
+                {
+                    PhyID = p.PhyID,
+                    PhyName = p.PhyName,
+                    PhyPrimaryCodeType = p.PhyPrimaryCodeType,
+                    PhyType = p.PhyType,
+                    PhyLastName = p.PhyLastName,
+                    PhyFirstName = p.PhyFirstName,
+                    PhyMiddleName = p.PhyMiddleName,
+                    PhyAddress1 = p.PhyAddress1,
+                    PhyAddress2 = p.PhyAddress2,
+                    PhyCity = p.PhyCity,
+                    PhyState = p.PhyState,
+                    PhyZip = p.PhyZip,
+                    PhyTelephone = p.PhyTelephone,
+                    PhyFax = p.PhyFax,
+                    PhyEMail = p.PhyEMail,
+                    PhySpecialtyCode = p.PhySpecialtyCode,
+                    PhyInactive = p.PhyInactive,
+                    PhyNPI = p.PhyNPI,
+                    PhyEntityType = p.PhyEntityType,
+                    PhyPrimaryIDCode = p.PhyPrimaryIDCode,
+                    PhyDateTimeCreated = p.PhyDateTimeCreated,
+                    PhyDateTimeModified = p.PhyDateTimeModified
+                })
+                .FirstOrDefaultAsync();
+
+            if (physician == null)
+            {
+                return NotFound(new ErrorResponseDto
+                {
+                    ErrorCode = "NOT_FOUND",
+                    Message = "Physician not found"
+                });
+            }
+
+            return Ok(new ApiResponse<PhysicianDetailDto>
+            {
+                Data = physician
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreatePhysician([FromBody] CreatePhysicianDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "VALIDATION_ERROR",
+                    Message = "Invalid physician data"
+                });
+            }
+
+            // Check for duplicate NPI if provided
+            if (!string.IsNullOrWhiteSpace(dto.PhyNPI))
+            {
+                var existingByNpi = await _db.Physicians
+                    .AnyAsync(p => p.PhyNPI == dto.PhyNPI.Trim());
+                
+                if (existingByNpi)
+                {
+                    return Conflict(new ErrorResponseDto
+                    {
+                        ErrorCode = "DUPLICATE_NPI",
+                        Message = "A physician with this NPI already exists"
+                    });
+                }
+            }
+
+            // Normalize and trim all string fields
+            var physician = new Infrastructure.Persistence.Entities.Physician
+            {
+                PhyName = dto.PhyName?.Trim() ?? string.Empty,
+                PhyPrimaryCodeType = NormalizeString(dto.PhyPrimaryCodeType, 2),
+                PhyType = dto.PhyType?.Trim() ?? "Person",
+                PhyLastName = NormalizeString(dto.PhyLastName, 60),
+                PhyFirstName = NormalizeString(dto.PhyFirstName, 35),
+                PhyMiddleName = NormalizeString(dto.PhyMiddleName, 25),
+                PhyAddress1 = NormalizeString(dto.PhyAddress1, 55),
+                PhyAddress2 = NormalizeString(dto.PhyAddress2, 55),
+                PhyCity = NormalizeString(dto.PhyCity, 50),
+                PhyState = NormalizeString(dto.PhyState, 2)?.ToUpperInvariant(),
+                PhyZip = NormalizeString(dto.PhyZip, 15),
+                PhyTelephone = NormalizeString(dto.PhyTelephone, 80),
+                PhyFax = NormalizeString(dto.PhyFax, 80),
+                PhyEMail = NormalizeString(dto.PhyEMail, 80),
+                PhySpecialtyCode = NormalizeString(dto.PhySpecialtyCode, 30),
+                PhyInactive = dto.PhyInactive,
+                PhyNPI = NormalizeString(dto.PhyNPI, 20),
+                PhyEntityType = NormalizeString(dto.PhyEntityType, 1),
+                PhyPrimaryIDCode = NormalizeString(dto.PhyPrimaryIDCode, 80),
+                PhyDateTimeCreated = DateTime.UtcNow,
+                PhyDateTimeModified = DateTime.UtcNow,
+                PhyFirstMiddleLastNameCC = string.Empty,
+                PhyFullNameCC = string.Empty,
+                PhyNameWithInactiveCC = string.Empty,
+                PhyCityStateZipCC = string.Empty
+            };
+
+            await _db.Physicians.AddAsync(physician);
+            await _db.SaveChangesAsync();
+
+            var result = new PhysicianDetailDto
+            {
+                PhyID = physician.PhyID,
+                PhyName = physician.PhyName,
+                PhyPrimaryCodeType = physician.PhyPrimaryCodeType,
+                PhyType = physician.PhyType,
+                PhyLastName = physician.PhyLastName,
+                PhyFirstName = physician.PhyFirstName,
+                PhyMiddleName = physician.PhyMiddleName,
+                PhyAddress1 = physician.PhyAddress1,
+                PhyAddress2 = physician.PhyAddress2,
+                PhyCity = physician.PhyCity,
+                PhyState = physician.PhyState,
+                PhyZip = physician.PhyZip,
+                PhyTelephone = physician.PhyTelephone,
+                PhyFax = physician.PhyFax,
+                PhyEMail = physician.PhyEMail,
+                PhySpecialtyCode = physician.PhySpecialtyCode,
+                PhyInactive = physician.PhyInactive,
+                PhyNPI = physician.PhyNPI,
+                PhyPrimaryIDCode = physician.PhyPrimaryIDCode,
+                PhyDateTimeCreated = physician.PhyDateTimeCreated,
+                PhyDateTimeModified = physician.PhyDateTimeModified
+            };
+
+            return CreatedAtAction(nameof(GetPhysicianById), new { id = physician.PhyID }, new ApiResponse<PhysicianDetailDto>
+            {
+                Data = result
+            });
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePhysician(int id, [FromBody] UpdatePhysicianDto dto)
+        {
+            _logger.LogInformation("UpdatePhysician called with id={Id}", id);
+
+            if (id <= 0)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "Invalid physician ID"
+                });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "VALIDATION_ERROR",
+                    Message = "Invalid physician data"
+                });
+            }
+
+            var physician = await _db.Physicians.FindAsync(id);
+            if (physician == null)
+            {
+                return NotFound(new ErrorResponseDto
+                {
+                    ErrorCode = "NOT_FOUND",
+                    Message = "Physician not found"
+                });
+            }
+
+            // Check for duplicate NPI if provided and changed
+            if (!string.IsNullOrWhiteSpace(dto.PhyNPI) && physician.PhyNPI != dto.PhyNPI.Trim())
+            {
+                var existingByNpi = await _db.Physicians
+                    .AnyAsync(p => p.PhyNPI == dto.PhyNPI.Trim() && p.PhyID != id);
+                
+                if (existingByNpi)
+                {
+                    return Conflict(new ErrorResponseDto
+                    {
+                        ErrorCode = "DUPLICATE_NPI",
+                        Message = "A physician with this NPI already exists"
+                    });
+                }
+            }
+
+            // Update fields with normalization
+            physician.PhyName = dto.PhyName?.Trim() ?? string.Empty;
+            physician.PhyPrimaryCodeType = NormalizeString(dto.PhyPrimaryCodeType, 2);
+            physician.PhyType = dto.PhyType?.Trim() ?? "Person";
+            physician.PhyLastName = NormalizeString(dto.PhyLastName, 60);
+            physician.PhyFirstName = NormalizeString(dto.PhyFirstName, 35);
+            physician.PhyMiddleName = NormalizeString(dto.PhyMiddleName, 25);
+            physician.PhyAddress1 = NormalizeString(dto.PhyAddress1, 55);
+            physician.PhyAddress2 = NormalizeString(dto.PhyAddress2, 55);
+            physician.PhyCity = NormalizeString(dto.PhyCity, 50);
+            physician.PhyState = NormalizeString(dto.PhyState, 2)?.ToUpperInvariant();
+            physician.PhyZip = NormalizeString(dto.PhyZip, 15);
+            physician.PhyTelephone = NormalizeString(dto.PhyTelephone, 80);
+            physician.PhyFax = NormalizeString(dto.PhyFax, 80);
+            physician.PhyEMail = NormalizeString(dto.PhyEMail, 80);
+            physician.PhySpecialtyCode = NormalizeString(dto.PhySpecialtyCode, 30);
+            physician.PhyInactive = dto.PhyInactive;
+            physician.PhyNPI = NormalizeString(dto.PhyNPI, 20);
+            physician.PhyEntityType = NormalizeString(dto.PhyEntityType, 1);
+            physician.PhyPrimaryIDCode = NormalizeString(dto.PhyPrimaryIDCode, 80);
+            physician.PhyDateTimeModified = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            var result = new PhysicianDetailDto
+            {
+                PhyID = physician.PhyID,
+                PhyName = physician.PhyName,
+                PhyPrimaryCodeType = physician.PhyPrimaryCodeType,
+                PhyType = physician.PhyType,
+                PhyLastName = physician.PhyLastName,
+                PhyFirstName = physician.PhyFirstName,
+                PhyMiddleName = physician.PhyMiddleName,
+                PhyAddress1 = physician.PhyAddress1,
+                PhyAddress2 = physician.PhyAddress2,
+                PhyCity = physician.PhyCity,
+                PhyState = physician.PhyState,
+                PhyZip = physician.PhyZip,
+                PhyTelephone = physician.PhyTelephone,
+                PhyFax = physician.PhyFax,
+                PhyEMail = physician.PhyEMail,
+                PhySpecialtyCode = physician.PhySpecialtyCode,
+                PhyInactive = physician.PhyInactive,
+                PhyNPI = physician.PhyNPI,
+                PhyEntityType = physician.PhyEntityType,
+                PhyPrimaryIDCode = physician.PhyPrimaryIDCode,
+                PhyDateTimeCreated = physician.PhyDateTimeCreated,
+                PhyDateTimeModified = physician.PhyDateTimeModified
+            };
+
+            return Ok(new ApiResponse<PhysicianDetailDto>
+            {
+                Data = result
+            });
+        }
+
+        private string? NormalizeString(string? value, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            
+            var trimmed = value.Trim();
+            if (trimmed.Length > maxLength)
+                trimmed = trimmed.Substring(0, maxLength);
+            
+            return trimmed.Length == 0 ? null : trimmed;
         }
 
         private async Task<int> GetApproxPhysicianCountAsync()
