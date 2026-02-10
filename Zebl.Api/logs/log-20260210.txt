@@ -1,0 +1,19 @@
+2026-02-10 10:35:15.525 +05:30 [INF] Zebl API starting
+2026-02-10 10:35:15.610 +05:30 [INF] Initializing UI Database
+2026-02-10 10:35:19.349 +05:30 [INF] HTTP GET /swagger responded 301 in 84.9426 ms
+2026-02-10 10:35:19.421 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 48.5997 ms
+2026-02-10 10:35:19.512 +05:30 [INF] HTTP GET /swagger/swagger-ui.css responded 200 in 17.2017 ms
+2026-02-10 10:35:19.512 +05:30 [INF] HTTP GET /swagger/swagger-ui-standalone-preset.js responded 200 in 17.6504 ms
+2026-02-10 10:35:19.550 +05:30 [INF] HTTP GET /swagger/swagger-ui-bundle.js responded 200 in 54.9721 ms
+2026-02-10 10:35:19.783 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 10.5730 ms
+2026-02-10 10:37:33.272 +05:30 [INF] HTTP GET /api/physicians responded 200 in 1385.0311 ms
+2026-02-10 10:37:51.947 +05:30 [INF] HTTP GET /api/claims/available-columns responded 200 in 6.6612 ms
+2026-02-10 10:37:52.024 +05:30 [INF] HTTP GET /api/claims responded 200 in 83.4451 ms
+2026-02-10 10:37:54.051 +05:30 [INF] HTTP GET /api/claims/17 responded 200 in 134.1263 ms
+2026-02-10 10:37:54.136 +05:30 [INF] HTTP GET /api/services/claims/17 responded 200 in 218.4778 ms
+2026-02-10 10:38:05.786 +05:30 [INF] HTTP GET /api/services/claims/17 responded 200 in 30.2646 ms
+2026-02-10 10:38:05.786 +05:30 [INF] HTTP GET /api/claims/17 responded 200 in 30.9134 ms
+2026-02-10 10:38:36.903 +05:30 [INF] HTTP GET /api/physicians responded 200 in 30.8624 ms
+2026-02-10 10:50:09.296 +05:30 [INF] HTTP POST /api/physicians responded 201 in 638.1356 ms
+2026-02-10 10:50:09.377 +05:30 [INF] HTTP GET /api/physicians responded 200 in 26.1454 ms
+2026-02-10 10:50:13.276 +05:30 [INF] HTTP GET /api/physicians responded 200 in 139.4356 ms

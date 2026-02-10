@@ -16,6 +16,10 @@ namespace Zebl.Application.Dtos.Physicians
         
         public string? PhyFullNameCC { get; set; }
         
+        public string? PhyName { get; set; }
+        
+        public string? PhyPrimaryCodeType { get; set; }
+        
         public string? PhyNPI { get; set; }
         
         public string PhyType { get; set; } = null!;
