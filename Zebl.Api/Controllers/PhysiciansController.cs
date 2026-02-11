@@ -318,8 +318,6 @@ namespace Zebl.Api.Controllers
                 PhyNPI = NormalizeString(dto.PhyNPI, 20),
                 PhyEntityType = NormalizeString(dto.PhyEntityType, 1),
                 PhyPrimaryIDCode = NormalizeString(dto.PhyPrimaryIDCode, 80),
-                PhyDateTimeCreated = DateTime.UtcNow,
-                PhyDateTimeModified = DateTime.UtcNow,
                 PhyFirstMiddleLastNameCC = string.Empty,
                 PhyFullNameCC = string.Empty,
                 PhyNameWithInactiveCC = string.Empty,
@@ -429,7 +427,6 @@ namespace Zebl.Api.Controllers
             physician.PhyNPI = NormalizeString(dto.PhyNPI, 20);
             physician.PhyEntityType = NormalizeString(dto.PhyEntityType, 1);
             physician.PhyPrimaryIDCode = NormalizeString(dto.PhyPrimaryIDCode, 80);
-            physician.PhyDateTimeModified = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 

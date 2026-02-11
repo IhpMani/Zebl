@@ -27,6 +27,8 @@ var jwtSettings =
     builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
     ?? new JwtSettings();
 
+builder.Services.AddSingleton(jwtSettings);
+
 var corsOrigins =
     builder.Configuration.GetSection("CorsSettings:AllowedOrigins")
     .Get<string[]>() ?? Array.Empty<string>();
@@ -96,7 +98,9 @@ builder.Services.AddCors(options =>
 });
 #endregion
 
-#region Authentication (Optional JWT)
+#region Authentication (JWT)
+builder.Services.AddHttpContextAccessor();
+
 if (!string.IsNullOrWhiteSpace(jwtSettings.SecretKey))
 {
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -127,10 +131,18 @@ builder.Services.AddAuthorization(options =>
         else
             policy.RequireAssertion(_ => true);
     });
+
+    options.AddPolicy("RequireAdmin", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("IsAdmin", "true");
+    });
 });
 #endregion
 
 #region Services
+builder.Services.AddScoped<Zebl.Application.Abstractions.ICurrentUserContext, Zebl.Api.Services.JwtCurrentUserContext>();
+builder.Services.AddSingleton<Zebl.Api.Services.IAdminUserService, Zebl.Api.Services.AdminUserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ParserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ImportService>();
 #endregion

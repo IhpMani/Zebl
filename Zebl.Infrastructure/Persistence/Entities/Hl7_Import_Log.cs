@@ -27,4 +27,6 @@ public partial class Hl7_Import_Log
     public string? ErrorMessage { get; set; }
 
     public string? ImportedBy { get; set; }
+
+    public string? ComputerName { get; set; }
 }
