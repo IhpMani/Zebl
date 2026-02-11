@@ -1,15 +1,24 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Zebl.Application.Abstractions;
 using Zebl.Infrastructure.Persistence.Entities;
 
 namespace Zebl.Infrastructure.Persistence.Context;
 
 public partial class ZeblDbContext : DbContext
 {
+    private readonly ICurrentUserContext? _userContext;
+
     public ZeblDbContext(DbContextOptions<ZeblDbContext> options)
         : base(options)
     {
+    }
+
+    public ZeblDbContext(DbContextOptions<ZeblDbContext> options, ICurrentUserContext userContext)
+        : base(options)
+    {
+        _userContext = userContext;
     }
 
     public virtual DbSet<Adjustment> Adjustments { get; set; }
@@ -35,6 +44,10 @@ public partial class ZeblDbContext : DbContext
     public virtual DbSet<Procedure_Code> Procedure_Codes { get; set; }
 
     public virtual DbSet<Service_Line> Service_Lines { get; set; }
+
+    public virtual DbSet<AppUser> AppUsers { get; set; }
+
+    public virtual DbSet<Hl7_Import_Log> Hl7_Import_Logs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1455,7 +1468,82 @@ public partial class ZeblDbContext : DbContext
                 .HasConstraintName("FK_ServiceLine_ResponsibleParty");
         });
 
+        modelBuilder.Entity<AppUser>(entity =>
+        {
+            entity.HasKey(e => e.UserGuid).HasName("PK__AppUser__81B7740C5F82BC9D");
+            entity.ToTable("AppUser");
+            entity.Property(e => e.UserGuid)
+                .ValueGeneratedNever()
+                .HasColumnName("UserGUID");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.Email).HasMaxLength(200);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.PasswordHash).HasMaxLength(64);
+            entity.Property(e => e.PasswordSalt).HasMaxLength(32);
+            entity.Property(e => e.UserName).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<Hl7_Import_Log>(entity =>
+        {
+            entity.HasKey(e => e.ImportLogID).HasName("PK__Hl7_Impo__ImportLogID");
+            entity.ToTable("Hl7_Import_Log");
+            entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.ImportDateTime).IsRequired();
+            entity.Property(e => e.ErrorMessage).HasMaxLength(1000);
+            entity.Property(e => e.ImportedBy).HasMaxLength(100);
+            entity.Property(e => e.ComputerName).HasMaxLength(100);
+        });
+
         OnModelCreatingPartial(modelBuilder);
+    }
+
+    public override int SaveChanges()
+    {
+        ApplyAudit();
+        return base.SaveChanges();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ApplyAudit();
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void ApplyAudit()
+    {
+        if (_userContext == null)
+            return;
+
+        var now = DateTime.UtcNow;
+        var userId = _userContext.UserId;
+        var userName = _userContext.UserName;
+        
+        // Ensure ComputerName is NEVER null or empty (fallback to server machine name).
+        // This guarantees audit fields are always populated globally for all inserts/updates.
+        var computerName = _userContext.ComputerName;
+        if (string.IsNullOrWhiteSpace(computerName))
+        {
+            computerName = Environment.MachineName;
+            if (string.IsNullOrWhiteSpace(computerName))
+                computerName = "SERVER";
+        }
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is IAuditableEntity auditable)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    // On Add: Set CreatedComputerName if NULL, always set LastComputerName.
+                    auditable.SetCreated(userId, userName, computerName, now);
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    // On Update: Always set LastComputerName.
+                    auditable.SetModified(userId, userName, computerName, now);
+                }
+            }
+        }
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

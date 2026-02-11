@@ -17,3 +17,21 @@
 2026-02-10 10:50:09.296 +05:30 [INF] HTTP POST /api/physicians responded 201 in 638.1356 ms
 2026-02-10 10:50:09.377 +05:30 [INF] HTTP GET /api/physicians responded 200 in 26.1454 ms
 2026-02-10 10:50:13.276 +05:30 [INF] HTTP GET /api/physicians responded 200 in 139.4356 ms
+2026-02-10 11:25:16.860 +05:30 [INF] Zebl API starting
+2026-02-10 11:25:16.902 +05:30 [INF] Initializing UI Database
+2026-02-10 11:25:19.401 +05:30 [INF] HTTP GET /swagger responded 301 in 115.5246 ms
+2026-02-10 11:25:19.471 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 48.8107 ms
+2026-02-10 11:25:19.793 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 15.2775 ms
+2026-02-10 11:25:33.360 +05:30 [INF] HTTP GET /api/physicians responded 200 in 1252.1670 ms
+2026-02-10 11:26:23.358 +05:30 [INF] HTTP POST /api/physicians responded 201 in 262.1390 ms
+2026-02-10 11:26:23.446 +05:30 [INF] HTTP GET /api/physicians responded 200 in 73.8518 ms
+2026-02-10 11:56:17.033 +05:30 [INF] Zebl API starting
+2026-02-10 11:56:17.077 +05:30 [INF] Initializing UI Database
+2026-02-10 11:56:19.556 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 230.6003 ms
+2026-02-10 11:56:24.123 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 17.8532 ms
+2026-02-10 11:56:56.734 +05:30 [INF] HTTP POST /api/auth/login responded 400 in 63.8965 ms
+2026-02-10 12:00:44.138 +05:30 [WRN] Login failed: invalid password. UserName=admin
+2026-02-10 12:00:44.143 +05:30 [INF] HTTP POST /api/auth/login responded 401 in 1071.5851 ms
+2026-02-10 12:00:54.233 +05:30 [INF] HTTP POST /api/auth/login responded 400 in 4.2112 ms
+2026-02-10 12:00:55.223 +05:30 [INF] HTTP POST /api/auth/login responded 400 in 0.6435 ms
+2026-02-10 12:01:21.491 +05:30 [INF] HTTP POST /api/auth/login responded 400 in 1.7958 ms

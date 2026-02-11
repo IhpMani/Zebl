@@ -26,12 +26,24 @@ public class Hl7ImportService
     }
 
     /// <summary>
+    /// Result of processing HL7 messages with statistics
+    /// </summary>
+    public class Hl7ImportResult
+    {
+        public int SuccessCount { get; set; }
+        public int NewPatientsCount { get; set; }
+        public int UpdatedPatientsCount { get; set; }
+        public int NewClaimsCount { get; set; }
+        public int NewServiceLinesCount { get; set; }
+    }
+
+    /// <summary>
     /// Processes a list of HL7 DFT messages and creates Patients, Claims, and Service_Lines
     /// Each message is processed in its own transaction - if one fails, others continue
     /// </summary>
-    public async Task<int> ProcessHl7Messages(List<Hl7DftMessage> messages)
+    public async Task<Hl7ImportResult> ProcessHl7Messages(List<Hl7DftMessage> messages)
     {
-        int successCount = 0;
+        var result = new Hl7ImportResult();
 
         foreach (var message in messages)
         {
@@ -45,9 +57,14 @@ public class Hl7ImportService
             using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                await ProcessDftMessage(message);
+                var messageStats = await ProcessDftMessage(message);
                 await transaction.CommitAsync();
-                successCount++;
+                
+                result.SuccessCount++;
+                result.NewPatientsCount += messageStats.NewPatient ? 1 : 0;
+                result.UpdatedPatientsCount += messageStats.NewPatient ? 0 : 1;
+                result.NewClaimsCount += messageStats.NewClaim ? 1 : 0;
+                result.NewServiceLinesCount += messageStats.ServiceLinesCreated;
             }
             catch (Exception ex)
             {
@@ -65,14 +82,27 @@ public class Hl7ImportService
             }
         }
 
-        return successCount;
+        return result;
+    }
+
+    /// <summary>
+    /// Statistics for a single message processing
+    /// </summary>
+    private class MessageStats
+    {
+        public bool NewPatient { get; set; }
+        public bool NewClaim { get; set; }
+        public int ServiceLinesCreated { get; set; }
     }
 
     /// <summary>
     /// Processes a single DFT message: Patient → Claim → Service_Lines
+    /// Returns statistics about what was created
     /// </summary>
-    private async Task ProcessDftMessage(Hl7DftMessage message)
+    private async Task<MessageStats> ProcessDftMessage(Hl7DftMessage message)
     {
+        var stats = new MessageStats();
+
         // Step 1: Extract patient MRN from PID-3
         var mrn = _parser.ExtractPatientMrn(message.PidSegment);
         if (string.IsNullOrWhiteSpace(mrn))
@@ -81,37 +111,45 @@ public class Hl7ImportService
         }
 
         // Step 2: Match or create Patient
-        var patient = await MatchOrCreatePatient(message.PidSegment, mrn);
+        var (patient, isNewPatient) = await MatchOrCreatePatient(message.PidSegment, mrn);
         if (patient == null || patient.PatID <= 0)
         {
             throw new InvalidOperationException($"Failed to create or retrieve patient with MRN: {mrn}");
         }
+        stats.NewPatient = isNewPatient;
 
         // Step 3: ALWAYS create a NEW Claim per DFT message
-        var claim = await CreateNewClaim(patient.PatID, message);
+        var (claim, isNewClaim) = await CreateNewClaim(patient.PatID, message);
         if (claim == null || claim.ClaID <= 0)
         {
             throw new InvalidOperationException($"Failed to create claim for patient {patient.PatID}");
         }
+        stats.NewClaim = isNewClaim;
 
         // Step 4: Create Service_Lines from FT1 segments
+        int serviceLinesCreated = 0;
         foreach (var ft1Segment in message.Ft1Segments)
         {
-            await CreateServiceLineFromFt1(claim.ClaID, ft1Segment);
+            var created = await CreateServiceLineFromFt1(claim.ClaID, ft1Segment);
+            if (created) serviceLinesCreated++;
         }
+        stats.ServiceLinesCreated = serviceLinesCreated;
 
         // Step 5: Create Claim_Insured records from IN1 segments (primary + secondary only)
         await CreateClaimInsuredRecords(claim.ClaID, patient.PatID, message.In1Segments);
 
         // Step 6: Update claim totals after all service lines are created
         await UpdateClaimTotals(claim.ClaID);
+
+        return stats;
     }
 
     /// <summary>
     /// Matches patient by MRN (PID-3) or creates new patient
     /// Uses PatAccountNo as the unique identifier
+    /// Returns patient and whether it was newly created
     /// </summary>
-    private async Task<Patient?> MatchOrCreatePatient(string pidSegment, string mrn)
+    private async Task<(Patient patient, bool isNew)> MatchOrCreatePatient(string pidSegment, string mrn)
     {
         // Normalize MRN (trim, truncate to max length)
         var normalizedMrn = _parser.NormalizeString(mrn, maxLength: 50);
@@ -127,7 +165,7 @@ public class Hl7ImportService
         if (existingPatient != null)
         {
             _logger.LogInformation("Found existing patient with MRN {MRN}, PatID: {PatID}", mrn, existingPatient.PatID);
-            return existingPatient;
+            return (existingPatient, false);
         }
 
         // Extract patient data from PID segment
@@ -160,8 +198,6 @@ public class Hl7ImportService
             PatState = state,
             PatZip = zip,
             PatHomePhoneNo = phone,
-            PatDateTimeCreated = DateTime.UtcNow,
-            PatDateTimeModified = DateTime.UtcNow,
             // Required boolean fields (NOT NULL) - EZClaim defaults
             PatActive = true,
             PatDontSendPromotions = false,
@@ -202,15 +238,16 @@ public class Hl7ImportService
         }
 
         _logger.LogInformation("Created new patient with MRN {MRN}, PatID: {PatID}", normalizedMrn, newPatient.PatID);
-        return newPatient;
+        return (newPatient, true);
     }
 
     /// <summary>
     /// Creates a NEW Claim for the DFT message or returns existing if duplicate
     /// EZClaim deduplication: Patient + DOS + Visit/Account
     /// Maps PV1 segment data to claim fields
+    /// Returns claim and whether it was newly created
     /// </summary>
-    private async Task<Claim?> CreateNewClaim(int patientId, Hl7DftMessage message)
+    private async Task<(Claim claim, bool isNew)> CreateNewClaim(int patientId, Hl7DftMessage message)
     {
         if (patientId <= 0)
         {
@@ -257,15 +294,13 @@ public class Hl7ImportService
             {
                 _logger.LogInformation("Found existing claim ClaID: {ClaID} for patient PatID: {PatID}, DOS: {DOS}, Visit: {Visit}", 
                     existingClaim.ClaID, patientId, firstServiceDate.Value, visitNumber ?? "N/A");
-                return existingClaim;
+                return (existingClaim, false);
             }
         }
 
         var newClaim = new Claim
         {
             ClaPatFID = patientId,
-            ClaDateTimeCreated = DateTime.UtcNow,
-            ClaDateTimeModified = DateTime.UtcNow,
             ClaStatus = "Imported", // Default status for imported claims
             ClaSubmissionMethod = "Electronic", // HL7 imports are electronic
             ClaAdmittedDate = admittedDate,
@@ -300,26 +335,27 @@ public class Hl7ImportService
         }
 
         _logger.LogInformation("Created new claim ClaID: {ClaID} for patient PatID: {PatID}", newClaim.ClaID, patientId);
-        return newClaim;
+        return (newClaim, true);
     }
 
     /// <summary>
     /// Creates a Service_Line from an FT1 segment or returns existing if duplicate
     /// EZClaim deduplication: Claim + CPT + DOS
     /// Maps FT1 fields to Service_Line fields
+    /// Returns true if service line was created, false if duplicate
     /// </summary>
-    private async Task CreateServiceLineFromFt1(int claimId, string ft1Segment)
+    private async Task<bool> CreateServiceLineFromFt1(int claimId, string ft1Segment)
     {
         if (claimId <= 0)
         {
             _logger.LogWarning("Cannot create service line: Invalid claim ID {ClaID}", claimId);
-            return;
+            return false;
         }
 
         if (string.IsNullOrWhiteSpace(ft1Segment))
         {
             _logger.LogWarning("Cannot create service line: FT1 segment is null or empty");
-            return;
+            return false;
         }
 
         // FT1-4: Transaction Date → SrvFromDate (DOS)
@@ -343,7 +379,7 @@ public class Hl7ImportService
             {
                 _logger.LogInformation("Found existing service line SrvID: {SrvID} for claim ClaID: {ClaID}, CPT: {CPT}, DOS: {DOS}", 
                     existingServiceLine.SrvID, claimId, procedureCode, serviceDate);
-                return; // Skip duplicate service line
+                return false; // Skip duplicate service line
             }
         }
 
@@ -367,8 +403,6 @@ public class Hl7ImportService
             SrvDesc = description,
             SrvCharges = charges,
             SrvUnits = units,
-            SrvDateTimeCreated = DateTime.UtcNow,
-            SrvDateTimeModified = DateTime.UtcNow,
             SrvGUID = Guid.NewGuid(),
             // Required fields with defaults
             SrvModifiersCC = string.Empty,
@@ -381,6 +415,7 @@ public class Hl7ImportService
         await _db.SaveChangesAsync();
 
         _logger.LogDebug("Created service line SrvID: {SrvID} for claim ClaID: {ClaID}", serviceLine.SrvID, claimId);
+        return true; // Service line was created
     }
 
     /// <summary>
@@ -462,8 +497,6 @@ public class Hl7ImportService
                 payer = new Payer
                 {
                     PayName = insuranceCompanyName, // Already normalized
-                    PayDateTimeCreated = DateTime.UtcNow,
-                    PayDateTimeModified = DateTime.UtcNow,
                     PayInactive = false,
                     PayAddr1 = _parser.NormalizeString(insuranceAddress, maxLength: 50),
                     PayCity = insuranceCity, // Already normalized
@@ -512,8 +545,6 @@ public class Hl7ImportService
                 ClaInsState = insuranceState, // Already normalized to 2-char
                 ClaInsZip = insuranceZip, // Already normalized
                 ClaInsPhone = insurancePhone, // Already sanitized (digits only)
-                ClaInsDateTimeCreated = DateTime.UtcNow,
-                ClaInsDateTimeModified = DateTime.UtcNow,
                 ClaInsRelationToInsured = 0, // Default to Self
                 ClaInsSequenceDescriptionCC = sequence == 1 ? "Primary" : "Secondary",
                 ClaInsCityStateZipCC = string.Empty
@@ -551,7 +582,7 @@ public class Hl7ImportService
             claim.ClaTotalChargeTRIG = totalCharge;
             // Balance = Charges - Payments - Adjustments (simplified for import)
             claim.ClaTotalBalanceCC = totalCharge - (claim.ClaTotalAmtPaidCC ?? 0) - (claim.ClaTotalAmtAppliedCC ?? 0);
-            claim.ClaDateTimeModified = DateTime.UtcNow;
+            // ClaDateTimeModified set by global audit on SaveChanges
 
             await _db.SaveChangesAsync();
         }
