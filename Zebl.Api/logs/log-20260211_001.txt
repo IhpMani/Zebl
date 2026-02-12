@@ -1,0 +1,125 @@
+2026-02-11 16:12:15.364 +05:30 [INF] Zebl API starting
+2026-02-11 16:12:15.419 +05:30 [INF] Initializing UI Database
+2026-02-11 16:12:16.146 +05:30 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address https://127.0.0.1:7183: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindAsync(ListenOptions[] listenOptions, AddressBindContext context, Func`2 useHttps, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__15_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-02-11 16:12:16.290 +05:30 [FTL] Zebl API terminated unexpectedly
+System.IO.IOException: Failed to bind to address https://127.0.0.1:7183: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindAsync(ListenOptions[] listenOptions, AddressBindContext context, Func`2 useHttps, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__15_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Program.cs:line 221
+2026-02-11 16:35:30.700 +05:30 [INF] Zebl API starting
+2026-02-11 16:35:30.743 +05:30 [INF] Initializing UI Database
+2026-02-11 16:37:28.506 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 208.7985 ms
+2026-02-11 16:37:29.056 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 118.3586 ms
+2026-02-11 16:37:45.110 +05:30 [INF] HTTP GET /api/claims/available-columns responded 200 in 252.7618 ms
+2026-02-11 16:37:47.097 +05:30 [INF] HTTP GET /api/claims responded 200 in 2240.3842 ms
+2026-02-11 16:42:29.298 +05:30 [INF] HTTP GET /api/claims/available-columns responded 200 in 96.8591 ms
+2026-02-11 16:42:29.466 +05:30 [INF] HTTP GET /api/claims responded 200 in 265.0429 ms
+2026-02-11 16:43:17.421 +05:30 [INF] HTTP GET /api/claims/available-columns responded 200 in 15.9032 ms
+2026-02-11 16:43:17.708 +05:30 [INF] HTTP GET /api/claims responded 200 in 303.1289 ms
+2026-02-11 16:44:24.122 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 60.6515 ms
+2026-02-11 16:44:24.371 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 237.1600 ms
+2026-02-11 16:44:29.034 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 19.7744 ms
+2026-02-11 16:44:29.913 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 20.2262 ms
+2026-02-11 16:44:30.441 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 14.3780 ms
+2026-02-11 16:44:31.005 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 16.8172 ms
+2026-02-11 16:44:31.749 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 33.7262 ms
+2026-02-11 16:44:32.449 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 6.2115 ms
+2026-02-11 16:44:34.188 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 9.4697 ms
+2026-02-11 16:44:35.090 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 7.7361 ms
+2026-02-11 16:44:35.657 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 21.6592 ms
+2026-02-11 16:44:36.126 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.1676 ms
+2026-02-11 16:44:36.725 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 19.1086 ms
+2026-02-11 16:44:37.182 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.9643 ms
+2026-02-11 16:44:37.483 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 17.2506 ms
+2026-02-11 16:44:37.894 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 12.5040 ms
+2026-02-11 16:44:38.357 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 10.6247 ms
+2026-02-11 16:44:41.253 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 11.8227 ms
+2026-02-11 16:45:55.253 +05:30 [INF] HTTP GET /api/claims/available-columns responded 200 in 1.7448 ms
+2026-02-11 16:45:55.290 +05:30 [INF] HTTP GET /api/claims responded 200 in 39.1529 ms
+2026-02-11 16:46:00.301 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 1.8265 ms
+2026-02-11 16:46:00.330 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 19.8030 ms
+2026-02-11 16:46:01.790 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 20.3976 ms
+2026-02-11 16:46:02.263 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 16.3030 ms
+2026-02-11 16:46:02.713 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 7.5884 ms
+2026-02-11 16:46:03.304 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 10.3126 ms
+2026-02-11 16:46:03.739 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 6.6419 ms
+2026-02-11 16:46:04.140 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 8.0523 ms
+2026-02-11 16:46:04.731 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 7.7496 ms
+2026-02-11 16:46:05.274 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 7.5929 ms
+2026-02-11 16:46:05.814 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 9.0291 ms
+2026-02-11 16:46:06.171 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 22.6559 ms
+2026-02-11 16:46:06.785 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 15.3400 ms
+2026-02-11 16:46:07.562 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.8234 ms
+2026-02-11 16:46:07.963 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 14.1561 ms
+2026-02-11 16:46:08.339 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 14.2928 ms
+2026-02-11 16:46:08.819 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.3453 ms
+2026-02-11 16:46:24.814 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 17.4928 ms
+2026-02-11 16:46:33.066 +05:30 [INF] Added list value Billers WL to Claim Classification by Ranjit
+2026-02-11 16:46:33.070 +05:30 [INF] HTTP POST /api/lists/values responded 200 in 244.3318 ms
+2026-02-11 16:46:53.363 +05:30 [INF] HTTP GET /api/claims/available-columns responded 200 in 1.0338 ms
+2026-02-11 16:46:53.392 +05:30 [INF] HTTP GET /api/claims responded 200 in 30.0926 ms
+2026-02-11 16:47:13.151 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 1.0750 ms
+2026-02-11 16:47:13.187 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 23.4464 ms
+2026-02-11 16:52:28.986 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 8.8029 ms
+2026-02-11 16:52:29.246 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 213.3943 ms
+2026-02-11 16:52:59.961 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 2.2189 ms
+2026-02-11 16:53:00.005 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 24.5589 ms
+2026-02-11 16:53:04.391 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 1.1795 ms
+2026-02-11 16:53:04.422 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 20.6150 ms
+2026-02-11 16:54:47.014 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 9.7880 ms
+2026-02-11 16:54:47.094 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 30.7114 ms
+2026-02-11 16:58:17.218 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 4.3044 ms
+2026-02-11 16:58:17.302 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 36.5328 ms
+2026-02-11 16:58:23.048 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 3.5297 ms
+2026-02-11 16:58:23.080 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 21.8433 ms

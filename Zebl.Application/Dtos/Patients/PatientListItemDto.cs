@@ -22,11 +22,27 @@ namespace Zebl.Application.Dtos.Patients
         
         public DateOnly? PatBirthDate { get; set; }
         
-        public string? PatPhoneNo { get; set; }
+        public string? PatSSN { get; set; }
+        
+        public string? PatSex { get; set; }
+        
+        public string? PatAddress { get; set; }
         
         public string? PatCity { get; set; }
         
         public string? PatState { get; set; }
+        
+        public string? PatZip { get; set; }
+        
+        public string? PatPhoneNo { get; set; }
+        
+        public string? PatCellPhoneNo { get; set; }
+        
+        public string? PatPriEmail { get; set; }
+        
+        public int PatBillingPhyFID { get; set; }
+        
+        public string? PatClassification { get; set; }
         
         public decimal? PatTotalBalanceCC { get; set; }
         

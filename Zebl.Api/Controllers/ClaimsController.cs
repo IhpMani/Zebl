@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
@@ -98,6 +98,7 @@ namespace Zebl.Api.Controllers
             var hasRenderingPhyNPI = columnsToInclude.Any(col => col.Key == "renderingPhyNPI");
             var hasBillingPhyName = columnsToInclude.Any(col => col.Key == "billingPhyName");
             var hasBillingPhyNPI = columnsToInclude.Any(col => col.Key == "billingPhyNPI");
+            var hasFacilityName = columnsToInclude.Any(col => col.Key == "facilityName");
 
             // Build efficient LINQ query with server-side filtering
             // Note: We don't need Include() when using Select() - EF Core will automatically join
@@ -277,6 +278,10 @@ namespace Zebl.Api.Controllers
                 {
                     query = query.Include(c => c.ClaBillingPhyF);
                 }
+                if (hasFacilityName)
+                {
+                    query = query.Include(c => c.ClaFacilityPhyF);
+                }
                 
                 // EF Core will automatically generate JOINs when accessing navigation properties in Select
                 var data = await query
@@ -291,7 +296,22 @@ namespace Zebl.Api.Controllers
                             ClaDateTimeCreated = c.ClaDateTimeCreated,
                             ClaTotalChargeTRIG = c.ClaTotalChargeTRIG,
                             ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
-                            ClaTotalBalanceCC = c.ClaTotalBalanceCC
+                            ClaTotalBalanceCC = c.ClaTotalBalanceCC,
+                            ClaClassification = c.ClaClassification,
+                            ClaPatFID = c.ClaPatFID,
+                            ClaAttendingPhyFID = c.ClaAttendingPhyFID,
+                            ClaBillingPhyFID = c.ClaBillingPhyFID,
+                            ClaReferringPhyFID = c.ClaReferringPhyFID,
+                            ClaBillDate = c.ClaBillDate,
+                            ClaTypeOfBill = c.ClaTypeOfBill,
+                            ClaAdmissionType = c.ClaAdmissionType,
+                            ClaPatientStatus = c.ClaPatientStatus,
+                            ClaDiagnosis1 = c.ClaDiagnosis1,
+                            ClaDiagnosis2 = c.ClaDiagnosis2,
+                            ClaDiagnosis3 = c.ClaDiagnosis3,
+                            ClaDiagnosis4 = c.ClaDiagnosis4,
+                            ClaFirstDateTRIG = c.ClaFirstDateTRIG,
+                            ClaLastDateTRIG = c.ClaLastDateTRIG
                         },
                         // Include related data if requested (pre-evaluated booleans)
                         // Use null-safe access to prevent NullReferenceException
@@ -306,7 +326,8 @@ namespace Zebl.Api.Controllers
                         RenderingPhyName = hasRenderingPhyName ? (c.ClaRenderingPhyF != null ? c.ClaRenderingPhyF.PhyName : null) : null,
                         RenderingPhyNPI = hasRenderingPhyNPI ? (c.ClaRenderingPhyF != null ? c.ClaRenderingPhyF.PhyNPI : null) : null,
                         BillingPhyName = hasBillingPhyName ? (c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyName : null) : null,
-                        BillingPhyNPI = hasBillingPhyNPI ? (c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyNPI : null) : null
+                        BillingPhyNPI = hasBillingPhyNPI ? (c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyNPI : null) : null,
+                        FacilityPhyName = hasFacilityName ? (c.ClaFacilityPhyF != null ? c.ClaFacilityPhyF.PhyName : null) : null
                     })
                     .ToListAsync();
 
@@ -331,6 +352,7 @@ namespace Zebl.Api.Controllers
                             "renderingPhyNPI" => d.RenderingPhyNPI,
                             "billingPhyName" => d.BillingPhyName,
                             "billingPhyNPI" => d.BillingPhyNPI,
+                            "facilityName" => d.FacilityPhyName,
                             _ => null
                         };
                         claim.AdditionalColumns[col.Key] = value;
@@ -351,7 +373,22 @@ namespace Zebl.Api.Controllers
                         ClaDateTimeCreated = c.ClaDateTimeCreated,
                         ClaTotalChargeTRIG = c.ClaTotalChargeTRIG,
                         ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
-                        ClaTotalBalanceCC = c.ClaTotalBalanceCC
+                        ClaTotalBalanceCC = c.ClaTotalBalanceCC,
+                        ClaClassification = c.ClaClassification,
+                        ClaPatFID = c.ClaPatFID,
+                        ClaAttendingPhyFID = c.ClaAttendingPhyFID,
+                        ClaBillingPhyFID = c.ClaBillingPhyFID,
+                        ClaReferringPhyFID = c.ClaReferringPhyFID,
+                        ClaBillDate = c.ClaBillDate,
+                        ClaTypeOfBill = c.ClaTypeOfBill,
+                        ClaAdmissionType = c.ClaAdmissionType,
+                        ClaPatientStatus = c.ClaPatientStatus,
+                        ClaDiagnosis1 = c.ClaDiagnosis1,
+                        ClaDiagnosis2 = c.ClaDiagnosis2,
+                        ClaDiagnosis3 = c.ClaDiagnosis3,
+                        ClaDiagnosis4 = c.ClaDiagnosis4,
+                        ClaFirstDateTRIG = c.ClaFirstDateTRIG,
+                        ClaLastDateTRIG = c.ClaLastDateTRIG
                     })
                     .ToListAsync();
             }
@@ -427,6 +464,7 @@ namespace Zebl.Api.Controllers
                         c.ClaRelatedToState,
                         c.ClaFirstDateTRIG,
                         c.ClaLastDateTRIG,
+                        c.ClaClassification,
                         c.ClaDiagnosis1,
                         c.ClaDiagnosis2,
                         c.ClaDiagnosis3,
@@ -593,6 +631,7 @@ namespace Zebl.Api.Controllers
                     ClaLastDateTRIG = claimBase.ClaLastDateTRIG.HasValue 
                         ? claimBase.ClaLastDateTRIG.Value.ToDateTime(TimeOnly.MinValue)
                         : (DateTime?)null,
+                    claimBase.ClaClassification,
                     claimBase.ClaDiagnosis1,
                     claimBase.ClaDiagnosis2,
                     claimBase.ClaDiagnosis3,
@@ -701,6 +740,63 @@ namespace Zebl.Api.Controllers
                     ErrorCode = "INTERNAL_ERROR",
                     Message = "An error occurred while retrieving the claim details."
                 });
+            }
+        }
+
+        /// <summary>
+        /// Update claim fields. ClaClassification (Facility) values come from Libraries → List → Claim Classification.
+        /// </summary>
+        [HttpPut("{claId:int}")]
+        public async Task<IActionResult> UpdateClaim([FromRoute] int claId, [FromBody] UpdateClaimRequest request)
+        {
+            if (claId <= 0)
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Invalid claim ID" });
+            if (request == null)
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Request body is required" });
+
+            try
+            {
+                var claim = await _db.Claims.FindAsync(claId);
+                if (claim == null)
+                    return NotFound();
+
+                claim.ClaClassification = request.ClaClassification != null
+                    ? (request.ClaClassification.Length > 30 ? request.ClaClassification[..30] : request.ClaClassification)
+                    : null;
+                claim.ClaStatus = request.ClaStatus;
+                if (request.ClaAdmittedDate.HasValue)
+                    claim.ClaAdmittedDate = DateOnly.FromDateTime(request.ClaAdmittedDate.Value);
+                if (request.ClaDischargedDate.HasValue)
+                    claim.ClaDischargedDate = DateOnly.FromDateTime(request.ClaDischargedDate.Value);
+                if (request.ClaDateLastSeen.HasValue)
+                    claim.ClaDateLastSeen = DateOnly.FromDateTime(request.ClaDateLastSeen.Value);
+                if (request.ClaEDINotes != null)
+                    claim.ClaEDINotes = request.ClaEDINotes;
+                if (request.ClaRemarks != null)
+                    claim.ClaRemarks = request.ClaRemarks;
+                if (request.ClaRelatedTo.HasValue)
+                {
+                    // Ensure the int value fits into the target short? property to avoid data loss
+                    if (request.ClaRelatedTo.Value < short.MinValue || request.ClaRelatedTo.Value > short.MaxValue)
+                    {
+                        return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "ClaRelatedTo value is out of range" });
+                    }
+
+                    claim.ClaRelatedTo = (short?)request.ClaRelatedTo.Value;
+                }
+                if (request.ClaRelatedToState != null)
+                    claim.ClaRelatedToState = request.ClaRelatedToState;
+                if (request.ClaLocked.HasValue)
+                    claim.ClaLocked = request.ClaLocked.Value;
+
+                await _db.SaveChangesAsync();
+                _logger.LogInformation("Updated claim {ClaId}, ClaClassification={ClaClassification}", claId, claim.ClaClassification);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating claim {ClaId}", claId);
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = "INTERNAL_ERROR", Message = "Failed to update claim" });
             }
         }
 

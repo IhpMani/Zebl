@@ -204,9 +204,17 @@ namespace Zebl.Api.Controllers
                             PatActive = p.PatActive,
                             PatAccountNo = p.PatAccountNo,
                             PatBirthDate = p.PatBirthDate,
-                            PatPhoneNo = p.PatPhoneNo,
+                            PatSSN = p.PatSSN,
+                            PatSex = p.PatSex,
+                            PatAddress = p.PatAddress,
                             PatCity = p.PatCity,
                             PatState = p.PatState,
+                            PatZip = p.PatZip,
+                            PatPhoneNo = p.PatPhoneNo,
+                            PatCellPhoneNo = p.PatCellPhoneNo,
+                            PatPriEmail = p.PatPriEmail,
+                            PatBillingPhyFID = p.PatBillingPhyFID,
+                            PatClassification = p.PatClassification,
                             PatTotalBalanceCC = p.PatTotalBalanceCC,
                             AdditionalColumns = new Dictionary<string, object?>()
                         })

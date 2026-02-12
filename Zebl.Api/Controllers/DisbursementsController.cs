@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -77,7 +77,7 @@ namespace Zebl.Api.Controllers
         // 🟡 GLOBAL DISBURSEMENTS SEARCH (Find → Disbursements)
         // NOT USED BY CLAIM DETAILS
         // =========================================================
-        [HttpGet("list")]
+        [HttpGet]
         public async Task<IActionResult> GetDisbursements(
             int page = 1,
             int pageSize = 25,
