@@ -161,12 +161,16 @@ namespace Zebl.Api.Controllers
                     PayID = p.PayID,
                     PayDateTimeCreated = p.PayDateTimeCreated,
                     PayName = p.PayName,
+                    PayClassification = p.PayClassification,
+                    PayClaimType = p.PayClaimType,
                     PayExternalID = p.PayExternalID,
+                    PayAddr1 = p.PayAddr1,
                     PayCity = p.PayCity,
                     PayState = p.PayState,
+                    PayZip = p.PayZip,
                     PayPhoneNo = p.PayPhoneNo,
+                    PayEmail = p.PayEmail,
                     PayInactive = p.PayInactive,
-                    PayClaimType = p.PayClaimType,
                     PaySubmissionMethod = p.PaySubmissionMethod,
                     AdditionalColumns = new Dictionary<string, object?>()
                 })

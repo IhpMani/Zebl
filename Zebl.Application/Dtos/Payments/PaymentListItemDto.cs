@@ -18,7 +18,13 @@ namespace Zebl.Application.Dtos.Payments
         
         public int? PmtPayFID { get; set; }
         
+        public int PmtBFEPFID { get; set; }
+        
         public string? PmtMethod { get; set; }
+        
+        public string? PmtAuthCode { get; set; }
+        
+        public string? PmtNote { get; set; }
         
         public string? Pmt835Ref { get; set; }
         

@@ -178,13 +178,17 @@ namespace Zebl.Api.Controllers
                     PhyLastName = p.PhyLastName,
                     PhyFullNameCC = p.PhyFullNameCC,
                     PhyName = p.PhyName,
-                    PhyPrimaryCodeType = p.PhyPrimaryCodeType,
-                    PhyNPI = p.PhyNPI,
                     PhyType = p.PhyType,
-                    PhyInactive = p.PhyInactive,
+                    PhyRateClass = p.PhyRateClass,
+                    PhyNPI = p.PhyNPI,
+                    PhySpecialtyCode = p.PhySpecialtyCode,
+                    PhyPrimaryCodeType = p.PhyPrimaryCodeType,
+                    PhyAddress1 = p.PhyAddress1,
                     PhyCity = p.PhyCity,
                     PhyState = p.PhyState,
+                    PhyZip = p.PhyZip,
                     PhyTelephone = p.PhyTelephone,
+                    PhyInactive = p.PhyInactive,
                     AdditionalColumns = new Dictionary<string, object?>()
                 })
                 .ToListAsync();

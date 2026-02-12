@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +51,7 @@ namespace Zebl.Api.Controllers
                     AdjAmount = a.AdjAmount,
                     AdjGroupCode = a.AdjGroupCode,
                     AdjReasonCode = a.AdjReasonCode,
+                    AdjNote = a.AdjNote,
                     AdjSrvFID = a.AdjSrvFID,
                     AdjPmtFID = a.AdjPmtFID,
                     AdjPayFID = a.AdjPayFID,
@@ -107,6 +108,7 @@ namespace Zebl.Api.Controllers
                     AdjAmount = a.AdjAmount,
                     AdjGroupCode = a.AdjGroupCode,
                     AdjReasonCode = a.AdjReasonCode,
+                    AdjNote = a.AdjNote,
                     AdjSrvFID = a.AdjSrvFID,
                     AdjPmtFID = a.AdjPmtFID,
                     AdjPayFID = a.AdjPayFID,

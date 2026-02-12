@@ -49,6 +49,8 @@ public partial class ZeblDbContext : DbContext
 
     public virtual DbSet<Hl7_Import_Log> Hl7_Import_Logs { get; set; }
 
+    public virtual DbSet<ListValue> ListValues { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Adjustment>(entity =>
@@ -1494,6 +1496,8 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.ComputerName).HasMaxLength(100);
         });
 
+        ConfigureListValue(modelBuilder);
+
         OnModelCreatingPartial(modelBuilder);
     }
 
@@ -1547,4 +1551,16 @@ public partial class ZeblDbContext : DbContext
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+    
+    private void ConfigureListValue(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ListValue>(entity =>
+        {
+            entity.HasKey(e => e.ListValueID).HasName("PK__ListValue__ListValueID");
+            entity.ToTable("ListValue");
+            entity.Property(e => e.ListType).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Value).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+        });
+    }
 }

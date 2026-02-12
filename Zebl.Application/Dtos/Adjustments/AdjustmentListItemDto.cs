@@ -18,6 +18,8 @@ namespace Zebl.Application.Dtos.Adjustments
         
         public string? AdjReasonCode { get; set; }
         
+        public string? AdjNote { get; set; }
+        
         public int AdjSrvFID { get; set; }
         
         public int AdjPmtFID { get; set; }

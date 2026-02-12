@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Zebl.Application.Dtos.Common;
@@ -113,7 +113,10 @@ namespace Zebl.Api.Controllers
                     PmtAmount = p.PmtAmount,
                     PmtPatFID = p.PmtPatFID,
                     PmtPayFID = p.PmtPayFID,
+                    PmtBFEPFID = p.PmtBFEPFID,
                     PmtMethod = p.PmtMethod,
+                    PmtAuthCode = p.PmtAuthCode,
+                    PmtNote = p.PmtNote,
                     Pmt835Ref = p.Pmt835Ref,
                     PmtDisbursedTRIG = p.PmtDisbursedTRIG,
                     PmtRemainingCC = p.PmtRemainingCC,
