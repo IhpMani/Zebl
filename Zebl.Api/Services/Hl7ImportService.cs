@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Zebl.Application.Abstractions;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
 
@@ -14,15 +15,21 @@ public class Hl7ImportService
     private readonly ZeblDbContext _db;
     private readonly ILogger<Hl7ImportService> _logger;
     private readonly Hl7ParserService _parser;
+    private readonly ICurrentUserContext _userContext;
+    private readonly ClaimAuditService _claimAuditService;
 
     public Hl7ImportService(
         ZeblDbContext db,
         ILogger<Hl7ImportService> logger,
-        Hl7ParserService parser)
+        Hl7ParserService parser,
+        ICurrentUserContext userContext,
+        ClaimAuditService claimAuditService)
     {
         _db = db;
         _logger = logger;
         _parser = parser;
+        _userContext = userContext;
+        _claimAuditService = claimAuditService;
     }
 
     /// <summary>
@@ -34,14 +41,18 @@ public class Hl7ImportService
         public int NewPatientsCount { get; set; }
         public int UpdatedPatientsCount { get; set; }
         public int NewClaimsCount { get; set; }
+        public int DuplicateClaimsCount { get; set; }
         public int NewServiceLinesCount { get; set; }
+        public decimal TotalAmount { get; set; }
     }
 
     /// <summary>
     /// Processes a list of HL7 DFT messages and creates Patients, Claims, and Service_Lines
     /// Each message is processed in its own transaction - if one fails, others continue
     /// </summary>
-    public async Task<Hl7ImportResult> ProcessHl7Messages(List<Hl7DftMessage> messages)
+    /// <param name="messages">Parsed HL7 DFT messages</param>
+    /// <param name="fileName">Original file name for Claim_Audit note</param>
+    public async Task<Hl7ImportResult> ProcessHl7Messages(List<Hl7DftMessage> messages, string fileName = "unknown.hl7")
     {
         var result = new Hl7ImportResult();
 
@@ -57,14 +68,16 @@ public class Hl7ImportService
             using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                var messageStats = await ProcessDftMessage(message);
+                var messageStats = await ProcessDftMessage(message, fileName);
                 await transaction.CommitAsync();
                 
                 result.SuccessCount++;
                 result.NewPatientsCount += messageStats.NewPatient ? 1 : 0;
                 result.UpdatedPatientsCount += messageStats.NewPatient ? 0 : 1;
                 result.NewClaimsCount += messageStats.NewClaim ? 1 : 0;
+                result.DuplicateClaimsCount += messageStats.NewClaim ? 0 : 1;
                 result.NewServiceLinesCount += messageStats.ServiceLinesCreated;
+                result.TotalAmount += messageStats.Amount;
             }
             catch (Exception ex)
             {
@@ -93,13 +106,14 @@ public class Hl7ImportService
         public bool NewPatient { get; set; }
         public bool NewClaim { get; set; }
         public int ServiceLinesCreated { get; set; }
+        public decimal Amount { get; set; }
     }
 
     /// <summary>
     /// Processes a single DFT message: Patient → Claim → Service_Lines
     /// Returns statistics about what was created
     /// </summary>
-    private async Task<MessageStats> ProcessDftMessage(Hl7DftMessage message)
+    private async Task<MessageStats> ProcessDftMessage(Hl7DftMessage message, string fileName)
     {
         var stats = new MessageStats();
 
@@ -126,20 +140,59 @@ public class Hl7ImportService
         }
         stats.NewClaim = isNewClaim;
 
-        // Step 4: Create Service_Lines from FT1 segments
+        // Step 4: Create Service_Lines from FT1 segments and sum amount
         int serviceLinesCreated = 0;
+        decimal amount = 0m;
         foreach (var ft1Segment in message.Ft1Segments)
         {
-            var created = await CreateServiceLineFromFt1(claim.ClaID, ft1Segment);
+            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, ft1Segment);
             if (created) serviceLinesCreated++;
+            amount += charges;
         }
         stats.ServiceLinesCreated = serviceLinesCreated;
+        stats.Amount = amount;
 
         // Step 5: Create Claim_Insured records from IN1 segments (primary + secondary only)
         await CreateClaimInsuredRecords(claim.ClaID, patient.PatID, message.In1Segments);
 
+        // Step 5b: Insert Claim_Audit when insurance info was added/updated
+        if (message.In1Segments != null && message.In1Segments.Count > 0)
+        {
+            await _claimAuditService.AddInsuranceEditedAsync(claim.ClaID);
+        }
+
         // Step 6: Update claim totals after all service lines are created
         await UpdateClaimTotals(claim.ClaID);
+
+        // Step 7: Insert Claim_Audit (shows in Claim Note List with filename)
+        var noteText = stats.NewClaim
+            ? $"Claim Note: Imported from file {fileName}."
+            : $"Claim Note: Updated from file {fileName}.";
+        var activityType = stats.NewClaim ? "Claim Imported" : "Claim Updated";
+        try
+        {
+            var claimForSnapshot = await _db.Claims.AsNoTracking()
+                .Where(c => c.ClaID == claim.ClaID)
+                .Select(c => new { c.ClaTotalChargeTRIG, c.ClaTotalInsBalanceTRIG, c.ClaTotalPatBalanceTRIG })
+                .FirstOrDefaultAsync();
+            _db.Claim_Audits.Add(new Claim_Audit
+            {
+                ClaFID = claim.ClaID,
+                ActivityType = activityType,
+                ActivityDate = DateTime.UtcNow,
+                UserName = _userContext.UserName ?? "SYSTEM",
+                ComputerName = _userContext.ComputerName ?? Environment.MachineName,
+                Notes = noteText,
+                TotalCharge = claimForSnapshot?.ClaTotalChargeTRIG,
+                InsuranceBalance = claimForSnapshot?.ClaTotalInsBalanceTRIG,
+                PatientBalance = claimForSnapshot?.ClaTotalPatBalanceTRIG
+            });
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Claim_Audit insert failed for claim {ClaId} (DFT import). Import succeeded.", claim.ClaID);
+        }
 
         return stats;
     }
@@ -342,20 +395,20 @@ public class Hl7ImportService
     /// Creates a Service_Line from an FT1 segment or returns existing if duplicate
     /// EZClaim deduplication: Claim + CPT + DOS
     /// Maps FT1 fields to Service_Line fields
-    /// Returns true if service line was created, false if duplicate
+    /// Returns (created, charges) - created is true if service line was created
     /// </summary>
-    private async Task<bool> CreateServiceLineFromFt1(int claimId, string ft1Segment)
+    private async Task<(bool created, decimal charges)> CreateServiceLineFromFt1WithCharges(int claimId, string ft1Segment)
     {
         if (claimId <= 0)
         {
             _logger.LogWarning("Cannot create service line: Invalid claim ID {ClaID}", claimId);
-            return false;
+            return (false, 0m);
         }
 
         if (string.IsNullOrWhiteSpace(ft1Segment))
         {
             _logger.LogWarning("Cannot create service line: FT1 segment is null or empty");
-            return false;
+            return (false, 0m);
         }
 
         // FT1-4: Transaction Date → SrvFromDate (DOS)
@@ -365,6 +418,10 @@ public class Hl7ImportService
         // FT1-7: Transaction Code → SrvProcedureCode (CPT)
         var procedureCodeRaw = _parser.GetFieldValue(ft1Segment, 7);
         var procedureCode = _parser.NormalizeString(procedureCodeRaw, maxLength: 30); // Normalize CPT code
+
+        // FT1-10: Transaction Amount → SrvCharges (extract early for duplicate case)
+        var chargesStr = _parser.GetFieldValue(ft1Segment, 10);
+        var charges = _parser.ParseDecimal(chargesStr);
 
         // EZClaim deduplication: Match by Claim + CPT + DOS
         if (!string.IsNullOrWhiteSpace(procedureCode))
@@ -379,13 +436,9 @@ public class Hl7ImportService
             {
                 _logger.LogInformation("Found existing service line SrvID: {SrvID} for claim ClaID: {ClaID}, CPT: {CPT}, DOS: {DOS}", 
                     existingServiceLine.SrvID, claimId, procedureCode, serviceDate);
-                return false; // Skip duplicate service line
+                return (false, charges); // Skip duplicate but still count amount
             }
         }
-
-        // FT1-10: Transaction Amount → SrvCharges
-        var chargesStr = _parser.GetFieldValue(ft1Segment, 10);
-        var charges = _parser.ParseDecimal(chargesStr);
 
         // FT1-11: Transaction Quantity → SrvUnits
         var unitsStr = _parser.GetFieldValue(ft1Segment, 11);
@@ -415,7 +468,7 @@ public class Hl7ImportService
         await _db.SaveChangesAsync();
 
         _logger.LogDebug("Created service line SrvID: {SrvID} for claim ClaID: {ClaID}", serviceLine.SrvID, claimId);
-        return true; // Service line was created
+        return (true, charges);
     }
 
     /// <summary>

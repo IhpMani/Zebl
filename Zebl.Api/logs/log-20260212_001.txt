@@ -283,3 +283,1762 @@
 2026-02-12 12:42:43.474 +05:30 [INF] Updated claim 1059, ClaClassification=BL
 2026-02-12 12:42:43.475 +05:30 [INF] HTTP PUT /api/claims/1059 responded 204 in 5.3664 ms
 2026-02-12 12:42:43.768 +05:30 [INF] HTTP GET /api/claims responded 200 in 251.5320 ms
+2026-02-12 13:36:00.182 +05:30 [INF] Zebl API starting
+2026-02-12 13:36:00.243 +05:30 [INF] Initializing UI Database
+2026-02-12 13:36:01.253 +05:30 [INF] HTTP GET /swagger responded 301 in 62.2764 ms
+2026-02-12 13:36:01.317 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 43.5786 ms
+2026-02-12 13:36:01.343 +05:30 [INF] HTTP GET /swagger/swagger-ui-standalone-preset.js responded 200 in 18.0429 ms
+2026-02-12 13:36:01.344 +05:30 [INF] HTTP GET /swagger/swagger-ui.css responded 200 in 18.0482 ms
+2026-02-12 13:36:01.366 +05:30 [INF] HTTP GET /swagger/swagger-ui-bundle.js responded 200 in 40.7694 ms
+2026-02-12 13:36:01.526 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 8.8402 ms
+2026-02-12 13:36:01.557 +05:30 [INF] HTTP GET /swagger/favicon-32x32.png responded 200 in 0.6531 ms
+2026-02-12 13:56:17.495 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 66.5836 ms
+2026-02-12 13:56:24.617 +05:30 [INF] HTTP GET /api/claims responded 200 in 1775.8110 ms
+2026-02-12 13:57:38.755 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 85.6272 ms
+2026-02-12 13:57:38.836 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 166.2481 ms
+2026-02-12 13:57:38.855 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 185.3512 ms
+2026-02-12 13:57:38.969 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 299.8138 ms
+2026-02-12 14:16:32.548 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 1308.7891 ms
+2026-02-12 14:16:32.620 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 1380.7332 ms
+2026-02-12 14:16:32.628 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 1389.3798 ms
+2026-02-12 14:16:32.711 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 1471.9113 ms
+2026-02-12 14:16:40.259 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 154.4664 ms
+2026-02-12 14:16:40.274 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 183.3785 ms
+2026-02-12 14:16:40.284 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 200.8391 ms
+2026-02-12 14:16:40.308 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 197.1675 ms
+2026-02-12 14:17:07.746 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 255.6903 ms
+2026-02-12 14:17:07.746 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 258.2498 ms
+2026-02-12 14:17:07.755 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 267.1985 ms
+2026-02-12 14:17:07.755 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 265.3841 ms
+2026-02-12 14:19:31.084 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 370.1583 ms
+2026-02-12 14:19:31.084 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 371.6596 ms
+2026-02-12 14:19:31.084 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 371.6670 ms
+2026-02-12 14:19:31.114 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 400.5460 ms
+2026-02-12 14:21:51.421 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 242.1967 ms
+2026-02-12 14:21:51.429 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 251.0188 ms
+2026-02-12 14:21:51.429 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 254.4053 ms
+2026-02-12 14:21:51.455 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 281.0197 ms
+2026-02-12 14:41:51.339 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 463.3294 ms
+2026-02-12 14:41:51.339 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 899.7921 ms
+2026-02-12 14:41:51.441 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 551.6181 ms
+2026-02-12 14:41:51.459 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 569.0813 ms
+2026-02-12 14:42:00.109 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 100.4156 ms
+2026-02-12 14:42:00.109 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 97.9572 ms
+2026-02-12 14:42:00.110 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 101.2894 ms
+2026-02-12 14:42:00.130 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 104.6265 ms
+2026-02-12 14:42:02.533 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 62.2469 ms
+2026-02-12 14:42:02.596 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 125.4498 ms
+2026-02-12 14:42:02.599 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 128.4105 ms
+2026-02-12 14:42:02.616 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 145.3767 ms
+2026-02-12 14:42:10.551 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 14.8993 ms
+2026-02-12 14:42:10.569 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 37.8686 ms
+2026-02-12 14:42:10.570 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 38.1741 ms
+2026-02-12 14:42:10.577 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 43.6325 ms
+2026-02-12 14:42:13.613 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 16.8873 ms
+2026-02-12 14:42:13.626 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 29.9534 ms
+2026-02-12 14:42:13.628 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 31.5139 ms
+2026-02-12 14:42:13.633 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 36.1268 ms
+2026-02-12 14:45:15.117 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 125.3627 ms
+2026-02-12 14:45:15.130 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 141.3406 ms
+2026-02-12 14:45:15.130 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 141.4936 ms
+2026-02-12 14:45:15.135 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 146.8906 ms
+2026-02-12 14:54:48.439 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 763.5207 ms
+2026-02-12 14:54:48.614 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 947.8210 ms
+2026-02-12 14:54:48.623 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 956.6256 ms
+2026-02-12 14:54:48.726 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 1052.2859 ms
+2026-02-12 14:54:50.231 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 332.4636 ms
+2026-02-12 14:54:50.245 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 334.6627 ms
+2026-02-12 14:54:50.245 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 338.2658 ms
+2026-02-12 14:54:50.269 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 359.2901 ms
+2026-02-12 14:54:52.725 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 31.7305 ms
+2026-02-12 14:54:52.729 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 36.2957 ms
+2026-02-12 14:54:52.732 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 43.6870 ms
+2026-02-12 14:54:52.762 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 69.5987 ms
+2026-02-12 14:54:54.799 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 39.1994 ms
+2026-02-12 14:54:54.807 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 48.9998 ms
+2026-02-12 14:54:54.809 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 49.0352 ms
+2026-02-12 14:54:54.828 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 68.2398 ms
+2026-02-12 15:03:22.374 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 365.0173 ms
+2026-02-12 15:03:22.375 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 365.9593 ms
+2026-02-12 15:03:22.535 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 531.0557 ms
+2026-02-12 15:03:22.535 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 531.0575 ms
+2026-02-12 15:18:10.029 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 571.4514 ms
+2026-02-12 15:18:10.106 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 660.4172 ms
+2026-02-12 15:18:10.122 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 663.4588 ms
+2026-02-12 15:18:10.210 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 764.8537 ms
+2026-02-12 15:18:14.259 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 44.9681 ms
+2026-02-12 15:18:14.260 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 51.0832 ms
+2026-02-12 15:18:14.260 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 47.7665 ms
+2026-02-12 15:18:14.415 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 207.6890 ms
+2026-02-12 15:18:18.613 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 23.8400 ms
+2026-02-12 15:18:18.613 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 25.0838 ms
+2026-02-12 15:18:18.621 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 34.6671 ms
+2026-02-12 15:18:18.635 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 48.4349 ms
+2026-02-12 15:18:30.930 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 20.5760 ms
+2026-02-12 15:18:30.945 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 41.8413 ms
+2026-02-12 15:18:30.948 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 45.7752 ms
+2026-02-12 15:18:30.951 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 47.0999 ms
+2026-02-12 15:18:31.513 +05:30 [INF] HTTP GET /api/physicians responded 200 in 600.1688 ms
+2026-02-12 15:18:39.376 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 36.1098 ms
+2026-02-12 15:18:39.397 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 64.9771 ms
+2026-02-12 15:18:39.398 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 58.6303 ms
+2026-02-12 15:18:39.408 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 74.9628 ms
+2026-02-12 15:18:39.458 +05:30 [INF] HTTP GET /api/physicians responded 200 in 125.3185 ms
+2026-02-12 15:19:54.585 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 439.1928 ms
+2026-02-12 15:19:54.585 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 439.1895 ms
+2026-02-12 15:19:54.585 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 435.4081 ms
+2026-02-12 15:19:58.321 +05:30 [INF] HTTP GET /api/physicians responded 200 in 4176.3892 ms
+2026-02-12 15:19:58.343 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 4195.1011 ms
+2026-02-12 15:20:11.504 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 52.6205 ms
+2026-02-12 15:20:11.507 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 58.6450 ms
+2026-02-12 15:20:11.520 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 62.6006 ms
+2026-02-12 15:20:11.522 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 64.8113 ms
+2026-02-12 15:20:11.565 +05:30 [INF] HTTP GET /api/physicians responded 200 in 103.4829 ms
+2026-02-12 15:20:41.625 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 24.6506 ms
+2026-02-12 15:20:41.640 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 45.2226 ms
+2026-02-12 15:20:41.641 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 42.5820 ms
+2026-02-12 15:20:41.651 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 51.7651 ms
+2026-02-12 15:20:41.660 +05:30 [INF] HTTP GET /api/physicians responded 200 in 63.5888 ms
+2026-02-12 15:20:43.088 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 35.7890 ms
+2026-02-12 15:20:43.090 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 37.9052 ms
+2026-02-12 15:20:43.090 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 36.1719 ms
+2026-02-12 15:20:43.114 +05:30 [INF] HTTP GET /api/physicians responded 200 in 61.1658 ms
+2026-02-12 15:20:43.118 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 61.3403 ms
+2026-02-12 15:20:45.688 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 15.3227 ms
+2026-02-12 15:20:45.696 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 28.5931 ms
+2026-02-12 15:20:45.701 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 31.8474 ms
+2026-02-12 15:20:45.704 +05:30 [INF] HTTP GET /api/physicians responded 200 in 33.2838 ms
+2026-02-12 15:20:45.708 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 36.3263 ms
+2026-02-12 15:20:47.550 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 18.3818 ms
+2026-02-12 15:20:47.558 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 30.0653 ms
+2026-02-12 15:20:47.558 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 28.9071 ms
+2026-02-12 15:20:47.568 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 39.2806 ms
+2026-02-12 15:20:47.583 +05:30 [INF] HTTP GET /api/physicians responded 200 in 54.6583 ms
+2026-02-12 15:20:56.655 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 15.1622 ms
+2026-02-12 15:20:56.661 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 25.1084 ms
+2026-02-12 15:20:56.673 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 36.4663 ms
+2026-02-12 15:20:56.684 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 47.9339 ms
+2026-02-12 15:20:56.691 +05:30 [INF] HTTP GET /api/physicians responded 200 in 49.5449 ms
+2026-02-12 15:59:59.869 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 843.8964 ms
+2026-02-12 15:59:59.874 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 849.6408 ms
+2026-02-12 15:59:59.876 +05:30 [INF] HTTP GET /api/physicians responded 200 in 851.2012 ms
+2026-02-12 16:00:00.060 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 1026.8128 ms
+2026-02-12 16:00:00.136 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 1102.3836 ms
+2026-02-12 16:00:32.909 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 226.8781 ms
+2026-02-12 16:00:32.909 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 226.8737 ms
+2026-02-12 16:00:32.909 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 227.5960 ms
+2026-02-12 16:00:33.113 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 428.6189 ms
+2026-02-12 16:00:33.123 +05:30 [INF] HTTP GET /api/physicians responded 200 in 440.4456 ms
+2026-02-12 16:00:41.727 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 31.1664 ms
+2026-02-12 16:00:41.746 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 55.1255 ms
+2026-02-12 16:00:41.766 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 71.5101 ms
+2026-02-12 16:00:41.766 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 75.9574 ms
+2026-02-12 16:00:41.793 +05:30 [INF] HTTP GET /api/physicians responded 200 in 100.9832 ms
+2026-02-12 16:05:18.175 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 27.6423 ms
+2026-02-12 16:05:18.178 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 36.1808 ms
+2026-02-12 16:05:18.178 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 36.2646 ms
+2026-02-12 16:05:18.190 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 46.7190 ms
+2026-02-12 16:05:18.208 +05:30 [INF] HTTP GET /api/physicians responded 200 in 62.0905 ms
+2026-02-12 16:08:28.581 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 59.3500 ms
+2026-02-12 16:08:28.586 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 64.3612 ms
+2026-02-12 16:08:28.588 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 67.4668 ms
+2026-02-12 16:08:28.603 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 82.4554 ms
+2026-02-12 16:08:28.620 +05:30 [INF] HTTP GET /api/physicians responded 200 in 100.1172 ms
+2026-02-12 16:36:34.310 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 696.7738 ms
+2026-02-12 16:36:34.354 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 742.8330 ms
+2026-02-12 16:36:34.427 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 815.0681 ms
+2026-02-12 16:36:34.428 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 816.6001 ms
+2026-02-12 16:36:34.505 +05:30 [INF] HTTP GET /api/physicians responded 200 in 895.5667 ms
+2026-02-12 16:36:51.521 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 18.7677 ms
+2026-02-12 16:36:51.532 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 30.2035 ms
+2026-02-12 16:36:51.532 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 30.3290 ms
+2026-02-12 16:36:51.708 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 205.2516 ms
+2026-02-12 16:36:51.710 +05:30 [INF] HTTP GET /api/physicians responded 200 in 208.5508 ms
+2026-02-12 16:37:01.772 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 50.0871 ms
+2026-02-12 16:37:01.787 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 66.3486 ms
+2026-02-12 16:37:01.804 +05:30 [INF] HTTP GET /api/physicians responded 200 in 84.4757 ms
+2026-02-12 16:37:01.819 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 93.2493 ms
+2026-02-12 16:37:02.024 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 296.6872 ms
+2026-02-12 16:37:40.403 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 15.9435 ms
+2026-02-12 16:37:40.409 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 23.4168 ms
+2026-02-12 16:37:40.409 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 21.7508 ms
+2026-02-12 16:37:40.430 +05:30 [INF] HTTP GET /api/physicians responded 200 in 43.3441 ms
+2026-02-12 16:37:40.441 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 56.8860 ms
+2026-02-12 16:37:49.841 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 89.0973 ms
+2026-02-12 16:37:49.847 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 99.3158 ms
+2026-02-12 16:37:49.850 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 86.6736 ms
+2026-02-12 16:37:49.856 +05:30 [INF] HTTP GET /api/physicians responded 200 in 96.7475 ms
+2026-02-12 16:37:49.868 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 121.9817 ms
+2026-02-12 17:05:15.408 +05:30 [INF] Fetching import history from Hl7_Import_Log table
+2026-02-12 17:05:15.966 +05:30 [INF] Retrieved 4 import history records
+2026-02-12 17:05:16.003 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 770.9011 ms
+2026-02-12 17:19:09.607 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 684.7863 ms
+2026-02-12 17:19:09.648 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 725.5014 ms
+2026-02-12 17:19:09.725 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 803.8352 ms
+2026-02-12 17:19:09.727 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 804.3997 ms
+2026-02-12 17:19:09.852 +05:30 [INF] HTTP GET /api/physicians responded 200 in 929.5440 ms
+2026-02-12 17:19:36.392 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 33.6917 ms
+2026-02-12 17:19:36.394 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 34.2040 ms
+2026-02-12 17:19:36.414 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 53.2197 ms
+2026-02-12 17:19:36.520 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 154.1588 ms
+2026-02-12 17:19:36.654 +05:30 [INF] HTTP GET /api/physicians responded 200 in 295.7106 ms
+2026-02-12 17:25:19.763 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 200.5945 ms
+2026-02-12 17:25:19.782 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 222.8372 ms
+2026-02-12 17:25:19.782 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 222.8989 ms
+2026-02-12 17:25:19.800 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 236.6085 ms
+2026-02-12 17:25:19.934 +05:30 [INF] HTTP GET /api/physicians responded 200 in 374.4868 ms
+2026-02-12 17:25:27.192 +05:30 [INF] HTTP GET /api/claims responded 200 in 175.6734 ms
+2026-02-12 17:25:29.660 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 28.7942 ms
+2026-02-12 17:25:29.667 +05:30 [INF] HTTP GET /api/services/claims/1039 responded 200 in 16.3778 ms
+2026-02-12 17:25:29.668 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 14.1793 ms
+2026-02-12 17:25:29.679 +05:30 [INF] HTTP GET /api/claims/1039 responded 200 in 26.5754 ms
+2026-02-12 17:25:29.692 +05:30 [INF] HTTP GET /api/physicians responded 200 in 39.6794 ms
+2026-02-12 17:25:39.732 +05:30 [INF] Fetching import history from Hl7_Import_Log table
+2026-02-12 17:25:39.771 +05:30 [INF] Retrieved 4 import history records
+2026-02-12 17:25:39.774 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 49.5671 ms
+2026-02-12 17:26:24.012 +05:30 [INF] HTTP GET /api/claims responded 200 in 379.5318 ms
+2026-02-12 17:26:25.634 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 11.7325 ms
+2026-02-12 17:26:25.641 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 21.9620 ms
+2026-02-12 17:26:25.641 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 21.1054 ms
+2026-02-12 17:26:25.649 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 27.4663 ms
+2026-02-12 17:26:25.652 +05:30 [INF] HTTP GET /api/physicians responded 200 in 31.7098 ms
+2026-02-12 17:27:58.503 +05:30 [INF] Zebl API starting
+2026-02-12 17:27:58.568 +05:30 [INF] Initializing UI Database
+2026-02-12 17:28:02.912 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 111.1537 ms
+2026-02-12 17:28:03.077 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 26.7880 ms
+2026-02-12 17:28:05.630 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 1321.8112 ms
+2026-02-12 17:28:05.669 +05:30 [ERR] Failed executing DbCommand (21ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 17:28:05.686 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:43af03d7-2ef1-48ff-a49a-f6bd1c44297f
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:43af03d7-2ef1-48ff-a49a-f6bd1c44297f
+Error Number:208,State:1,Class:16
+2026-02-12 17:28:05.691 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:43af03d7-2ef1-48ff-a49a-f6bd1c44297f
+Error Number:208,State:1,Class:16
+2026-02-12 17:28:05.705 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 1397.6606 ms
+2026-02-12 17:28:05.717 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 1407.4865 ms
+2026-02-12 17:28:05.728 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 1419.7374 ms
+2026-02-12 17:28:05.780 +05:30 [INF] HTTP GET /api/physicians responded 200 in 1471.9832 ms
+2026-02-12 17:28:07.073 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 0.7145 ms
+2026-02-12 17:28:07.149 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 7.9150 ms
+2026-02-12 17:28:10.652 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 68.7251 ms
+2026-02-12 17:28:10.654 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 72.4705 ms
+2026-02-12 17:28:10.655 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 69.1618 ms
+2026-02-12 17:28:10.782 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 17:28:10.785 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:2974c129-1f82-4222-9403-206fb91176d2
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:2974c129-1f82-4222-9403-206fb91176d2
+Error Number:208,State:1,Class:16
+2026-02-12 17:28:10.790 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:2974c129-1f82-4222-9403-206fb91176d2
+Error Number:208,State:1,Class:16
+2026-02-12 17:28:10.795 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 211.0466 ms
+2026-02-12 17:28:10.867 +05:30 [INF] HTTP GET /api/physicians responded 200 in 283.8043 ms
+2026-02-12 17:55:17.074 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 602.6260 ms
+2026-02-12 17:55:17.095 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 627.8125 ms
+2026-02-12 17:55:17.123 +05:30 [ERR] Failed executing DbCommand (16ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 17:55:17.150 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d8e21c79-b58c-4a65-826c-37445bb3f2dd
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d8e21c79-b58c-4a65-826c-37445bb3f2dd
+Error Number:208,State:1,Class:16
+2026-02-12 17:55:17.157 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:d8e21c79-b58c-4a65-826c-37445bb3f2dd
+Error Number:208,State:1,Class:16
+2026-02-12 17:55:17.178 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 707.0293 ms
+2026-02-12 17:55:17.196 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 729.0987 ms
+2026-02-12 17:55:17.252 +05:30 [INF] HTTP GET /api/physicians responded 200 in 784.8699 ms
+2026-02-12 17:55:24.643 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-12 17:55:24.697 +05:30 [ERR] Failed executing DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[ImportID] AS [importId], [i].[FileName] AS [fileName], [i].[ImportDate] AS [importDate], COALESCE([i].[UserName], N'SYSTEM') AS [userName], COALESCE([i].[ComputerName], N'Unknown') AS [computerName], [i].[NewPatientsCount] AS [newPatientsCount], [i].[UpdatedPatientsCount] AS [updatedPatientsCount], [i].[NewClaimsCount] AS [newClaimsCount], [i].[DuplicateClaimsCount] AS [duplicateClaimsCount], [i].[TotalAmount] AS [totalAmount], [i].[Notes] AS [notes]
+FROM [Interface_Import_Log] AS [i]
+ORDER BY [i].[ImportDate] DESC
+2026-02-12 17:55:24.700 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d8e21c79-b58c-4a65-826c-37445bb3f2dd
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d8e21c79-b58c-4a65-826c-37445bb3f2dd
+Error Number:208,State:1,Class:16
+2026-02-12 17:55:24.705 +05:30 [WRN] Interface_Import_Log table does not exist (SQL Error 208: Invalid object name 'Interface_Import_Log'.). Returning empty history.
+2026-02-12 17:55:24.707 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 101.3140 ms
+2026-02-12 17:55:31.633 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 36.9725 ms
+2026-02-12 17:55:31.653 +05:30 [INF] HTTP GET /api/physicians responded 200 in 54.9253 ms
+2026-02-12 17:55:31.660 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 17:55:31.663 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ff2b872f-6bf0-406e-8f68-b193f6214301
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ff2b872f-6bf0-406e-8f68-b193f6214301
+Error Number:208,State:1,Class:16
+2026-02-12 17:55:31.667 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:ff2b872f-6bf0-406e-8f68-b193f6214301
+Error Number:208,State:1,Class:16
+2026-02-12 17:55:31.672 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 73.5502 ms
+2026-02-12 17:55:31.745 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 143.0903 ms
+2026-02-12 17:55:31.746 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 149.5926 ms
+2026-02-12 17:55:34.785 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-12 17:55:34.791 +05:30 [ERR] Failed executing DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[ImportID] AS [importId], [i].[FileName] AS [fileName], [i].[ImportDate] AS [importDate], COALESCE([i].[UserName], N'SYSTEM') AS [userName], COALESCE([i].[ComputerName], N'Unknown') AS [computerName], [i].[NewPatientsCount] AS [newPatientsCount], [i].[UpdatedPatientsCount] AS [updatedPatientsCount], [i].[NewClaimsCount] AS [newClaimsCount], [i].[DuplicateClaimsCount] AS [duplicateClaimsCount], [i].[TotalAmount] AS [totalAmount], [i].[Notes] AS [notes]
+FROM [Interface_Import_Log] AS [i]
+ORDER BY [i].[ImportDate] DESC
+2026-02-12 17:55:34.794 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:e41c073b-a6f8-4fee-91fe-012253f358e6
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:e41c073b-a6f8-4fee-91fe-012253f358e6
+Error Number:208,State:1,Class:16
+2026-02-12 17:55:34.797 +05:30 [WRN] Interface_Import_Log table does not exist (SQL Error 208: Invalid object name 'Interface_Import_Log'.). Returning empty history.
+2026-02-12 17:55:34.798 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 13.7574 ms
+2026-02-12 17:56:16.873 +05:30 [INF] Zebl API starting
+2026-02-12 17:56:16.914 +05:30 [INF] Initializing UI Database
+2026-02-12 17:56:18.103 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 122.4437 ms
+2026-02-12 17:56:18.217 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 17.8169 ms
+2026-02-12 17:56:25.904 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-12 17:56:26.940 +05:30 [ERR] Failed executing DbCommand (19ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[ImportID] AS [importId], [i].[FileName] AS [fileName], [i].[ImportDate] AS [importDate], COALESCE([i].[UserName], N'SYSTEM') AS [userName], COALESCE([i].[ComputerName], N'Unknown') AS [computerName], [i].[NewPatientsCount] AS [newPatientsCount], [i].[UpdatedPatientsCount] AS [updatedPatientsCount], [i].[NewClaimsCount] AS [newClaimsCount], [i].[DuplicateClaimsCount] AS [duplicateClaimsCount], [i].[TotalAmount] AS [totalAmount], [i].[Notes] AS [notes]
+FROM [Interface_Import_Log] AS [i]
+ORDER BY [i].[ImportDate] DESC
+2026-02-12 17:56:26.963 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:44e472d3-e8c2-4208-b687-4d44b9129e00
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:44e472d3-e8c2-4208-b687-4d44b9129e00
+Error Number:208,State:1,Class:16
+2026-02-12 17:56:26.968 +05:30 [WRN] Interface_Import_Log table does not exist (SQL Error 208: Invalid object name 'Interface_Import_Log'.). Returning empty history.
+2026-02-12 17:56:26.978 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 1156.4099 ms
+2026-02-12 17:58:56.608 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-12 17:58:56.684 +05:30 [ERR] Failed executing DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[ImportID] AS [importId], [i].[FileName] AS [fileName], [i].[ImportDate] AS [importDate], COALESCE([i].[UserName], N'SYSTEM') AS [userName], COALESCE([i].[ComputerName], N'Unknown') AS [computerName], [i].[NewPatientsCount] AS [newPatientsCount], [i].[UpdatedPatientsCount] AS [updatedPatientsCount], [i].[NewClaimsCount] AS [newClaimsCount], [i].[DuplicateClaimsCount] AS [duplicateClaimsCount], [i].[TotalAmount] AS [totalAmount], [i].[Notes] AS [notes]
+FROM [Interface_Import_Log] AS [i]
+ORDER BY [i].[ImportDate] DESC
+2026-02-12 17:58:56.698 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:44e472d3-e8c2-4208-b687-4d44b9129e00
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:44e472d3-e8c2-4208-b687-4d44b9129e00
+Error Number:208,State:1,Class:16
+2026-02-12 17:58:56.702 +05:30 [WRN] Interface_Import_Log table does not exist (SQL Error 208: Invalid object name 'Interface_Import_Log'.). Returning empty history.
+2026-02-12 17:58:56.709 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 137.5148 ms
+2026-02-12 17:59:28.938 +05:30 [INF] Zebl API starting
+2026-02-12 17:59:28.984 +05:30 [INF] Initializing UI Database
+2026-02-12 17:59:29.979 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 115.5209 ms
+2026-02-12 17:59:30.084 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 15.0120 ms
+2026-02-12 17:59:36.016 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-12 17:59:37.065 +05:30 [ERR] Failed executing DbCommand (23ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[ImportID] AS [importId], [i].[FileName] AS [fileName], [i].[ImportDate] AS [importDate], COALESCE([i].[UserName], N'SYSTEM') AS [userName], COALESCE([i].[ComputerName], N'Unknown') AS [computerName], [i].[NewPatientsCount] AS [newPatientsCount], [i].[UpdatedPatientsCount] AS [updatedPatientsCount], [i].[NewClaimsCount] AS [newClaimsCount], [i].[DuplicateClaimsCount] AS [duplicateClaimsCount], [i].[TotalAmount] AS [totalAmount], [i].[Notes] AS [notes]
+FROM [Interface_Import_Log] AS [i]
+ORDER BY [i].[ImportDate] DESC
+2026-02-12 17:59:37.089 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:b4d157fa-2dde-40c2-9b72-3c34c44025b1
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:b4d157fa-2dde-40c2-9b72-3c34c44025b1
+Error Number:208,State:1,Class:16
+2026-02-12 17:59:37.094 +05:30 [WRN] Interface_Import_Log table does not exist (SQL Error 208: Invalid object name 'Interface_Import_Log'.). Returning empty history.
+2026-02-12 17:59:37.106 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 1167.7863 ms
+2026-02-12 18:00:10.005 +05:30 [INF] HTTP GET /api/claims responded 200 in 914.8665 ms
+2026-02-12 18:00:11.622 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 205.0349 ms
+2026-02-12 18:00:11.628 +05:30 [INF] HTTP GET /api/physicians responded 200 in 212.7864 ms
+2026-02-12 18:00:11.836 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 422.1620 ms
+2026-02-12 18:00:11.836 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 422.5533 ms
+2026-02-12 18:00:11.864 +05:30 [ERR] Failed executing DbCommand (5ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:00:11.869 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:0b128e2c-16a3-4d60-b037-865aa729e9f1
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:0b128e2c-16a3-4d60-b037-865aa729e9f1
+Error Number:208,State:1,Class:16
+2026-02-12 18:00:11.873 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:0b128e2c-16a3-4d60-b037-865aa729e9f1
+Error Number:208,State:1,Class:16
+2026-02-12 18:00:11.915 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 499.5217 ms
+2026-02-12 18:13:33.621 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 449.9107 ms
+2026-02-12 18:13:33.621 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 449.9578 ms
+2026-02-12 18:13:33.758 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 586.3039 ms
+2026-02-12 18:13:33.804 +05:30 [INF] HTTP GET /api/physicians responded 200 in 634.7461 ms
+2026-02-12 18:13:33.811 +05:30 [ERR] Failed executing DbCommand (23ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:13:33.833 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f49a0b05-1b3d-4685-9837-671c4cd49d0b
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f49a0b05-1b3d-4685-9837-671c4cd49d0b
+Error Number:208,State:1,Class:16
+2026-02-12 18:13:33.840 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:f49a0b05-1b3d-4685-9837-671c4cd49d0b
+Error Number:208,State:1,Class:16
+2026-02-12 18:13:33.854 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 682.5971 ms
+2026-02-12 18:13:40.803 +05:30 [INF] HTTP GET /api/claims responded 200 in 61.0724 ms
+2026-02-12 18:13:42.505 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.3128 ms
+2026-02-12 18:13:42.505 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 11.9962 ms
+2026-02-12 18:13:42.513 +05:30 [INF] HTTP GET /api/physicians responded 200 in 18.6705 ms
+2026-02-12 18:13:42.611 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 116.5023 ms
+2026-02-12 18:13:42.618 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:13:42.621 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:c0ae9a89-d1b5-44c7-82c3-b997973c5a57
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:c0ae9a89-d1b5-44c7-82c3-b997973c5a57
+Error Number:208,State:1,Class:16
+2026-02-12 18:13:42.625 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:c0ae9a89-d1b5-44c7-82c3-b997973c5a57
+Error Number:208,State:1,Class:16
+2026-02-12 18:13:42.629 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 135.7282 ms
+2026-02-12 18:13:51.218 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-12 18:13:51.228 +05:30 [ERR] Failed executing DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[ImportID] AS [importId], [i].[FileName] AS [fileName], [i].[ImportDate] AS [importDate], COALESCE([i].[UserName], N'SYSTEM') AS [userName], COALESCE([i].[ComputerName], N'Unknown') AS [computerName], [i].[NewPatientsCount] AS [newPatientsCount], [i].[UpdatedPatientsCount] AS [updatedPatientsCount], [i].[NewClaimsCount] AS [newClaimsCount], [i].[DuplicateClaimsCount] AS [duplicateClaimsCount], [i].[TotalAmount] AS [totalAmount], [i].[Notes] AS [notes]
+FROM [Interface_Import_Log] AS [i]
+ORDER BY [i].[ImportDate] DESC
+2026-02-12 18:13:51.231 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:c0ae9a89-d1b5-44c7-82c3-b997973c5a57
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:c0ae9a89-d1b5-44c7-82c3-b997973c5a57
+Error Number:208,State:1,Class:16
+2026-02-12 18:13:51.234 +05:30 [WRN] Interface_Import_Log table does not exist (SQL Error 208: Invalid object name 'Interface_Import_Log'.). Returning empty history.
+2026-02-12 18:13:51.236 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 20.0822 ms
+2026-02-12 18:13:53.217 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 42.2189 ms
+2026-02-12 18:13:53.220 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 44.7520 ms
+2026-02-12 18:13:53.230 +05:30 [INF] HTTP GET /api/physicians responded 200 in 53.0489 ms
+2026-02-12 18:13:53.231 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:13:53.233 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d6f95708-97f6-44f6-9145-673f5a300728
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d6f95708-97f6-44f6-9145-673f5a300728
+Error Number:208,State:1,Class:16
+2026-02-12 18:13:53.238 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:d6f95708-97f6-44f6-9145-673f5a300728
+Error Number:208,State:1,Class:16
+2026-02-12 18:13:53.242 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 64.5245 ms
+2026-02-12 18:13:53.295 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 116.9976 ms
+2026-02-12 18:13:54.755 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-12 18:13:54.759 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[ImportID] AS [importId], [i].[FileName] AS [fileName], [i].[ImportDate] AS [importDate], COALESCE([i].[UserName], N'SYSTEM') AS [userName], COALESCE([i].[ComputerName], N'Unknown') AS [computerName], [i].[NewPatientsCount] AS [newPatientsCount], [i].[UpdatedPatientsCount] AS [updatedPatientsCount], [i].[NewClaimsCount] AS [newClaimsCount], [i].[DuplicateClaimsCount] AS [duplicateClaimsCount], [i].[TotalAmount] AS [totalAmount], [i].[Notes] AS [notes]
+FROM [Interface_Import_Log] AS [i]
+ORDER BY [i].[ImportDate] DESC
+2026-02-12 18:13:54.761 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:2fab62e8-32e7-48cf-a8cb-b0e8e1dd727c
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:2fab62e8-32e7-48cf-a8cb-b0e8e1dd727c
+Error Number:208,State:1,Class:16
+2026-02-12 18:13:54.765 +05:30 [WRN] Interface_Import_Log table does not exist (SQL Error 208: Invalid object name 'Interface_Import_Log'.). Returning empty history.
+2026-02-12 18:13:54.766 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 12.5838 ms
+2026-02-12 18:14:03.855 +05:30 [INF] HTTP GET /api/claims responded 200 in 55.1119 ms
+2026-02-12 18:14:04.790 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 21.9744 ms
+2026-02-12 18:14:04.792 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 27.1974 ms
+2026-02-12 18:14:04.795 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 29.5598 ms
+2026-02-12 18:14:04.811 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:14:04.814 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f49a0b05-1b3d-4685-9837-671c4cd49d0b
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f49a0b05-1b3d-4685-9837-671c4cd49d0b
+Error Number:208,State:1,Class:16
+2026-02-12 18:14:04.819 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:f49a0b05-1b3d-4685-9837-671c4cd49d0b
+Error Number:208,State:1,Class:16
+2026-02-12 18:14:04.820 +05:30 [INF] HTTP GET /api/physicians responded 200 in 52.1733 ms
+2026-02-12 18:14:04.825 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 58.6093 ms
+2026-02-12 18:14:12.616 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 25.5663 ms
+2026-02-12 18:14:12.624 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 36.7879 ms
+2026-02-12 18:14:12.624 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 37.3968 ms
+2026-02-12 18:14:12.631 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:14:12.635 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d6f95708-97f6-44f6-9145-673f5a300728
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d6f95708-97f6-44f6-9145-673f5a300728
+Error Number:208,State:1,Class:16
+2026-02-12 18:14:12.641 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:d6f95708-97f6-44f6-9145-673f5a300728
+Error Number:208,State:1,Class:16
+2026-02-12 18:14:12.647 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 58.5319 ms
+2026-02-12 18:14:12.658 +05:30 [INF] HTTP GET /api/physicians responded 200 in 71.0684 ms
+2026-02-12 18:27:50.219 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 765.1362 ms
+2026-02-12 18:27:50.280 +05:30 [ERR] Failed executing DbCommand (40ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:27:50.307 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:84cbc479-1aab-414e-826e-aab01d29a3be
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:84cbc479-1aab-414e-826e-aab01d29a3be
+Error Number:208,State:1,Class:16
+2026-02-12 18:27:50.322 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 868.8764 ms
+2026-02-12 18:27:50.325 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:84cbc479-1aab-414e-826e-aab01d29a3be
+Error Number:208,State:1,Class:16
+2026-02-12 18:27:50.347 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 882.0177 ms
+2026-02-12 18:27:50.402 +05:30 [INF] HTTP GET /api/physicians responded 200 in 948.4216 ms
+2026-02-12 18:27:50.468 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 1002.6825 ms
+2026-02-12 18:28:01.102 +05:30 [INF] HTTP GET /api/claims responded 200 in 76.9255 ms
+2026-02-12 18:28:02.255 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 30.6689 ms
+2026-02-12 18:28:02.256 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 30.5962 ms
+2026-02-12 18:28:02.265 +05:30 [INF] HTTP GET /api/physicians responded 200 in 38.7993 ms
+2026-02-12 18:28:02.276 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:28:02.280 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+2026-02-12 18:28:02.284 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+2026-02-12 18:28:02.288 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 60.7139 ms
+2026-02-12 18:28:02.378 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 151.0679 ms
+2026-02-12 18:28:07.967 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-12 18:28:07.976 +05:30 [ERR] Failed executing DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [i].[ImportID] AS [importId], [i].[FileName] AS [fileName], [i].[ImportDate] AS [importDate], COALESCE([i].[UserName], N'SYSTEM') AS [userName], COALESCE([i].[ComputerName], N'Unknown') AS [computerName], [i].[NewPatientsCount] AS [newPatientsCount], [i].[UpdatedPatientsCount] AS [updatedPatientsCount], [i].[NewClaimsCount] AS [newClaimsCount], [i].[DuplicateClaimsCount] AS [duplicateClaimsCount], [i].[TotalAmount] AS [totalAmount], [i].[Notes] AS [notes]
+FROM [Interface_Import_Log] AS [i]
+ORDER BY [i].[ImportDate] DESC
+2026-02-12 18:28:07.979 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:74f2980f-cc8c-41bd-9915-e99bbbfc8c66
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Interface_Import_Log'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:74f2980f-cc8c-41bd-9915-e99bbbfc8c66
+Error Number:208,State:1,Class:16
+2026-02-12 18:28:07.986 +05:30 [WRN] Interface_Import_Log table does not exist (SQL Error 208: Invalid object name 'Interface_Import_Log'.). Returning empty history.
+2026-02-12 18:28:07.987 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 21.3730 ms
+2026-02-12 18:28:37.339 +05:30 [INF] HTTP GET /api/claims responded 200 in 60.7454 ms
+2026-02-12 18:28:38.711 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 19.8159 ms
+2026-02-12 18:28:38.714 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 24.4401 ms
+2026-02-12 18:28:38.714 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 24.5735 ms
+2026-02-12 18:28:38.720 +05:30 [INF] HTTP GET /api/physicians responded 200 in 29.2859 ms
+2026-02-12 18:28:38.726 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:28:38.728 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+2026-02-12 18:28:38.731 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+2026-02-12 18:28:38.737 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 45.5026 ms
+2026-02-12 18:28:54.088 +05:30 [ERR] Failed executing DbCommand (6ms) [Parameters=[@p0='?' (DbType = DateTime2), @p1='?' (Size = 50), @p2='?' (DbType = Int32), @p3='?' (Size = 100), @p4='?' (Size = 500), @p5='?' (Size = 100)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [Claim_Audit] ([ActivityDate], [ActivityType], [ClaFID], [ComputerName], [Notes], [UserName])
+OUTPUT INSERTED.[AuditID]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5);
+2026-02-12 18:28:54.107 +05:30 [ERR] An exception occurred in the database while saving changes for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+2026-02-12 18:28:54.113 +05:30 [WRN] Claim_Audit insert failed for claim 1059. Claim was updated successfully.
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Persistence.Context.ZeblDbContext.SaveChangesAsync(CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.UpdateClaim(Int32 claId, UpdateClaimRequest request) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 849
+2026-02-12 18:28:54.155 +05:30 [INF] Updated claim 1059, ClaClassification=BL
+2026-02-12 18:28:54.158 +05:30 [INF] HTTP PUT /api/claims/1059 responded 204 in 950.6578 ms
+2026-02-12 18:28:54.190 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@p0='?' (DbType = DateTime2), @p1='?' (Size = 50), @p2='?' (DbType = Int32), @p3='?' (Size = 100), @p4='?' (Size = 500), @p5='?' (Size = 100)], CommandType='"Text"', CommandTimeout='30']
+SET IMPLICIT_TRANSACTIONS OFF;
+SET NOCOUNT ON;
+INSERT INTO [Claim_Audit] ([ActivityDate], [ActivityType], [ClaFID], [ComputerName], [Notes], [UserName])
+OUTPUT INSERTED.[AuditID]
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5);
+2026-02-12 18:28:54.193 +05:30 [ERR] An exception occurred in the database while saving changes for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+2026-02-12 18:28:54.200 +05:30 [WRN] Claim_Audit insert failed for claim 1059. Claim was updated successfully.
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabase.SaveChangesAsync(IList`1 entries, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Persistence.Context.ZeblDbContext.SaveChangesAsync(CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.UpdateClaim(Int32 claId, UpdateClaimRequest request) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 849
+2026-02-12 18:28:54.206 +05:30 [INF] Updated claim 1059, ClaClassification=BL
+2026-02-12 18:28:54.207 +05:30 [INF] HTTP PUT /api/claims/1059 responded 204 in 25.8290 ms
+2026-02-12 18:28:54.271 +05:30 [INF] HTTP GET /api/claims responded 200 in 47.7993 ms
+2026-02-12 18:28:55.790 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 21.3731 ms
+2026-02-12 18:28:55.792 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 23.2147 ms
+2026-02-12 18:28:55.792 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 27.7642 ms
+2026-02-12 18:28:55.829 +05:30 [INF] HTTP GET /api/physicians responded 200 in 60.7551 ms
+2026-02-12 18:28:55.842 +05:30 [ERR] Failed executing DbCommand (1ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:28:55.845 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+2026-02-12 18:28:55.850 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+2026-02-12 18:28:55.855 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 89.7335 ms
+2026-02-12 18:33:04.102 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 204.7888 ms
+2026-02-12 18:33:04.104 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 213.1583 ms
+2026-02-12 18:33:04.122 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 231.2433 ms
+2026-02-12 18:33:04.141 +05:30 [INF] HTTP GET /api/physicians responded 200 in 249.9541 ms
+2026-02-12 18:33:04.173 +05:30 [ERR] Failed executing DbCommand (14ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:33:04.196 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+2026-02-12 18:33:04.203 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:f522dab4-e28c-45cd-9b95-85af3e64dde3
+Error Number:208,State:1,Class:16
+2026-02-12 18:33:04.217 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 320.1641 ms
+2026-02-12 18:35:15.854 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 303.4173 ms
+2026-02-12 18:35:15.854 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 307.8274 ms
+2026-02-12 18:35:15.855 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 309.5258 ms
+2026-02-12 18:35:15.855 +05:30 [INF] HTTP GET /api/physicians responded 200 in 309.1920 ms
+2026-02-12 18:35:15.907 +05:30 [ERR] Failed executing DbCommand (21ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:35:15.925 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:757598c5-aa4b-4894-9e3c-390c273349e1
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:757598c5-aa4b-4894-9e3c-390c273349e1
+Error Number:208,State:1,Class:16
+2026-02-12 18:35:15.932 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:757598c5-aa4b-4894-9e3c-390c273349e1
+Error Number:208,State:1,Class:16
+2026-02-12 18:35:15.945 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 394.4469 ms
+2026-02-12 18:35:39.606 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 33.8890 ms
+2026-02-12 18:35:39.612 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 36.3294 ms
+2026-02-12 18:35:39.613 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 37.5376 ms
+2026-02-12 18:35:39.630 +05:30 [INF] HTTP GET /api/physicians responded 200 in 57.7816 ms
+2026-02-12 18:35:39.633 +05:30 [ERR] Failed executing DbCommand (5ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:35:39.637 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:74f2980f-cc8c-41bd-9915-e99bbbfc8c66
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:74f2980f-cc8c-41bd-9915-e99bbbfc8c66
+Error Number:208,State:1,Class:16
+2026-02-12 18:35:39.641 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:74f2980f-cc8c-41bd-9915-e99bbbfc8c66
+Error Number:208,State:1,Class:16
+2026-02-12 18:35:39.672 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 99.4231 ms
+2026-02-12 18:36:03.902 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 35.6400 ms
+2026-02-12 18:36:03.902 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 24.0641 ms
+2026-02-12 18:36:03.902 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 35.5257 ms
+2026-02-12 18:36:03.919 +05:30 [INF] HTTP GET /api/physicians responded 200 in 51.9258 ms
+2026-02-12 18:36:03.927 +05:30 [ERR] Failed executing DbCommand (5ms) [Parameters=[@__claId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[ActivityDate] AS [date], COALESCE([c].[UserName], N'SYSTEM') AS [user], [c].[ActivityType] AS [activityType], [c].[Notes] AS [notes]
+FROM [Claim_Audit] AS [c]
+WHERE [c].[ClaFID] = @__claId_0
+ORDER BY [c].[ActivityDate] DESC
+2026-02-12 18:36:03.930 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:eb765e58-0052-41d8-bbca-b464cf580b19
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:eb765e58-0052-41d8-bbca-b464cf580b19
+Error Number:208,State:1,Class:16
+2026-02-12 18:36:03.934 +05:30 [WRN] Claim_Audit table may not exist. Skipping claim activity for claim 1059.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'Claim_Audit'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.GetClaimById(Int32 claId) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 601
+ClientConnectionId:eb765e58-0052-41d8-bbca-b464cf580b19
+Error Number:208,State:1,Class:16
+2026-02-12 18:36:03.939 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 62.8570 ms

@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -139,6 +140,7 @@ public class AuthController : ControllerBase
         {
             new SecurityClaim(JwtRegisteredClaimNames.Sub, userGuid.ToString()),
             new SecurityClaim(JwtRegisteredClaimNames.UniqueName, userName),
+            new SecurityClaim(ClaimTypes.Name, userName),  // Standard claim for User.Identity.Name / logged-in user
             new SecurityClaim("UserGuid", userGuid.ToString()),
             new SecurityClaim("UserName", userName),
             new SecurityClaim("IsAdmin", isAdmin ? "true" : "false")

@@ -38,6 +38,7 @@ namespace Zebl.Api.Controllers
             [FromQuery] int? minPatientId = null,
             [FromQuery] int? maxPatientId = null,
             [FromQuery] int? claimId = null,
+            [FromQuery] string? classificationList = null,
             [FromQuery] string? additionalColumns = null)
         {
             try
@@ -101,6 +102,26 @@ namespace Zebl.Api.Controllers
                     query = query.Where(p => p.Claims.Any(c => c.ClaID == claimId.Value));
                 }
 
+                // Facility (PatClassification) filter - values from Libraries → List → Patient Classification
+                if (!string.IsNullOrWhiteSpace(classificationList))
+                {
+                    var parts = classificationList.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .ToList();
+                    var classifications = parts.Where(s => s != "(Blank)").ToList();
+                    var includeBlank = parts.Contains("(Blank)");
+                    if (classifications.Count > 0 || includeBlank)
+                    {
+                        if (classifications.Count > 0 && includeBlank)
+                            query = query.Where(p => (p.PatClassification != null && classifications.Contains(p.PatClassification)) || string.IsNullOrEmpty(p.PatClassification));
+                        else if (includeBlank)
+                            query = query.Where(p => string.IsNullOrEmpty(p.PatClassification));
+                        else
+                            query = query.Where(p => p.PatClassification != null && classifications.Contains(p.PatClassification));
+                    }
+                }
+
                 // Text search
                 if (!string.IsNullOrWhiteSpace(searchText))
                 {
@@ -115,7 +136,7 @@ namespace Zebl.Api.Controllers
                         query = query.Where(p =>
                             (p.PatFirstName != null && p.PatFirstName.ToLower().Contains(searchLower)) ||
                             (p.PatLastName != null && p.PatLastName.ToLower().Contains(searchLower)) ||
-                            p.PatFullNameCC.ToLower().Contains(searchLower) ||
+                            (p.PatFullNameCC != null && p.PatFullNameCC.ToLower().Contains(searchLower)) ||
                             (p.PatAccountNo != null && p.PatAccountNo.ToLower().Contains(searchLower)) ||
                             (p.PatPhoneNo != null && p.PatPhoneNo.Contains(searchText)));
                     }
@@ -127,7 +148,8 @@ namespace Zebl.Api.Controllers
                 // Smart count strategy
                 int totalCount;
                 bool hasFilters = active.HasValue || fromDate.HasValue || toDate.HasValue ||
-                                 minPatientId.HasValue || maxPatientId.HasValue || claimId.HasValue || !string.IsNullOrWhiteSpace(searchText);
+                                 minPatientId.HasValue || maxPatientId.HasValue || claimId.HasValue ||
+                                 !string.IsNullOrWhiteSpace(classificationList) || !string.IsNullOrWhiteSpace(searchText);
 
                 if (!hasFilters)
                 {

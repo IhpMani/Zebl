@@ -145,6 +145,7 @@ builder.Services.AddScoped<Zebl.Application.Abstractions.ICurrentUserContext, Ze
 builder.Services.AddSingleton<Zebl.Api.Services.IAdminUserService, Zebl.Api.Services.AdminUserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ParserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ImportService>();
+builder.Services.AddScoped<Zebl.Api.Services.ClaimAuditService>();
 builder.Services.AddScoped<Zebl.Api.Services.EntityMetadataService>();
 #endregion
 
