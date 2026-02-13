@@ -81,43 +81,39 @@ public class Hl7ImportController : ControllerBase
             _logger.LogInformation("Processing {Count} HL7 DFT messages from file {FileName}", messages.Count, fileName);
             
             // Process messages and get statistics
-            var importResult = await _importService.ProcessHl7Messages(messages);
+            var importResult = await _importService.ProcessHl7Messages(messages, fileName);
 
-            // Create import log entry (if table exists)
+            // Insert ONE record per file into Interface_Import_Log (NOT Claim_Audit)
             try
             {
-                var importLog = new Hl7_Import_Log
+                var importLog = new Interface_Import_Log
                 {
                     FileName = fileName,
-                    ImportDateTime = DateTime.UtcNow,
-                    ImportSuccessful = importResult.SuccessCount > 0,
+                    ImportDate = DateTime.UtcNow,
+                    UserName = _userContext.UserName ?? "SYSTEM",
+                    ComputerName = _userContext.ComputerName,
                     NewPatientsCount = importResult.NewPatientsCount,
                     UpdatedPatientsCount = importResult.UpdatedPatientsCount,
                     NewClaimsCount = importResult.NewClaimsCount,
-                    NewServiceLinesCount = importResult.NewServiceLinesCount,
-                    ImportedBy = _userContext.UserName ?? "SYSTEM",
-                    ComputerName = _userContext.ComputerName
+                    DuplicateClaimsCount = importResult.DuplicateClaimsCount,
+                    TotalAmount = importResult.TotalAmount,
+                    Notes = importResult.SuccessCount == 0
+                        ? "No messages were successfully processed"
+                        : $"Imported {importResult.SuccessCount} messages. {importResult.NewPatientsCount} New Patients, {importResult.UpdatedPatientsCount} Updated Patients, {importResult.NewClaimsCount} New Claims, {importResult.DuplicateClaimsCount} Duplicate Claims. Total: ${importResult.TotalAmount:N2}"
                 };
 
-                if (importResult.SuccessCount == 0)
-                {
-                    importLog.ErrorMessage = "No messages were successfully processed";
-                }
-
-                await _db.Hl7_Import_Logs.AddAsync(importLog);
+                await _db.Interface_Import_Logs.AddAsync(importLog);
                 await _db.SaveChangesAsync();
             }
             catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx) when (
                 dbEx.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx &&
                 (sqlEx.Number == 208 || sqlEx.Message.Contains("Invalid object name")))
             {
-                // Table doesn't exist - log warning but don't fail the import
-                _logger.LogWarning("Hl7_Import_Log table does not exist. Skipping import log entry.");
+                _logger.LogWarning("Interface_Import_Log table does not exist. Skipping import log entry.");
             }
             catch (Microsoft.Data.SqlClient.SqlException sqlEx) when (sqlEx.Number == 208 || sqlEx.Message.Contains("Invalid object name"))
             {
-                // Table doesn't exist - log warning but don't fail the import
-                _logger.LogWarning("Hl7_Import_Log table does not exist. Skipping import log entry.");
+                _logger.LogWarning("Interface_Import_Log table does not exist. Skipping import log entry.");
             }
 
             return Ok(new

@@ -4,9 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.Claims;
 using Zebl.Application.Dtos.Common;
 using Zebl.Infrastructure.Persistence.Context;
+using Zebl.Infrastructure.Persistence.Entities;
 using System.Collections.Generic;
 
 
@@ -18,11 +20,13 @@ namespace Zebl.Api.Controllers
     public class ClaimsController : ControllerBase
     {
         private readonly ZeblDbContext _db;
+        private readonly ICurrentUserContext _userContext;
         private readonly ILogger<ClaimsController> _logger;
 
-        public ClaimsController(ZeblDbContext db, ILogger<ClaimsController> logger)
+        public ClaimsController(ZeblDbContext db, ICurrentUserContext userContext, ILogger<ClaimsController> logger)
         {
             _db = db;
+            _userContext = userContext;
             _logger = logger;
         }
 
@@ -415,6 +419,207 @@ namespace Zebl.Api.Controllers
             });
         }
 
+        /// <summary>
+        /// Get claim notes from Claim_Audit (one row per note). Same data source as Claim Details Notes.
+        /// Returns note fields + all claim list columns (claim + patient + additionalColumns).
+        /// </summary>
+        [HttpGet("notes")]
+        public async Task<IActionResult> GetClaimNotes(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 25,
+            [FromQuery] int? minClaimId = null,
+            [FromQuery] int? maxClaimId = null,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] string? searchText = null,
+            [FromQuery] string? additionalColumns = null)
+        {
+            if (page < 1 || pageSize < 1 || pageSize > 100)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Page must be >= 1 and pageSize 1-100." });
+            }
+
+            var requestedColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(additionalColumns))
+            {
+                foreach (var k in additionalColumns.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var trimmed = k.Trim();
+                    if (!string.IsNullOrEmpty(trimmed)) requestedColumns.Add(trimmed);
+                }
+            }
+
+            var availableColumns = RelatedColumnConfig.GetAvailableColumns()["Claim"];
+            var columnsToInclude = availableColumns.Where(c => requestedColumns.Contains(c.Key)).ToList();
+            var hasPatFirstName = columnsToInclude.Any(c => c.Key == "patFirstName");
+            var hasPatLastName = columnsToInclude.Any(c => c.Key == "patLastName");
+            var hasPatFullNameCC = columnsToInclude.Any(c => c.Key == "patFullNameCC");
+            var hasPatAccountNo = columnsToInclude.Any(c => c.Key == "patAccountNo");
+            var hasPatPhoneNo = columnsToInclude.Any(c => c.Key == "patPhoneNo");
+            var hasPatCity = columnsToInclude.Any(c => c.Key == "patCity");
+            var hasPatState = columnsToInclude.Any(c => c.Key == "patState");
+            var hasPatBirthDate = columnsToInclude.Any(c => c.Key == "patBirthDate");
+            var hasRenderingPhyName = columnsToInclude.Any(c => c.Key == "renderingPhyName");
+            var hasRenderingPhyNPI = columnsToInclude.Any(c => c.Key == "renderingPhyNPI");
+            var hasBillingPhyName = columnsToInclude.Any(c => c.Key == "billingPhyName");
+            var hasBillingPhyNPI = columnsToInclude.Any(c => c.Key == "billingPhyNPI");
+            var hasFacilityName = columnsToInclude.Any(c => c.Key == "facilityName");
+
+            try
+            {
+                var query = from a in _db.Claim_Audits.AsNoTracking()
+                           join c in _db.Claims on a.ClaFID equals c.ClaID
+                           join p in _db.Patients on c.ClaPatFID equals p.PatID into patientGroup
+                           from p in patientGroup.DefaultIfEmpty()
+                           select new
+                           {
+                               a.AuditID,
+                               ClaID = a.ClaFID,
+                               a.ActivityDate,
+                               a.UserName,
+                               a.Notes,
+                               a.ActivityType,
+                               a.TotalCharge,
+                               a.InsuranceBalance,
+                               a.PatientBalance,
+                               // Claim fields (all claim list columns)
+                               c.ClaStatus,
+                               c.ClaDateTimeCreated,
+                               c.ClaDateTimeModified,
+                               c.ClaTotalChargeTRIG,
+                               c.ClaTotalBalanceCC,
+                               c.ClaClassification,
+                               c.ClaFirstDateTRIG,
+                               c.ClaLastDateTRIG,
+                               c.ClaBillDate,
+                               c.ClaBillTo,
+                               c.ClaPatFID,
+                               c.ClaTypeOfBill,
+                               c.ClaAdmissionType,
+                               c.ClaPatientStatus,
+                               c.ClaDiagnosis1,
+                               c.ClaDiagnosis2,
+                               c.ClaDiagnosis3,
+                               c.ClaDiagnosis4,
+                               c.ClaLastUserName,
+                               c.ClaRenderingPhyFID,
+                               c.ClaBillingPhyFID,
+                               c.ClaFacilityPhyFID,
+                               // Patient
+                               PatFullNameCC = p != null ? p.PatFullNameCC : null,
+                               PatFirstName = p != null ? p.PatFirstName : null,
+                               PatLastName = p != null ? p.PatLastName : null,
+                               PatAccountNo = p != null ? p.PatAccountNo : null,
+                               PatPhoneNo = p != null ? p.PatPhoneNo : null,
+                               PatCity = p != null ? p.PatCity : null,
+                               PatState = p != null ? p.PatState : null,
+                               PatBirthDate = p != null ? p.PatBirthDate : (DateOnly?)null,
+                               // Physicians (for additionalColumns)
+                               RenderingPhyName = c.ClaRenderingPhyF != null ? c.ClaRenderingPhyF.PhyName : null,
+                               RenderingPhyNPI = c.ClaRenderingPhyF != null ? c.ClaRenderingPhyF.PhyNPI : null,
+                               BillingPhyName = c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyName : null,
+                               BillingPhyNPI = c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyNPI : null,
+                               FacilityPhyName = c.ClaFacilityPhyF != null ? c.ClaFacilityPhyF.PhyName : null
+                           };
+
+                if (minClaimId.HasValue)
+                    query = query.Where(x => x.ClaID >= minClaimId.Value);
+                if (maxClaimId.HasValue)
+                    query = query.Where(x => x.ClaID <= maxClaimId.Value);
+                if (fromDate.HasValue)
+                    query = query.Where(x => x.ActivityDate >= fromDate.Value);
+                if (toDate.HasValue)
+                {
+                    var endOfDay = toDate.Value.Date.AddDays(1);
+                    query = query.Where(x => x.ActivityDate < endOfDay);
+                }
+                if (!string.IsNullOrWhiteSpace(searchText))
+                {
+                    var q = searchText.Trim().ToLower();
+                    query = query.Where(x =>
+                        (x.Notes != null && x.Notes.ToLower().Contains(q)) ||
+                        (x.ActivityType != null && x.ActivityType.ToLower().Contains(q)) ||
+                        (x.UserName != null && x.UserName.ToLower().Contains(q)));
+                }
+
+                var totalCount = await query.CountAsync();
+                var data = await query
+                    .OrderByDescending(x => x.ActivityDate)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var items = data.Select(x =>
+                {
+                    var noteText = !string.IsNullOrWhiteSpace(x.Notes) ? x.Notes : x.ActivityType;
+                    var patientName = x.PatFullNameCC ?? (string.IsNullOrEmpty(x.PatFirstName) && string.IsNullOrEmpty(x.PatLastName) ? null : (x.PatFirstName + " " + x.PatLastName).Trim());
+                    var addCols = new Dictionary<string, object?>();
+                    if (hasPatFirstName) addCols["patFirstName"] = x.PatFirstName;
+                    if (hasPatLastName) addCols["patLastName"] = x.PatLastName;
+                    if (hasPatFullNameCC) addCols["patFullNameCC"] = x.PatFullNameCC;
+                    if (hasPatAccountNo) addCols["patAccountNo"] = x.PatAccountNo;
+                    if (hasPatPhoneNo) addCols["patPhoneNo"] = x.PatPhoneNo;
+                    if (hasPatCity) addCols["patCity"] = x.PatCity;
+                    if (hasPatState) addCols["patState"] = x.PatState;
+                    if (hasPatBirthDate) addCols["patBirthDate"] = x.PatBirthDate;
+                    if (hasRenderingPhyName) addCols["renderingPhyName"] = x.RenderingPhyName;
+                    if (hasRenderingPhyNPI) addCols["renderingPhyNPI"] = x.RenderingPhyNPI;
+                    if (hasBillingPhyName) addCols["billingPhyName"] = x.BillingPhyName;
+                    if (hasBillingPhyNPI) addCols["billingPhyNPI"] = x.BillingPhyNPI;
+                    if (hasFacilityName) addCols["facilityName"] = x.FacilityPhyName;
+
+                    return new
+                    {
+                        x.AuditID,
+                        x.ClaID,
+                        activityDate = x.ActivityDate,
+                        userName = x.UserName ?? "SYSTEM",
+                        noteText,
+                        x.TotalCharge,
+                        x.InsuranceBalance,
+                        x.PatientBalance,
+                        patientName,
+                        // Claim list columns
+                        claStatus = x.ClaStatus,
+                        claDateTimeCreated = x.ClaDateTimeCreated,
+                        claDateTimeModified = x.ClaDateTimeModified,
+                        claTotalChargeTRIG = x.ClaTotalChargeTRIG,
+                        claTotalBalanceCC = x.ClaTotalBalanceCC,
+                        claClassification = x.ClaClassification,
+                        claFirstDateTRIG = x.ClaFirstDateTRIG,
+                        claLastDateTRIG = x.ClaLastDateTRIG,
+                        claBillDate = x.ClaBillDate,
+                        claBillTo = x.ClaBillTo,
+                        claPatFID = x.ClaPatFID,
+                        claTypeOfBill = x.ClaTypeOfBill,
+                        claAdmissionType = x.ClaAdmissionType,
+                        claPatientStatus = x.ClaPatientStatus,
+                        claDiagnosis1 = x.ClaDiagnosis1,
+                        claDiagnosis2 = x.ClaDiagnosis2,
+                        claDiagnosis3 = x.ClaDiagnosis3,
+                        claDiagnosis4 = x.ClaDiagnosis4,
+                        claLastUserName = x.ClaLastUserName,
+                        patFullNameCC = x.PatFullNameCC,
+                        patFirstName = x.PatFirstName,
+                        patLastName = x.PatLastName,
+                        patAccountNo = x.PatAccountNo,
+                        additionalColumns = addCols
+                    };
+                }).ToList();
+
+                return Ok(new
+                {
+                    data = items,
+                    meta = new { page, pageSize, totalCount }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Claim_Audit/GetClaimNotes failed. Table may not exist.");
+                return Ok(new { data = Array.Empty<object>(), meta = new { page, pageSize, totalCount = 0 } });
+            }
+        }
+
         [HttpGet("{claId:int}")]
         public async Task<IActionResult> GetClaimById([FromRoute] int claId)
         {
@@ -450,11 +655,14 @@ namespace Zebl.Api.Controllers
                         c.ClaBillDate,
                         c.ClaBillTo,
                         c.ClaSubmissionMethod,
+                        c.ClaInvoiceNumber,
                         c.ClaLocked,
                         c.ClaOriginalRefNo,
                         c.ClaDelayCode,
+                        c.ClaMedicaidResubmissionCode,
                         c.ClaPaperWorkTransmissionCode,
                         c.ClaPaperWorkControlNumber,
+                        c.ClaPaperWorkInd,
                         c.ClaEDINotes,
                         c.ClaRemarks,
                         c.ClaAdmittedDate,
@@ -587,6 +795,24 @@ namespace Zebl.Api.Controllers
                     responsiblePartyDict = responsibleParties.ToDictionary(p => p.PayID, p => p.PayName);
                 }
 
+                // Load Claim_Audit activity (claim-specific only, NOT interface import logs)
+                var claimActivityList = new List<object>();
+                try
+                {
+                    var audits = await _db.Claim_Audits
+                        .AsNoTracking()
+                        .Where(a => a.ClaFID == claId)
+                        .OrderByDescending(a => a.ActivityDate)
+                        .Select(a => new { date = a.ActivityDate, user = a.UserName ?? "SYSTEM", activityType = a.ActivityType, notes = a.Notes, totalCharge = a.TotalCharge, insuranceBalance = a.InsuranceBalance, patientBalance = a.PatientBalance })
+                        .ToListAsync(cts.Token);
+                    foreach (var a in audits)
+                        claimActivityList.Add(new { date = a.date, user = a.user, activityType = a.activityType, notes = a.notes, totalCharge = a.totalCharge, insuranceBalance = a.insuranceBalance, patientBalance = a.patientBalance });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Claim_Audit table may not exist. Skipping claim activity for claim {ClaId}.", claId);
+                }
+
                 // Step 6: Build the response object
                 // NOTE: Adjustments are NOT loaded here - they are loaded separately via /api/adjustments/claims/{claId}
                 // This significantly improves performance and prevents timeouts
@@ -607,11 +833,14 @@ namespace Zebl.Api.Controllers
                         : (DateTime?)null,
                     claimBase.ClaBillTo,
                     claimBase.ClaSubmissionMethod,
+                    claimBase.ClaInvoiceNumber,
                     claimBase.ClaLocked,
                     claimBase.ClaOriginalRefNo,
                     claimBase.ClaDelayCode,
+                    claimBase.ClaMedicaidResubmissionCode,
                     claimBase.ClaPaperWorkTransmissionCode,
                     claimBase.ClaPaperWorkControlNumber,
+                    claimBase.ClaPaperWorkInd,
                     claimBase.ClaEDINotes,
                     claimBase.ClaRemarks,
                     ClaAdmittedDate = claimBase.ClaAdmittedDate.HasValue 
@@ -709,7 +938,8 @@ namespace Zebl.Api.Controllers
                         // Empty arrays - loaded separately via API endpoints
                         Adjustments = Array.Empty<object>(),
                         Payments = Array.Empty<object>()
-                    }).ToList()
+                    }).ToList(),
+                    ClaimActivity = claimActivityList
                 };
 
                 return Ok(claim);
@@ -747,7 +977,7 @@ namespace Zebl.Api.Controllers
         /// Update claim fields. ClaClassification (Facility) values come from Libraries → List → Claim Classification.
         /// </summary>
         [HttpPut("{claId:int}")]
-        public async Task<IActionResult> UpdateClaim([FromRoute] int claId, [FromBody] UpdateClaimRequest request)
+        public async Task<IActionResult> UpdateClaim([FromRoute] int claId, [FromBody] Zebl.Application.Dtos.Claims.UpdateClaimRequest request)
         {
             if (claId <= 0)
                 return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Invalid claim ID" });
@@ -764,6 +994,12 @@ namespace Zebl.Api.Controllers
                     ? (request.ClaClassification.Length > 30 ? request.ClaClassification[..30] : request.ClaClassification)
                     : null;
                 claim.ClaStatus = request.ClaStatus;
+                claim.ClaSubmissionMethod = request.ClaSubmissionMethod;
+                if (request.ClaRenderingPhyFID.HasValue)
+                    claim.ClaRenderingPhyFID = request.ClaRenderingPhyFID.Value;
+                if (request.ClaFacilityPhyFID.HasValue)
+                    claim.ClaFacilityPhyFID = request.ClaFacilityPhyFID.Value;
+                claim.ClaInvoiceNumber = request.ClaInvoiceNumber;
                 if (request.ClaAdmittedDate.HasValue)
                     claim.ClaAdmittedDate = DateOnly.FromDateTime(request.ClaAdmittedDate.Value);
                 if (request.ClaDischargedDate.HasValue)
@@ -788,8 +1024,42 @@ namespace Zebl.Api.Controllers
                     claim.ClaRelatedToState = request.ClaRelatedToState;
                 if (request.ClaLocked.HasValue)
                     claim.ClaLocked = request.ClaLocked.Value;
+                claim.ClaDelayCode = request.ClaDelayCode != null && request.ClaDelayCode.Length > 2 ? request.ClaDelayCode[..2] : request.ClaDelayCode;
+                claim.ClaMedicaidResubmissionCode = request.ClaMedicaidResubmissionCode != null && request.ClaMedicaidResubmissionCode.Length > 50 ? request.ClaMedicaidResubmissionCode[..50] : request.ClaMedicaidResubmissionCode;
+                claim.ClaOriginalRefNo = request.ClaOriginalRefNo != null && request.ClaOriginalRefNo.Length > 80 ? request.ClaOriginalRefNo[..80] : request.ClaOriginalRefNo;
+                claim.ClaPaperWorkTransmissionCode = request.ClaPaperWorkTransmissionCode != null && request.ClaPaperWorkTransmissionCode.Length > 2 ? request.ClaPaperWorkTransmissionCode[..2] : request.ClaPaperWorkTransmissionCode;
+                claim.ClaPaperWorkControlNumber = request.ClaPaperWorkControlNumber != null && request.ClaPaperWorkControlNumber.Length > 80 ? request.ClaPaperWorkControlNumber[..80] : request.ClaPaperWorkControlNumber;
+                claim.ClaPaperWorkInd = request.ClaPaperWorkInd != null && request.ClaPaperWorkInd.Length > 20 ? request.ClaPaperWorkInd[..20] : request.ClaPaperWorkInd;
 
                 await _db.SaveChangesAsync();
+
+                // Insert Claim_Audit record (Claim Edited or manual note) - EZClaim-style history
+                try
+                {
+                    var userName = _userContext.UserName ?? "SYSTEM";
+                    var computerName = _userContext.ComputerName ?? Environment.MachineName;
+                    var noteText = !string.IsNullOrWhiteSpace(request.NoteText)
+                        ? request.NoteText.Trim().Length > 500 ? request.NoteText.Trim()[..500] : request.NoteText.Trim()
+                        : "Claim edited.";
+                    _db.Claim_Audits.Add(new Claim_Audit
+                    {
+                        ClaFID = claId,
+                        ActivityType = "Claim Edited",
+                        ActivityDate = DateTime.UtcNow,
+                        UserName = userName,
+                        ComputerName = computerName,
+                        Notes = noteText,
+                        TotalCharge = claim.ClaTotalChargeTRIG,
+                        InsuranceBalance = claim.ClaTotalInsBalanceTRIG,
+                        PatientBalance = claim.ClaTotalPatBalanceTRIG
+                    });
+                    await _db.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Claim_Audit insert failed for claim {ClaId}. Claim was updated successfully.", claId);
+                }
+
                 _logger.LogInformation("Updated claim {ClaId}, ClaClassification={ClaClassification}", claId, claim.ClaClassification);
                 return NoContent();
             }

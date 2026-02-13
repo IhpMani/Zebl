@@ -49,6 +49,10 @@ public partial class ZeblDbContext : DbContext
 
     public virtual DbSet<Hl7_Import_Log> Hl7_Import_Logs { get; set; }
 
+    public virtual DbSet<Interface_Import_Log> Interface_Import_Logs { get; set; }
+
+    public virtual DbSet<Claim_Audit> Claim_Audits { get; set; }
+
     public virtual DbSet<ListValue> ListValues { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -1494,6 +1498,32 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.ErrorMessage).HasMaxLength(1000);
             entity.Property(e => e.ImportedBy).HasMaxLength(100);
             entity.Property(e => e.ComputerName).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<Interface_Import_Log>(entity =>
+        {
+            entity.HasKey(e => e.ImportID).HasName("PK_Interface_Import_Log");
+            entity.ToTable("Interface_Import_Log");
+            entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.ImportDate).IsRequired();
+            entity.Property(e => e.UserName).HasMaxLength(100);
+            entity.Property(e => e.ComputerName).HasMaxLength(100);
+            entity.Property(e => e.TotalAmount).HasColumnType("money");
+            entity.Property(e => e.Notes).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<Claim_Audit>(entity =>
+        {
+            entity.HasKey(e => e.AuditID).HasName("PK_Claim_Audit");
+            entity.ToTable("Claim_Audit");
+            entity.Property(e => e.ActivityType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ActivityDate).IsRequired();
+            entity.Property(e => e.UserName).HasMaxLength(100);
+            entity.Property(e => e.ComputerName).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.TotalCharge).HasColumnType("money");
+            entity.Property(e => e.InsuranceBalance).HasColumnType("money");
+            entity.Property(e => e.PatientBalance).HasColumnType("money");
         });
 
         ConfigureListValue(modelBuilder);
