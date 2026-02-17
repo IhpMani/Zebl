@@ -192,6 +192,7 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.ClaCreatedUserName)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.ClaAdditionalData).HasColumnType("xml");
             entity.Property(e => e.ClaCustomField1)
                 .HasMaxLength(255)
                 .IsUnicode(false);
