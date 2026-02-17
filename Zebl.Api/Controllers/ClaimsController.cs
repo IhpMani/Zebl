@@ -4,12 +4,15 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
+using System.Xml.Serialization;
 using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.Claims;
 using Zebl.Application.Dtos.Common;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 
 namespace Zebl.Api.Controllers
@@ -45,6 +48,7 @@ namespace Zebl.Api.Controllers
             [FromQuery] decimal? maxTotalCharge = null,
             [FromQuery] decimal? minTotalBalance = null,
             [FromQuery] decimal? maxTotalBalance = null,
+            [FromQuery] int? patientId = null, // Filter by patient (ClaPatFID)
             [FromQuery] string? additionalColumns = null) // Comma-separated list of additional column keys to include
         {
             // Validate input
@@ -168,6 +172,12 @@ namespace Zebl.Api.Controllers
                 query = query.Where(c => c.ClaTotalBalanceCC.HasValue && c.ClaTotalBalanceCC <= maxTotalBalance.Value);
             }
 
+            // Patient filter (for ribbon: open claims for a specific patient)
+            if (patientId.HasValue)
+            {
+                query = query.Where(c => c.ClaPatFID == patientId.Value);
+            }
+
             // Text search across multiple columns (optimized for SQL)
             // Note: Avoid ToString().Contains() as it's very slow - use direct comparisons instead
             if (!string.IsNullOrWhiteSpace(searchText))
@@ -209,6 +219,7 @@ namespace Zebl.Api.Controllers
                              maxTotalCharge.HasValue ||
                              minTotalBalance.HasValue || 
                              maxTotalBalance.HasValue ||
+                             patientId.HasValue ||
                              !string.IsNullOrWhiteSpace(searchText);
 
             if (!hasFilters)
@@ -267,72 +278,61 @@ namespace Zebl.Api.Controllers
             
             if (columnsToInclude.Any())
             {
-                // Has additional columns - need to include related data
-                // Explicitly Include navigation properties to ensure they're loaded
-                if (hasPatFirstName || hasPatLastName || hasPatFullNameCC || hasPatAccountNo || 
-                    hasPatPhoneNo || hasPatCity || hasPatState || hasPatBirthDate)
-                {
-                    query = query.Include(c => c.ClaPatF);
-                }
-                if (hasRenderingPhyName || hasRenderingPhyNPI)
-                {
-                    query = query.Include(c => c.ClaRenderingPhyF);
-                }
-                if (hasBillingPhyName || hasBillingPhyNPI)
-                {
-                    query = query.Include(c => c.ClaBillingPhyF);
-                }
-                if (hasFacilityName)
-                {
-                    query = query.Include(c => c.ClaFacilityPhyF);
-                }
-                
-                // EF Core will automatically generate JOINs when accessing navigation properties in Select
-                var data = await query
+                // Use explicit LEFT JOINs instead of Include to avoid excluding claims when
+                // ClaRenderingPhyFID/ClaBillingPhyFID/ClaFacilityPhyFID=0 or FK references missing row
+                var joinQuery = from c in query
+                               join p in _db.Patients.AsNoTracking() on c.ClaPatFID equals p.PatID into pGrp
+                               from p in pGrp.DefaultIfEmpty()
+                               join rend in _db.Physicians.AsNoTracking() on c.ClaRenderingPhyFID equals rend.PhyID into rendGrp
+                               from rend in rendGrp.DefaultIfEmpty()
+                               join bill in _db.Physicians.AsNoTracking() on c.ClaBillingPhyFID equals bill.PhyID into billGrp
+                               from bill in billGrp.DefaultIfEmpty()
+                               join fac in _db.Physicians.AsNoTracking() on c.ClaFacilityPhyFID equals fac.PhyID into facGrp
+                               from fac in facGrp.DefaultIfEmpty()
+                               select new
+                               {
+                                   Claim = new ClaimListItemDto
+                                   {
+                                       ClaID = c.ClaID,
+                                       ClaStatus = c.ClaStatus,
+                                       ClaDateTimeCreated = c.ClaDateTimeCreated,
+                                       ClaTotalChargeTRIG = c.ClaTotalChargeTRIG,
+                                       ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
+                                       ClaTotalBalanceCC = c.ClaTotalBalanceCC,
+                                       ClaClassification = c.ClaClassification,
+                                       ClaPatFID = c.ClaPatFID,
+                                       ClaAttendingPhyFID = c.ClaAttendingPhyFID,
+                                       ClaBillingPhyFID = c.ClaBillingPhyFID,
+                                       ClaReferringPhyFID = c.ClaReferringPhyFID,
+                                       ClaBillDate = c.ClaBillDate,
+                                       ClaTypeOfBill = c.ClaTypeOfBill,
+                                       ClaAdmissionType = c.ClaAdmissionType,
+                                       ClaPatientStatus = c.ClaPatientStatus,
+                                       ClaDiagnosis1 = c.ClaDiagnosis1,
+                                       ClaDiagnosis2 = c.ClaDiagnosis2,
+                                       ClaDiagnosis3 = c.ClaDiagnosis3,
+                                       ClaDiagnosis4 = c.ClaDiagnosis4,
+                                       ClaFirstDateTRIG = c.ClaFirstDateTRIG,
+                                       ClaLastDateTRIG = c.ClaLastDateTRIG
+                                   },
+                                   PatFirstName = hasPatFirstName ? (p != null ? p.PatFirstName : null) : null,
+                                   PatLastName = hasPatLastName ? (p != null ? p.PatLastName : null) : null,
+                                   PatFullNameCC = hasPatFullNameCC ? (p != null ? p.PatFullNameCC : null) : null,
+                                   PatAccountNo = hasPatAccountNo ? (p != null ? p.PatAccountNo : null) : null,
+                                   PatPhoneNo = hasPatPhoneNo ? (p != null ? p.PatPhoneNo : null) : null,
+                                   PatCity = hasPatCity ? (p != null ? p.PatCity : null) : null,
+                                   PatState = hasPatState ? (p != null ? p.PatState : null) : null,
+                                   PatBirthDate = hasPatBirthDate ? (p != null ? p.PatBirthDate : (DateOnly?)null) : null,
+                                   RenderingPhyName = hasRenderingPhyName ? (rend != null ? rend.PhyName : null) : null,
+                                   RenderingPhyNPI = hasRenderingPhyNPI ? (rend != null ? rend.PhyNPI : null) : null,
+                                   BillingPhyName = hasBillingPhyName ? (bill != null ? bill.PhyName : null) : null,
+                                   BillingPhyNPI = hasBillingPhyNPI ? (bill != null ? bill.PhyNPI : null) : null,
+                                   FacilityPhyName = hasFacilityName ? (fac != null ? fac.PhyName : null) : null
+                               };
+
+                var data = await joinQuery
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
-                    .Select(c => new
-                    {
-                        Claim = new ClaimListItemDto
-                        {
-                            ClaID = c.ClaID,
-                            ClaStatus = c.ClaStatus,
-                            ClaDateTimeCreated = c.ClaDateTimeCreated,
-                            ClaTotalChargeTRIG = c.ClaTotalChargeTRIG,
-                            ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
-                            ClaTotalBalanceCC = c.ClaTotalBalanceCC,
-                            ClaClassification = c.ClaClassification,
-                            ClaPatFID = c.ClaPatFID,
-                            ClaAttendingPhyFID = c.ClaAttendingPhyFID,
-                            ClaBillingPhyFID = c.ClaBillingPhyFID,
-                            ClaReferringPhyFID = c.ClaReferringPhyFID,
-                            ClaBillDate = c.ClaBillDate,
-                            ClaTypeOfBill = c.ClaTypeOfBill,
-                            ClaAdmissionType = c.ClaAdmissionType,
-                            ClaPatientStatus = c.ClaPatientStatus,
-                            ClaDiagnosis1 = c.ClaDiagnosis1,
-                            ClaDiagnosis2 = c.ClaDiagnosis2,
-                            ClaDiagnosis3 = c.ClaDiagnosis3,
-                            ClaDiagnosis4 = c.ClaDiagnosis4,
-                            ClaFirstDateTRIG = c.ClaFirstDateTRIG,
-                            ClaLastDateTRIG = c.ClaLastDateTRIG
-                        },
-                        // Include related data if requested (pre-evaluated booleans)
-                        // Use null-safe access to prevent NullReferenceException
-                        PatFirstName = hasPatFirstName ? (c.ClaPatF != null ? c.ClaPatF.PatFirstName : null) : null,
-                        PatLastName = hasPatLastName ? (c.ClaPatF != null ? c.ClaPatF.PatLastName : null) : null,
-                        PatFullNameCC = hasPatFullNameCC ? (c.ClaPatF != null ? c.ClaPatF.PatFullNameCC : null) : null,
-                        PatAccountNo = hasPatAccountNo ? (c.ClaPatF != null ? c.ClaPatF.PatAccountNo : null) : null,
-                        PatPhoneNo = hasPatPhoneNo ? (c.ClaPatF != null ? c.ClaPatF.PatPhoneNo : null) : null,
-                        PatCity = hasPatCity ? (c.ClaPatF != null ? c.ClaPatF.PatCity : null) : null,
-                        PatState = hasPatState ? (c.ClaPatF != null ? c.ClaPatF.PatState : null) : null,
-                        PatBirthDate = hasPatBirthDate ? (c.ClaPatF != null ? c.ClaPatF.PatBirthDate : (DateOnly?)null) : null,
-                        RenderingPhyName = hasRenderingPhyName ? (c.ClaRenderingPhyF != null ? c.ClaRenderingPhyF.PhyName : null) : null,
-                        RenderingPhyNPI = hasRenderingPhyNPI ? (c.ClaRenderingPhyF != null ? c.ClaRenderingPhyF.PhyNPI : null) : null,
-                        BillingPhyName = hasBillingPhyName ? (c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyName : null) : null,
-                        BillingPhyNPI = hasBillingPhyNPI ? (c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyNPI : null) : null,
-                        FacilityPhyName = hasFacilityName ? (c.ClaFacilityPhyF != null ? c.ClaFacilityPhyF.PhyName : null) : null
-                    })
                     .ToListAsync();
 
                 // Map to final DTOs with additional columns
@@ -467,10 +467,17 @@ namespace Zebl.Api.Controllers
 
             try
             {
+                // Use LEFT JOINs for Patient and Physicians so claims with FK=0 or missing refs still appear
                 var query = from a in _db.Claim_Audits.AsNoTracking()
-                           join c in _db.Claims on a.ClaFID equals c.ClaID
-                           join p in _db.Patients on c.ClaPatFID equals p.PatID into patientGroup
+                           join c in _db.Claims.AsNoTracking() on a.ClaFID equals c.ClaID
+                           join p in _db.Patients.AsNoTracking() on c.ClaPatFID equals p.PatID into patientGroup
                            from p in patientGroup.DefaultIfEmpty()
+                           join rend in _db.Physicians.AsNoTracking() on c.ClaRenderingPhyFID equals rend.PhyID into rendGrp
+                           from rend in rendGrp.DefaultIfEmpty()
+                           join bill in _db.Physicians.AsNoTracking() on c.ClaBillingPhyFID equals bill.PhyID into billGrp
+                           from bill in billGrp.DefaultIfEmpty()
+                           join fac in _db.Physicians.AsNoTracking() on c.ClaFacilityPhyFID equals fac.PhyID into facGrp
+                           from fac in facGrp.DefaultIfEmpty()
                            select new
                            {
                                a.AuditID,
@@ -514,12 +521,12 @@ namespace Zebl.Api.Controllers
                                PatCity = p != null ? p.PatCity : null,
                                PatState = p != null ? p.PatState : null,
                                PatBirthDate = p != null ? p.PatBirthDate : (DateOnly?)null,
-                               // Physicians (for additionalColumns)
-                               RenderingPhyName = c.ClaRenderingPhyF != null ? c.ClaRenderingPhyF.PhyName : null,
-                               RenderingPhyNPI = c.ClaRenderingPhyF != null ? c.ClaRenderingPhyF.PhyNPI : null,
-                               BillingPhyName = c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyName : null,
-                               BillingPhyNPI = c.ClaBillingPhyF != null ? c.ClaBillingPhyF.PhyNPI : null,
-                               FacilityPhyName = c.ClaFacilityPhyF != null ? c.ClaFacilityPhyF.PhyName : null
+                               // Physicians (LEFT JOIN - avoids excluding rows when FK=0 or missing)
+                               RenderingPhyName = rend != null ? rend.PhyName : null,
+                               RenderingPhyNPI = rend != null ? rend.PhyNPI : null,
+                               BillingPhyName = bill != null ? bill.PhyName : null,
+                               BillingPhyNPI = bill != null ? bill.PhyNPI : null,
+                               FacilityPhyName = fac != null ? fac.PhyName : null
                            };
 
                 if (minClaimId.HasValue)
@@ -939,7 +946,8 @@ namespace Zebl.Api.Controllers
                         Adjustments = Array.Empty<object>(),
                         Payments = Array.Empty<object>()
                     }).ToList(),
-                    ClaimActivity = claimActivityList
+                    ClaimActivity = claimActivityList,
+                    AdditionalData = DeserializeClaimAdditionalData(null)
                 };
 
                 return Ok(claim);
@@ -1031,6 +1039,11 @@ namespace Zebl.Api.Controllers
                 claim.ClaPaperWorkControlNumber = request.ClaPaperWorkControlNumber != null && request.ClaPaperWorkControlNumber.Length > 80 ? request.ClaPaperWorkControlNumber[..80] : request.ClaPaperWorkControlNumber;
                 claim.ClaPaperWorkInd = request.ClaPaperWorkInd != null && request.ClaPaperWorkInd.Length > 20 ? request.ClaPaperWorkInd[..20] : request.ClaPaperWorkInd;
 
+                if (request.AdditionalData != null)
+                {
+                    claim.ClaAdditionalData = SerializeClaimAdditionalData(request.AdditionalData);
+                }
+
                 await _db.SaveChangesAsync();
 
                 // Insert Claim_Audit record (Claim Edited or manual note) - EZClaim-style history
@@ -1067,6 +1080,40 @@ namespace Zebl.Api.Controllers
             {
                 _logger.LogError(ex, "Error updating claim {ClaId}", claId);
                 return StatusCode(500, new ErrorResponseDto { ErrorCode = "INTERNAL_ERROR", Message = "Failed to update claim" });
+            }
+        }
+
+        private static ClaimAdditionalData? DeserializeClaimAdditionalData(string? xml)
+        {
+            if (string.IsNullOrWhiteSpace(xml)) return null;
+            try
+            {
+                var serializer = new XmlSerializer(typeof(ClaimAdditionalData));
+                using var reader = new StringReader(xml.Trim());
+                return (ClaimAdditionalData?)serializer.Deserialize(reader);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static string? SerializeClaimAdditionalData(ClaimAdditionalData data)
+        {
+            if (data == null) return null;
+            try
+            {
+                var serializer = new XmlSerializer(typeof(ClaimAdditionalData));
+                var sb = new StringBuilder();
+                using (var writer = new StringWriter(sb))
+                {
+                    serializer.Serialize(writer, data);
+                }
+                return sb.ToString();
+            }
+            catch
+            {
+                return null;
             }
         }
 

@@ -25,6 +25,11 @@ namespace Zebl.Application.Dtos.Claims
         public string? ClaPaperWorkControlNumber { get; set; }
         public string? ClaPaperWorkInd { get; set; }
 
+        /// <summary>
+        /// Additional data stored in ClaAdditionalData XML. Serialized on save.
+        /// </summary>
+        public ClaimAdditionalData? AdditionalData { get; set; }
+
         // Optional note text used when creating a claim audit record
         public string? NoteText { get; set; }
     }

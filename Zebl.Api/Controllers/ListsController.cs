@@ -28,6 +28,14 @@ public class ListsController : ControllerBase
                 .OrderBy(v => v.Value)
                 .ToListAsync(),
 
+        ["Claim Status"] = async (db) =>
+            await db.Claims
+                .Where(c => !string.IsNullOrEmpty(c.ClaStatus))
+                .GroupBy(c => c.ClaStatus)
+                .Select(g => new ListValueDto { Value = g.Key!, UsageCount = g.Count() })
+                .OrderBy(v => v.Value)
+                .ToListAsync(),
+
         ["Patient Classification"] = async (db) =>
             await db.Patients
                 .Where(p => !string.IsNullOrEmpty(p.PatClassification))
@@ -87,6 +95,7 @@ public class ListsController : ControllerBase
             var listTypeConfig = new Dictionary<string, (string Table, string Column)>
             {
                 ["Claim Classification"] = ("Claim", "ClaClassification"),
+                ["Claim Status"] = ("Claim", "ClaStatus"),
                 ["Patient Classification"] = ("Patient", "PatClassification"),
                 ["Payer Classification"] = ("Payer", "PayClassification"),
                 ["Payment Method"] = ("Payment", "PmtMethod"),

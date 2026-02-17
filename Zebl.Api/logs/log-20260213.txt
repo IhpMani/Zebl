@@ -5544,3 +5544,24 @@ Error Number:208,State:1,Class:16
 2026-02-13 16:02:06.119 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 169.9349 ms
 2026-02-13 16:02:06.213 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 259.4841 ms
 2026-02-13 16:02:06.241 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 287.6398 ms
+2026-02-13 16:16:46.739 +05:30 [INF] Zebl API starting
+2026-02-13 16:16:46.813 +05:30 [INF] Initializing UI Database
+2026-02-13 16:16:49.315 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 118.5405 ms
+2026-02-13 16:16:49.685 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 14.4451 ms
+2026-02-13 16:17:08.178 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 57.3922 ms
+2026-02-13 16:17:09.175 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 8.2069 ms
+2026-02-13 16:21:58.702 +05:30 [INF] HTTP GET /api/claims responded 200 in 1536.6856 ms
+2026-02-13 16:22:08.933 +05:30 [INF] HTTP GET /api/lists/values responded 400 in 10.0015 ms
+2026-02-13 16:22:08.983 +05:30 [INF] HTTP GET /api/physicians responded 200 in 64.0735 ms
+2026-02-13 16:22:09.056 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 130.7456 ms
+2026-02-13 16:22:09.106 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 179.2585 ms
+2026-02-13 16:22:09.114 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 196.5845 ms
+2026-02-13 16:22:16.954 +05:30 [INF] HTTP GET /api/patients/available-columns responded 200 in 4.3706 ms
+2026-02-13 16:22:17.015 +05:30 [INF] HTTP GET /api/patients responded 200 in 65.3940 ms
+2026-02-13 16:52:10.401 +05:30 [INF] HTTP GET /api/claims responded 200 in 562.0851 ms
+2026-02-13 17:20:25.599 +05:30 [INF] HTTP GET /api/claims responded 200 in 1232.4682 ms
+2026-02-13 17:29:37.825 +05:30 [INF] HTTP GET /api/claims responded 200 in 908.8310 ms
+2026-02-13 17:30:04.363 +05:30 [INF] HTTP GET /api/claims responded 200 in 190.5028 ms
+2026-02-13 17:30:12.950 +05:30 [INF] HTTP GET /api/claims responded 200 in 70.1526 ms
+2026-02-13 17:30:21.789 +05:30 [INF] HTTP GET /api/claims responded 200 in 467.1354 ms
+2026-02-13 17:30:32.676 +05:30 [INF] HTTP GET /api/claims responded 200 in 186.5901 ms

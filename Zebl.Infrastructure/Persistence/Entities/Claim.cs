@@ -87,6 +87,8 @@ public partial class Claim
 
     public string? ClaConditionCode4 { get; set; }
 
+    public string? ClaAdditionalData { get; set; }
+
     public string? ClaCustomField1 { get; set; }
 
     public string? ClaCustomField2 { get; set; }

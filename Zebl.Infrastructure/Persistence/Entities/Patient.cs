@@ -115,6 +115,9 @@ public partial class Patient
 
     public string? PatExternalFID { get; set; }
 
+    // Added property: payment matching key for patient (nullable string)
+    public string? PatPaymentMatchingKey { get; set; }
+
     public bool PatEZClaimPayConsent { get; set; }
 
     public int PatFacilityPhyFID { get; set; }
