@@ -196,11 +196,9 @@ app.UseAuthorization();
 #endregion
 
 #region Swagger UI
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+
 #endregion
 
 #region Health Endpoints
