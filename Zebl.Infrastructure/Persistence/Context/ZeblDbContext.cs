@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Zebl.Application.Abstractions;
+using Zebl.Application.Domain;
 using Zebl.Infrastructure.Persistence.Entities;
 
 namespace Zebl.Infrastructure.Persistence.Context;
@@ -54,6 +55,12 @@ public partial class ZeblDbContext : DbContext
     public virtual DbSet<Claim_Audit> Claim_Audits { get; set; }
 
     public virtual DbSet<ListValue> ListValues { get; set; }
+
+    public virtual DbSet<ReceiverLibrary> ReceiverLibraries { get; set; }
+
+    public virtual DbSet<ConnectionLibrary> ConnectionLibraries { get; set; }
+
+    public virtual DbSet<EdiReport> EdiReports { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1528,6 +1535,9 @@ public partial class ZeblDbContext : DbContext
         });
 
         ConfigureListValue(modelBuilder);
+        ConfigureReceiverLibrary(modelBuilder);
+        ConfigureConnectionLibrary(modelBuilder);
+        ConfigureEdiReport(modelBuilder);
 
         OnModelCreatingPartial(modelBuilder);
     }
@@ -1592,6 +1602,155 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.ListType).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Value).HasMaxLength(255).IsRequired();
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
+        });
+    }
+
+    private void ConfigureReceiverLibrary(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ReceiverLibrary>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ReceiverLibrary_Id");
+            entity.ToTable("ReceiverLibrary");
+
+            // Unique index on LibraryEntryName
+            entity.HasIndex(e => e.LibraryEntryName)
+                .IsUnique()
+                .HasDatabaseName("IX_ReceiverLibrary_LibraryEntryName");
+
+            // Map ExportFormat as string
+            entity.Property(e => e.ExportFormat)
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired();
+
+            // Required fields enforced at DB level
+            entity.Property(e => e.LibraryEntryName)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.ClaimType).HasMaxLength(100);
+            entity.Property(e => e.BusinessOrLastName).HasMaxLength(255);
+            entity.Property(e => e.FirstName).HasMaxLength(255);
+            entity.Property(e => e.SubmitterId).HasMaxLength(100);
+            entity.Property(e => e.ContactName).HasMaxLength(255);
+            entity.Property(e => e.ContactType).HasMaxLength(50);
+            entity.Property(e => e.ContactValue).HasMaxLength(255);
+            entity.Property(e => e.ReceiverName).HasMaxLength(255);
+            entity.Property(e => e.ReceiverId).HasMaxLength(100);
+            
+            // ISA01-ISA04
+            entity.Property(e => e.AuthorizationInfoQualifier).HasMaxLength(2);
+            entity.Property(e => e.AuthorizationInfo).HasMaxLength(10);
+            entity.Property(e => e.SecurityInfoQualifier).HasMaxLength(2);
+            entity.Property(e => e.SecurityInfo).HasMaxLength(10);
+            
+            // ISA05-ISA08
+            entity.Property(e => e.SenderQualifier).HasMaxLength(2);
+            entity.Property(e => e.SenderId).HasMaxLength(15);
+            entity.Property(e => e.ReceiverQualifier).HasMaxLength(2);
+            entity.Property(e => e.InterchangeReceiverId).HasMaxLength(15);
+            
+            entity.Property(e => e.TestProdIndicator).HasMaxLength(1);
+            entity.Property(e => e.SenderCode).HasMaxLength(50);
+            entity.Property(e => e.ReceiverCode).HasMaxLength(50);
+
+            // Set default CreatedAt
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(sysutcdatetime())")
+                .IsRequired();
+
+            entity.Property(e => e.ModifiedAt)
+                .HasDefaultValueSql("(sysutcdatetime())")
+                .IsRequired();
+
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .IsRequired();
+        });
+    }
+
+    private void ConfigureConnectionLibrary(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ConnectionLibrary>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ConnectionLibrary_Id");
+            entity.ToTable("ConnectionLibrary");
+
+            // Unique index on Name
+            entity.HasIndex(e => e.Name)
+                .IsUnique()
+                .HasDatabaseName("IX_ConnectionLibrary_Name");
+
+            // Required fields enforced at DB level
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Host)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Port)
+                .HasDefaultValue(22)
+                .IsRequired();
+
+            entity.Property(e => e.Username)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.EncryptedPassword)
+                .HasMaxLength(2000)
+                .IsRequired();
+
+            entity.Property(e => e.UploadDirectory)
+                .HasMaxLength(500);
+
+            entity.Property(e => e.DownloadDirectory)
+                .HasMaxLength(500);
+
+            entity.Property(e => e.DownloadPattern)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.AutoFileExtension)
+                .HasMaxLength(10);
+
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+
+            entity.Property(e => e.ModifiedAt)
+                .IsRequired();
+        });
+    }
+
+    private void ConfigureEdiReport(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EdiReport>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_EdiReport_Id");
+            entity.ToTable("EdiReport");
+
+            entity.Property(e => e.FileName).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.FileType).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Direction).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.TraceNumber).HasMaxLength(100);
+            entity.Property(e => e.PayerName).HasMaxLength(255);
+            entity.Property(e => e.PaymentAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Note).HasMaxLength(255);
+            entity.Property(e => e.FileSize).IsRequired();
+            entity.Property(e => e.FileContent).HasColumnType("varbinary(max)");
+
+            entity.Property(e => e.Status).HasDefaultValue("Generated");
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.IsArchived).HasDefaultValue(false);
+            entity.Property(e => e.IsRead).HasDefaultValue(false);
+
+            entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_EdiReport_CreatedAt");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_EdiReport_Status");
         });
     }
 }

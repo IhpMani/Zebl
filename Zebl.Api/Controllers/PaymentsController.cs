@@ -5,6 +5,7 @@ using Zebl.Application.Dtos.Common;
 using System.Collections.Generic;
 using Zebl.Application.Dtos.Payments;
 using Zebl.Infrastructure.Persistence.Context;
+using Zebl.Infrastructure.Persistence.Entities;
 
 namespace Zebl.Api.Controllers
 {
@@ -93,112 +94,46 @@ namespace Zebl.Api.Controllers
                 });
             }
 
-            var requestedColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if (!string.IsNullOrWhiteSpace(additionalColumns))
-            {
-                foreach (var k in additionalColumns.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    var trimmed = k.Trim();
-                    if (!string.IsNullOrEmpty(trimmed)) requestedColumns.Add(trimmed);
-                }
-            }
-
-            var availableColumns = RelatedColumnConfig.GetAvailableColumns()["Payment"];
-            var columnsToInclude = availableColumns.Where(c => requestedColumns.Contains(c.Key)).ToList();
-            var hasPatFirstName = columnsToInclude.Any(c => c.Key == "patFirstName");
-            var hasPatLastName = columnsToInclude.Any(c => c.Key == "patLastName");
-            var hasPatFullNameCC = columnsToInclude.Any(c => c.Key == "patFullNameCC");
-            var hasPatAccountNo = columnsToInclude.Any(c => c.Key == "patAccountNo");
-
-            var query = _db.Payments.AsNoTracking();
-
-            if (patientId.HasValue)
-            {
+            IQueryable<Payment> query = _db.Payments.AsNoTracking();
+            if (patientId.HasValue && patientId.Value > 0)
                 query = query.Where(p => p.PmtPatFID == patientId.Value);
-            }
-
-            query = query.OrderByDescending(p => p.PmtID);
+            query = query.OrderByDescending(p => p.PmtDateTimeCreated);
 
             var totalCount = await query.CountAsync();
 
-            List<PaymentListItemDto> data;
-            if (columnsToInclude.Count > 0)
-            {
-                var raw = await query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(p => new
-                    {
-                        p.PmtID,
-                        p.PmtDateTimeCreated,
-                        p.PmtDate,
-                        p.PmtAmount,
-                        p.PmtPatFID,
-                        p.PmtPayFID,
-                        p.PmtBFEPFID,
-                        p.PmtMethod,
-                        p.PmtAuthCode,
-                        p.PmtNote,
-                        p.Pmt835Ref,
-                        p.PmtDisbursedTRIG,
-                        p.PmtRemainingCC,
-                        PatFirstName = p.PmtPatF != null ? p.PmtPatF.PatFirstName : null,
-                        PatLastName = p.PmtPatF != null ? p.PmtPatF.PatLastName : null,
-                        PatFullNameCC = p.PmtPatF != null ? p.PmtPatF.PatFullNameCC : null,
-                        PatAccountNo = p.PmtPatF != null ? p.PmtPatF.PatAccountNo : null
-                    })
-                    .ToListAsync();
-
-                data = raw.Select(r =>
+            var data = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new PaymentListItemDto
                 {
-                    var addCols = new Dictionary<string, object?>();
-                    if (hasPatFirstName) addCols["patFirstName"] = r.PatFirstName;
-                    if (hasPatLastName) addCols["patLastName"] = r.PatLastName;
-                    if (hasPatFullNameCC) addCols["patFullNameCC"] = r.PatFullNameCC;
-                    if (hasPatAccountNo) addCols["patAccountNo"] = r.PatAccountNo;
-                    return new PaymentListItemDto
-                    {
-                        PmtID = r.PmtID,
-                        PmtDateTimeCreated = r.PmtDateTimeCreated,
-                        PmtDate = r.PmtDate,
-                        PmtAmount = r.PmtAmount,
-                        PmtPatFID = r.PmtPatFID,
-                        PmtPayFID = r.PmtPayFID,
-                        PmtBFEPFID = r.PmtBFEPFID,
-                        PmtMethod = r.PmtMethod,
-                        PmtAuthCode = r.PmtAuthCode,
-                        PmtNote = r.PmtNote,
-                        Pmt835Ref = r.Pmt835Ref,
-                        PmtDisbursedTRIG = r.PmtDisbursedTRIG,
-                        PmtRemainingCC = r.PmtRemainingCC,
-                        AdditionalColumns = addCols
-                    };
-                }).ToList();
-            }
-            else
-            {
-                data = await query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(p => new PaymentListItemDto
-                    {
-                        PmtID = p.PmtID,
-                        PmtDateTimeCreated = p.PmtDateTimeCreated,
-                        PmtDate = p.PmtDate,
-                        PmtAmount = p.PmtAmount,
-                        PmtPatFID = p.PmtPatFID,
-                        PmtPayFID = p.PmtPayFID,
-                        PmtBFEPFID = p.PmtBFEPFID,
-                        PmtMethod = p.PmtMethod,
-                        PmtAuthCode = p.PmtAuthCode,
-                        PmtNote = p.PmtNote,
-                        Pmt835Ref = p.Pmt835Ref,
-                        PmtDisbursedTRIG = p.PmtDisbursedTRIG,
-                        PmtRemainingCC = p.PmtRemainingCC,
-                        AdditionalColumns = new Dictionary<string, object?>()
-                    })
-                    .ToListAsync();
-            }
+                    PmtID = p.PmtID,
+                    PmtDateTimeCreated = p.PmtDateTimeCreated,
+                    PmtDateTimeModified = p.PmtDateTimeModified,
+                    PmtCreatedUserName = p.PmtCreatedUserName,
+                    PmtLastUserName = p.PmtLastUserName,
+                    PmtDate = p.PmtDate,
+                    PmtAmount = p.PmtAmount,
+                    PmtRemainingCC = p.PmtRemainingCC,
+                    PmtChargedPlatformFee = p.PmtChargedPlatformFee,
+                    PmtMethod = p.PmtMethod,
+                    PmtNote = p.PmtNote,
+                    Pmt835Ref = p.Pmt835Ref,
+                    PmtOtherReference1 = p.PmtOtherReference1,
+                    PmtPatFID = p.PmtPatFID,
+                    PmtPayFID = p.PmtPayFID,
+                    PmtBFEPFID = p.PmtBFEPFID,
+                    PmtAuthCode = p.PmtAuthCode,
+                    PmtDisbursedTRIG = p.PmtDisbursedTRIG,
+                    PmtPayerName = p.PmtPayF != null ? p.PmtPayF.PayName : null,
+                    PayClassification = p.PmtPayF != null ? p.PmtPayF.PayClassification : null,
+                    PatAccountNo = p.PmtPatF != null ? p.PmtPatF.PatAccountNo : null,
+                    PatLastName = p.PmtPatF != null ? p.PmtPatF.PatLastName : null,
+                    PatFirstName = p.PmtPatF != null ? p.PmtPatF.PatFirstName : null,
+                    PatFullNameCC = p.PmtPatF != null ? p.PmtPatF.PatFullNameCC : null,
+                    PatClassification = p.PmtPatF != null ? p.PmtPatF.PatClassification : null,
+                    AdditionalColumns = new Dictionary<string, object?>()
+                })
+                .ToListAsync();
 
             return Ok(new ApiResponse<List<PaymentListItemDto>>
             {

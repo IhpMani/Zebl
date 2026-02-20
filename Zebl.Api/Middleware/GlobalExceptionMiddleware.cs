@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
@@ -38,7 +38,7 @@ namespace Zebl.Api.Middleware
                 var response = new ErrorResponseDto
                 {
                     ErrorCode = GetErrorCode(ex),
-                    Message = GetErrorMessage(ex),
+                    Message = _environment.IsDevelopment() ? ex.Message : GetErrorMessage(ex),
                     TraceId = context.TraceIdentifier
                 };
 
