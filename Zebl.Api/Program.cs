@@ -147,6 +147,25 @@ builder.Services.AddScoped<Zebl.Api.Services.Hl7ParserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ImportService>();
 builder.Services.AddScoped<Zebl.Api.Services.ClaimAuditService>();
 builder.Services.AddScoped<Zebl.Api.Services.EntityMetadataService>();
+
+// Receiver Library
+builder.Services.AddScoped<Zebl.Application.Repositories.IReceiverLibraryRepository, Zebl.Infrastructure.Repositories.ReceiverLibraryRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.ReceiverLibraryService>();
+
+// EDI Export
+builder.Services.AddScoped<Zebl.Application.Repositories.IClaimRepository, Zebl.Infrastructure.Repositories.ClaimRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.IEdiExportService, Zebl.Application.Services.EdiExportService>();
+
+// Connection Library
+builder.Services.AddScoped<Zebl.Application.Repositories.IConnectionLibraryRepository, Zebl.Infrastructure.Repositories.ConnectionLibraryRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.ConnectionLibraryService>();
+builder.Services.AddScoped<Zebl.Application.Services.IEncryptionService, Zebl.Infrastructure.Services.AesEncryptionService>();
+builder.Services.AddScoped<Zebl.Infrastructure.Services.SftpTransportService>();
+
+// EDI Reports
+builder.Services.AddScoped<Zebl.Application.Repositories.IEdiReportRepository, Zebl.Infrastructure.Repositories.EdiReportRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.EdiReportService>();
+// IEdiReportFileStore removed - FileContent now stored in database
 #endregion
 
 #region Controllers

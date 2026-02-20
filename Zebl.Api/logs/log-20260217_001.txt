@@ -130,3 +130,26 @@ System.IO.IOException: Failed to bind to address http://127.0.0.1:5226: address 
 2026-02-17 14:14:48.953 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 37.3087 ms
 2026-02-17 14:14:48.956 +05:30 [INF] HTTP GET /api/payers responded 200 in 39.6756 ms
 2026-02-17 14:14:50.605 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 1689.2599 ms
+2026-02-17 18:29:49.351 +05:30 [INF] Zebl API starting
+2026-02-17 18:29:49.429 +05:30 [INF] Initializing UI Database
+2026-02-17 18:29:51.636 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 118.4669 ms
+2026-02-17 18:29:52.043 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 16.0217 ms
+2026-02-17 18:32:44.332 +05:30 [INF] HTTP GET /api/api/claims responded 404 in 146.2493 ms
+2026-02-17 18:32:52.091 +05:30 [INF] HTTP GET /api/api/patients responded 404 in 0.8514 ms
+2026-02-17 18:32:52.091 +05:30 [INF] HTTP GET /api/api/patients/available-columns responded 404 in 1.1264 ms
+2026-02-17 18:35:20.650 +05:30 [INF] HTTP GET /api/api/patients/available-columns responded 404 in 1.4546 ms
+2026-02-17 18:35:20.650 +05:30 [INF] HTTP GET /api/api/patients responded 404 in 1.4543 ms
+2026-02-17 18:35:23.447 +05:30 [INF] HTTP GET /api/api/claims responded 404 in 2.8161 ms
+2026-02-17 18:35:30.677 +05:30 [INF] HTTP GET /api/api/services responded 404 in 0.6728 ms
+2026-02-17 18:35:30.677 +05:30 [INF] HTTP GET /api/api/services/available-columns responded 404 in 0.3177 ms
+2026-02-17 18:35:34.928 +05:30 [INF] HTTP GET /api/api/claims responded 404 in 1.0203 ms
+2026-02-17 18:36:16.528 +05:30 [INF] HTTP GET /api/claims responded 200 in 2422.5648 ms
+2026-02-17 18:37:38.810 +05:30 [INF] HTTP GET /api/patients/available-columns responded 200 in 6.7734 ms
+2026-02-17 18:37:38.889 +05:30 [INF] HTTP GET /api/patients responded 200 in 87.2271 ms
+2026-02-17 18:37:40.132 +05:30 [INF] HTTP GET /api/physicians responded 200 in 111.9435 ms
+2026-02-17 18:37:40.255 +05:30 [INF] HTTP GET /api/payers responded 200 in 235.7085 ms
+2026-02-17 18:37:40.391 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 369.2343 ms
+2026-02-17 18:37:43.698 +05:30 [INF] HTTP GET /api/claims responded 200 in 39.9614 ms
+2026-02-17 18:37:45.142 +05:30 [INF] HTTP GET /api/physicians responded 200 in 25.4311 ms
+2026-02-17 18:37:45.163 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 46.6207 ms
+2026-02-17 18:37:45.327 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 210.9430 ms

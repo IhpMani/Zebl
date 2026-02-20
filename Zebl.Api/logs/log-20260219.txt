@@ -1,0 +1,364 @@
+2026-02-19 09:37:27.378 +05:30 [INF] Zebl API starting
+2026-02-19 09:37:27.674 +05:30 [INF] Initializing UI Database
+2026-02-19 09:37:38.760 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 243.5536 ms
+2026-02-19 09:37:39.246 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 28.6235 ms
+2026-02-19 10:40:12.053 +05:30 [INF] Login succeeded. UserGuid="6bc79735-b9cb-420a-a9d6-28e9ece8c370", UserName=admin
+2026-02-19 10:40:12.085 +05:30 [INF] HTTP POST /api/auth/login responded 200 in 1890.9249 ms
+2026-02-19 10:40:18.085 +05:30 [INF] HTTP GET /api/claims responded 200 in 172.3348 ms
+2026-02-19 10:40:23.231 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-19 10:40:23.296 +05:30 [INF] Retrieved 2 import history records
+2026-02-19 10:40:23.302 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 78.6036 ms
+2026-02-19 10:40:26.229 +05:30 [INF] HTTP GET /api/patients/available-columns responded 200 in 3.9797 ms
+2026-02-19 10:40:26.278 +05:30 [INF] HTTP GET /api/patients responded 200 in 52.6003 ms
+2026-02-19 10:40:28.557 +05:30 [INF] HTTP GET /api/physicians responded 200 in 48.8105 ms
+2026-02-19 10:40:28.686 +05:30 [INF] HTTP GET /api/payers responded 200 in 176.4816 ms
+2026-02-19 10:40:28.741 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 233.5209 ms
+2026-02-19 10:40:28.959 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 447.3814 ms
+2026-02-19 10:40:36.019 +05:30 [INF] HTTP GET /api/claims responded 200 in 6355.6600 ms
+2026-02-19 10:40:36.351 +05:30 [INF] HTTP GET /api/claims responded 200 in 23.1214 ms
+2026-02-19 10:40:36.366 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 29.6763 ms
+2026-02-19 10:40:36.368 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 31.5275 ms
+2026-02-19 10:40:36.374 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 32.3820 ms
+2026-02-19 10:40:36.452 +05:30 [INF] HTTP GET /api/claims responded 200 in 11.8253 ms
+2026-02-19 10:40:36.563 +05:30 [INF] HTTP GET /api/claims responded 200 in 39.5403 ms
+2026-02-19 10:40:36.572 +05:30 [INF] HTTP GET /api/physicians responded 200 in 236.9207 ms
+2026-02-19 10:40:36.623 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 283.9793 ms
+2026-02-19 10:40:36.653 +05:30 [INF] HTTP GET /api/claims responded 200 in 14.5267 ms
+2026-02-19 10:40:38.410 +05:30 [INF] HTTP GET /api/payers responded 200 in 8.1364 ms
+2026-02-19 10:40:38.412 +05:30 [INF] HTTP GET /api/physicians responded 200 in 7.7959 ms
+2026-02-19 10:40:38.439 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 39.0091 ms
+2026-02-19 10:40:38.455 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 53.8371 ms
+2026-02-19 10:40:39.312 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 12.7404 ms
+2026-02-19 10:40:39.321 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 22.6496 ms
+2026-02-19 10:40:39.323 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 23.4517 ms
+2026-02-19 10:40:39.326 +05:30 [INF] HTTP GET /api/physicians responded 200 in 26.4843 ms
+2026-02-19 10:40:39.475 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 173.9625 ms
+2026-02-19 10:40:40.877 +05:30 [INF] HTTP GET /api/physicians responded 200 in 11.1700 ms
+2026-02-19 10:40:40.881 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 14.9413 ms
+2026-02-19 10:40:40.890 +05:30 [INF] HTTP GET /api/payers responded 200 in 22.7278 ms
+2026-02-19 10:40:40.921 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 54.7104 ms
+2026-02-19 10:40:42.030 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 12.1483 ms
+2026-02-19 10:40:42.036 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 20.1023 ms
+2026-02-19 10:40:42.038 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 21.4697 ms
+2026-02-19 10:40:42.043 +05:30 [INF] HTTP GET /api/physicians responded 200 in 27.0090 ms
+2026-02-19 10:40:42.050 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 34.2908 ms
+2026-02-19 11:40:20.559 +05:30 [INF] Login succeeded. UserGuid="bb22638f-9097-42f3-a069-2f9ba4e4a004", UserName=Ranjit
+2026-02-19 11:40:20.589 +05:30 [INF] HTTP POST /api/auth/login responded 200 in 574.1940 ms
+2026-02-19 11:40:53.018 +05:30 [INF] HTTP GET /api/claims responded 200 in 243.3771 ms
+2026-02-19 11:41:01.548 +05:30 [INF] HTTP GET /api/patients/available-columns responded 200 in 4.7528 ms
+2026-02-19 11:41:01.625 +05:30 [INF] HTTP GET /api/patients responded 200 in 77.0123 ms
+2026-02-19 11:41:20.746 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 73.4627 ms
+2026-02-19 11:41:20.843 +05:30 [INF] HTTP GET /api/payers responded 200 in 164.6244 ms
+2026-02-19 11:41:20.960 +05:30 [INF] HTTP GET /api/physicians responded 200 in 286.5159 ms
+2026-02-19 11:41:20.967 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 282.7581 ms
+2026-02-19 11:41:34.761 +05:30 [INF] HTTP GET /api/claims responded 200 in 5553.7815 ms
+2026-02-19 11:41:38.245 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 17.2984 ms
+2026-02-19 11:41:38.246 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 24.5420 ms
+2026-02-19 11:41:38.253 +05:30 [INF] HTTP GET /api/physicians responded 200 in 25.4404 ms
+2026-02-19 11:41:38.361 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 125.7409 ms
+2026-02-19 11:41:38.388 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 160.3824 ms
+2026-02-19 11:42:13.199 +05:30 [INF] HTTP GET /api/claims responded 200 in 27.5867 ms
+2026-02-19 11:42:15.733 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.3052 ms
+2026-02-19 11:42:15.733 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 14.8993 ms
+2026-02-19 11:42:15.734 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 12.5094 ms
+2026-02-19 11:42:15.750 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 32.1356 ms
+2026-02-19 11:42:15.866 +05:30 [INF] HTTP GET /api/physicians responded 200 in 139.5525 ms
+2026-02-19 11:42:33.841 +05:30 [ERR] Failed executing DbCommand (26ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [c].[ClaID], [c].[ClaAccidentDate], [c].[ClaAcuteManifestationDate], [c].[ClaAdditionalData], [c].[ClaAdmissionHour], [c].[ClaAdmissionSource], [c].[ClaAdmissionType], [c].[ClaAdmittedDate], [c].[ClaAdmittingDiagnosis], [c].[ClaArchived], [c].[ClaAssumedCareDate], [c].[ClaAttendingPhyFID], [c].[ClaAuthorizedReturnToWorkDate], [c].[ClaBillDate], [c].[ClaBillTo], [c].[ClaBillingPhyFID], [c].[ClaBox10dClaimCodes], [c].[ClaBox11bOtherClaimIDQualifier], [c].[ClaBox22CodeOverride], [c].[ClaBox33bOverride], [c].[ClaCLIANumber], [c].[ClaCMNCertOnFile], [c].[ClaCMNCertTypeCode], [c].[ClaCMNFormIdentificationCode], [c].[ClaCMNInitialDate], [c].[ClaCMNLengthOfNeed], [c].[ClaCMNRevisedDate], [c].[ClaCMNSignedDate], [c].[ClaCN1Segment], [c].[ClaClassification], [c].[ClaConditionCode1], [c].[ClaConditionCode2], [c].[ClaConditionCode3], [c].[ClaConditionCode4], [c].[ClaCreatedComputerName], [c].[ClaCreatedUserGUID], [c].[ClaCreatedUserName], [c].[ClaCustomField1], [c].[ClaCustomField2], [c].[ClaCustomField3], [c].[ClaCustomField4], [c].[ClaCustomField5], [c].[ClaDMEFormData], [c].[ClaDateLastSeen], [c].[ClaDateOfCurrent], [c].[ClaDateTimeCreated], [c].[ClaDateTimeModified], [c].[ClaDateTotalFrom], [c].[ClaDateTotalThrough], [c].[ClaDelayCode], [c].[ClaDiagnosis1], [c].[ClaDiagnosis10], [c].[ClaDiagnosis11], [c].[ClaDiagnosis12], [c].[ClaDiagnosis13], [c].[ClaDiagnosis14], [c].[ClaDiagnosis15], [c].[ClaDiagnosis16], [c].[ClaDiagnosis17], [c].[ClaDiagnosis18], [c].[ClaDiagnosis19], [c].[ClaDiagnosis2], [c].[ClaDiagnosis20], [c].[ClaDiagnosis21], [c].[ClaDiagnosis22], [c].[ClaDiagnosis23], [c].[ClaDiagnosis24], [c].[ClaDiagnosis25], [c].[ClaDiagnosis3], [c].[ClaDiagnosis4], [c].[ClaDiagnosis5], [c].[ClaDiagnosis6], [c].[ClaDiagnosis7], [c].[ClaDiagnosis8], [c].[ClaDiagnosis9], [c].[ClaDiagnosisCodesCC], [c].[ClaDisabilityBeginDate], [c].[ClaDisabilityEndDate], [c].[ClaDischargedDate], [c].[ClaDischargedHour], [c].[ClaEDINotes], [c].[ClaEPSDTReferral], [c].[ClaExternalFID], [c].[ClaFacilityPhyFID], [c].[ClaFirstDateOfInjury], [c].[ClaFirstDateTRIG], [c].[ClaFirstInsPaymentDateTRIG], [c].[ClaHearingAndPrescriptionDate], [c].[ClaHomeboundInd], [c].[ClaHospiceInd], [c].[ClaICDIndicator], [c].[ClaIDENumber], [c].[ClaIgnoreAppliedAmount], [c].[ClaInitialTreatmentDate], [c].[ClaInsuranceTypeCodeOverride], [c].[ClaInvoiceNumber], [c].[ClaK3FileInformation], [c].[ClaLabCharges], [c].[ClaLastComputerName], [c].[ClaLastDateTRIG], [c].[ClaLastExportedDate], [c].[ClaLastMenstrualDate], [c].[ClaLastPrintedDate], [c].[ClaLastUserGUID], [c].[ClaLastUserName], [c].[ClaLastWorkedDate], [c].[ClaLastXRayDate], [c].[ClaLocked], [c].[ClaMOASegment], [c].[ClaMammographyCert], [c].[ClaMedicaidResubmissionCode], [c].[ClaMedicalRecordNumber], [c].[ClaOperatingPhyFID], [c].[ClaOrderingPhyFID], [c].[ClaOriginalRefNo], [c].[ClaOutsideLab], [c].[ClaPOAIndicator], [c].[ClaPPSCode], [c].[ClaPaidDateTRIG], [c].[ClaPaperWorkControlNumber], [c].[ClaPaperWorkInd], [c].[ClaPaperWorkTransmissionCode], [c].[ClaPatFID], [c].[ClaPatientReasonDiagnosis1], [c].[ClaPatientReasonDiagnosis2], [c].[ClaPatientReasonDiagnosis3], [c].[ClaPatientStatus], [c].[ClaPricingExceptionCode], [c].[ClaPrincipalProcedureCode], [c].[ClaPrincipalProcedureDate], [c].[ClaPrintUnitCharge], [c].[ClaProviderAgreementCode], [c].[ClaRecurUntilDate], [c].[ClaRecurringTimeFrame], [c].[ClaReferralNumber], [c].[ClaReferringPhyFID], [c].[ClaRelatedTo], [c].[ClaRelatedToState], [c].[ClaRelinquishedCareDate], [c].[ClaRemarks], [c].[ClaRenderingPhyFID], [c].[ClaReserved10], [c].[ClaReserved19], [c].[ClaSimilarIllnessDate], [c].[ClaSpecialProgramIndicator], [c].[ClaStatementCoversFromOverride], [c].[ClaStatementCoversThroughOverride], [c].[ClaStatus], [c].[ClaSubmissionMethod], [c].[ClaSupervisingPhyFID], [c].[ClaTotalAdjCC], [c].[ClaTotalAmtAppliedCC], [c].[ClaTotalAmtPaidCC], [c].[ClaTotalBalanceCC], [c].[ClaTotalCOAdjTRIG], [c].[ClaTotalCRAdjTRIG], [c].[ClaTotalChargeTRIG], [c].[ClaTotalInsAmtPaidTRIG], [c].[ClaTotalInsBalanceTRIG], [c].[ClaTotalOAAdjTRIG], [c].[ClaTotalPIAdjTRIG], [c].[ClaTotalPRAdjTRIG], [c].[ClaTotalPatAmtPaidTRIG], [c].[ClaTotalPatBalanceTRIG], [c].[ClaTotalServiceLineCountTRIG], [c].[ClaTypeOfBill]
+FROM [Claim] AS [c]
+WHERE [c].[ClaID] = @__p_0
+2026-02-19 11:42:33.903 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f970a7f4-3e1f-4833-b839-b25ae04106b4
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f970a7f4-3e1f-4833-b839-b25ae04106b4
+Error Number:207,State:1,Class:16
+2026-02-19 11:42:33.909 +05:30 [ERR] Error updating claim 1059
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.UpdateClaim(Int32 claId, UpdateClaimRequest request) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 997
+ClientConnectionId:f970a7f4-3e1f-4833-b839-b25ae04106b4
+Error Number:207,State:1,Class:16
+2026-02-19 11:42:33.942 +05:30 [ERR] HTTP PUT /api/claims/1059 responded 500 in 325.3647 ms
+2026-02-19 11:42:41.310 +05:30 [ERR] Failed executing DbCommand (10ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [c].[ClaID], [c].[ClaAccidentDate], [c].[ClaAcuteManifestationDate], [c].[ClaAdditionalData], [c].[ClaAdmissionHour], [c].[ClaAdmissionSource], [c].[ClaAdmissionType], [c].[ClaAdmittedDate], [c].[ClaAdmittingDiagnosis], [c].[ClaArchived], [c].[ClaAssumedCareDate], [c].[ClaAttendingPhyFID], [c].[ClaAuthorizedReturnToWorkDate], [c].[ClaBillDate], [c].[ClaBillTo], [c].[ClaBillingPhyFID], [c].[ClaBox10dClaimCodes], [c].[ClaBox11bOtherClaimIDQualifier], [c].[ClaBox22CodeOverride], [c].[ClaBox33bOverride], [c].[ClaCLIANumber], [c].[ClaCMNCertOnFile], [c].[ClaCMNCertTypeCode], [c].[ClaCMNFormIdentificationCode], [c].[ClaCMNInitialDate], [c].[ClaCMNLengthOfNeed], [c].[ClaCMNRevisedDate], [c].[ClaCMNSignedDate], [c].[ClaCN1Segment], [c].[ClaClassification], [c].[ClaConditionCode1], [c].[ClaConditionCode2], [c].[ClaConditionCode3], [c].[ClaConditionCode4], [c].[ClaCreatedComputerName], [c].[ClaCreatedUserGUID], [c].[ClaCreatedUserName], [c].[ClaCustomField1], [c].[ClaCustomField2], [c].[ClaCustomField3], [c].[ClaCustomField4], [c].[ClaCustomField5], [c].[ClaDMEFormData], [c].[ClaDateLastSeen], [c].[ClaDateOfCurrent], [c].[ClaDateTimeCreated], [c].[ClaDateTimeModified], [c].[ClaDateTotalFrom], [c].[ClaDateTotalThrough], [c].[ClaDelayCode], [c].[ClaDiagnosis1], [c].[ClaDiagnosis10], [c].[ClaDiagnosis11], [c].[ClaDiagnosis12], [c].[ClaDiagnosis13], [c].[ClaDiagnosis14], [c].[ClaDiagnosis15], [c].[ClaDiagnosis16], [c].[ClaDiagnosis17], [c].[ClaDiagnosis18], [c].[ClaDiagnosis19], [c].[ClaDiagnosis2], [c].[ClaDiagnosis20], [c].[ClaDiagnosis21], [c].[ClaDiagnosis22], [c].[ClaDiagnosis23], [c].[ClaDiagnosis24], [c].[ClaDiagnosis25], [c].[ClaDiagnosis3], [c].[ClaDiagnosis4], [c].[ClaDiagnosis5], [c].[ClaDiagnosis6], [c].[ClaDiagnosis7], [c].[ClaDiagnosis8], [c].[ClaDiagnosis9], [c].[ClaDiagnosisCodesCC], [c].[ClaDisabilityBeginDate], [c].[ClaDisabilityEndDate], [c].[ClaDischargedDate], [c].[ClaDischargedHour], [c].[ClaEDINotes], [c].[ClaEPSDTReferral], [c].[ClaExternalFID], [c].[ClaFacilityPhyFID], [c].[ClaFirstDateOfInjury], [c].[ClaFirstDateTRIG], [c].[ClaFirstInsPaymentDateTRIG], [c].[ClaHearingAndPrescriptionDate], [c].[ClaHomeboundInd], [c].[ClaHospiceInd], [c].[ClaICDIndicator], [c].[ClaIDENumber], [c].[ClaIgnoreAppliedAmount], [c].[ClaInitialTreatmentDate], [c].[ClaInsuranceTypeCodeOverride], [c].[ClaInvoiceNumber], [c].[ClaK3FileInformation], [c].[ClaLabCharges], [c].[ClaLastComputerName], [c].[ClaLastDateTRIG], [c].[ClaLastExportedDate], [c].[ClaLastMenstrualDate], [c].[ClaLastPrintedDate], [c].[ClaLastUserGUID], [c].[ClaLastUserName], [c].[ClaLastWorkedDate], [c].[ClaLastXRayDate], [c].[ClaLocked], [c].[ClaMOASegment], [c].[ClaMammographyCert], [c].[ClaMedicaidResubmissionCode], [c].[ClaMedicalRecordNumber], [c].[ClaOperatingPhyFID], [c].[ClaOrderingPhyFID], [c].[ClaOriginalRefNo], [c].[ClaOutsideLab], [c].[ClaPOAIndicator], [c].[ClaPPSCode], [c].[ClaPaidDateTRIG], [c].[ClaPaperWorkControlNumber], [c].[ClaPaperWorkInd], [c].[ClaPaperWorkTransmissionCode], [c].[ClaPatFID], [c].[ClaPatientReasonDiagnosis1], [c].[ClaPatientReasonDiagnosis2], [c].[ClaPatientReasonDiagnosis3], [c].[ClaPatientStatus], [c].[ClaPricingExceptionCode], [c].[ClaPrincipalProcedureCode], [c].[ClaPrincipalProcedureDate], [c].[ClaPrintUnitCharge], [c].[ClaProviderAgreementCode], [c].[ClaRecurUntilDate], [c].[ClaRecurringTimeFrame], [c].[ClaReferralNumber], [c].[ClaReferringPhyFID], [c].[ClaRelatedTo], [c].[ClaRelatedToState], [c].[ClaRelinquishedCareDate], [c].[ClaRemarks], [c].[ClaRenderingPhyFID], [c].[ClaReserved10], [c].[ClaReserved19], [c].[ClaSimilarIllnessDate], [c].[ClaSpecialProgramIndicator], [c].[ClaStatementCoversFromOverride], [c].[ClaStatementCoversThroughOverride], [c].[ClaStatus], [c].[ClaSubmissionMethod], [c].[ClaSupervisingPhyFID], [c].[ClaTotalAdjCC], [c].[ClaTotalAmtAppliedCC], [c].[ClaTotalAmtPaidCC], [c].[ClaTotalBalanceCC], [c].[ClaTotalCOAdjTRIG], [c].[ClaTotalCRAdjTRIG], [c].[ClaTotalChargeTRIG], [c].[ClaTotalInsAmtPaidTRIG], [c].[ClaTotalInsBalanceTRIG], [c].[ClaTotalOAAdjTRIG], [c].[ClaTotalPIAdjTRIG], [c].[ClaTotalPRAdjTRIG], [c].[ClaTotalPatAmtPaidTRIG], [c].[ClaTotalPatBalanceTRIG], [c].[ClaTotalServiceLineCountTRIG], [c].[ClaTypeOfBill]
+FROM [Claim] AS [c]
+WHERE [c].[ClaID] = @__p_0
+2026-02-19 11:42:41.313 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f970a7f4-3e1f-4833-b839-b25ae04106b4
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:f970a7f4-3e1f-4833-b839-b25ae04106b4
+Error Number:207,State:1,Class:16
+2026-02-19 11:42:41.316 +05:30 [ERR] Error updating claim 1059
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.UpdateClaim(Int32 claId, UpdateClaimRequest request) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 997
+ClientConnectionId:f970a7f4-3e1f-4833-b839-b25ae04106b4
+Error Number:207,State:1,Class:16
+2026-02-19 11:42:41.320 +05:30 [ERR] HTTP PUT /api/claims/1059 responded 500 in 20.8475 ms
+2026-02-19 11:43:05.920 +05:30 [INF] HTTP GET /api/adjustments/claims/1059 responded 200 in 73.8496 ms
+2026-02-19 11:43:07.662 +05:30 [INF] HTTP GET /api/disbursements/claims/1059 responded 200 in 34.5889 ms
+2026-02-19 11:45:46.846 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 148.8075 ms
+2026-02-19 11:45:46.846 +05:30 [INF] HTTP GET /api/payers responded 200 in 148.9772 ms
+2026-02-19 11:45:46.846 +05:30 [INF] HTTP GET /api/physicians responded 200 in 148.8300 ms
+2026-02-19 11:45:46.918 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 220.7115 ms
+2026-02-19 11:46:25.812 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 16.0384 ms
+2026-02-19 11:46:25.813 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 18.5110 ms
+2026-02-19 11:46:25.814 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 18.6748 ms
+2026-02-19 11:46:25.849 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 51.4993 ms
+2026-02-19 11:46:25.876 +05:30 [INF] HTTP GET /api/physicians responded 200 in 82.6093 ms
+2026-02-19 11:47:00.374 +05:30 [INF] HTTP GET /api/physicians responded 200 in 22.9355 ms
+2026-02-19 11:47:38.032 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-19 11:47:38.044 +05:30 [INF] Retrieved 2 import history records
+2026-02-19 11:47:38.045 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 16.3635 ms
+2026-02-19 12:23:11.191 +05:30 [INF] HTTP GET /api/claims responded 200 in 1077.2916 ms
+2026-02-19 12:23:14.014 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-19 12:23:14.040 +05:30 [INF] Retrieved 2 import history records
+2026-02-19 12:23:14.043 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 33.0951 ms
+2026-02-19 14:43:27.507 +05:30 [ERR] Failed executing DbCommand (37ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [AppUser] (
+    [UserGUID] uniqueidentifier NOT NULL,
+    [UserName] nvarchar(100) NOT NULL,
+    [Email] nvarchar(200) NULL,
+    [IsActive] bit NOT NULL DEFAULT CAST(1 AS bit),
+    [CreatedAt] datetime2 NOT NULL DEFAULT ((sysutcdatetime())),
+    [PasswordHash] varbinary(64) NULL,
+    [PasswordSalt] varbinary(32) NULL,
+    CONSTRAINT [PK__AppUser__81B7740C5F82BC9D] PRIMARY KEY ([UserGUID])
+);
+2026-02-19 15:18:03.131 +05:30 [ERR] Failed executing DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DROP INDEX [IX_ReceiverLibrary_LibraryEntryName] ON [ReceiverLibrary];
+2026-02-19 15:54:22.502 +05:30 [INF] Zebl API starting
+2026-02-19 15:54:22.635 +05:30 [INF] Initializing UI Database
+2026-02-19 15:56:09.791 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 248.8636 ms
+2026-02-19 15:56:14.387 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 45.3234 ms
+2026-02-19 15:56:14.478 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 14.0751 ms
+2026-02-19 15:56:21.075 +05:30 [INF] HTTP GET /api/claims responded 200 in 1505.4726 ms
+2026-02-19 15:58:11.123 +05:30 [INF] HTTP GET /api/claims responded 200 in 732.4243 ms
+2026-02-19 16:00:52.745 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 256.3589 ms
+2026-02-19 16:00:55.547 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 28.5228 ms
+2026-02-19 16:03:39.979 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 137.9005 ms
+2026-02-19 16:03:40.114 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 274.4945 ms
+2026-02-19 16:03:43.742 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 10.7603 ms
+2026-02-19 16:03:43.774 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 42.6909 ms
+2026-02-19 16:03:52.103 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 4.2447 ms
+2026-02-19 16:03:52.132 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 32.3339 ms
+2026-02-19 16:03:55.137 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 3.5306 ms
+2026-02-19 16:03:55.168 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 34.4992 ms
+2026-02-19 16:04:08.232 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 9.5112 ms
+2026-02-19 16:04:08.246 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 24.9526 ms
+2026-02-19 16:04:14.438 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 7.6020 ms
+2026-02-19 16:04:14.483 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 59.9142 ms
+2026-02-19 16:04:17.629 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 9.4069 ms
+2026-02-19 16:04:17.670 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 50.6120 ms
+2026-02-19 16:04:21.204 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 6.3562 ms
+2026-02-19 16:04:21.221 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 23.9401 ms
+2026-02-19 16:06:18.870 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 87.2170 ms
+2026-02-19 16:06:18.939 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 157.6173 ms
+2026-02-19 16:06:25.027 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 12.2452 ms
+2026-02-19 16:06:25.034 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 19.2369 ms
+2026-02-19 16:08:25.227 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 95.2771 ms
+2026-02-19 16:08:25.307 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 180.6571 ms
+2026-02-19 16:08:27.140 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 17.3172 ms
+2026-02-19 16:08:27.160 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 36.9607 ms
+2026-02-19 16:08:33.934 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 24.9984 ms
+2026-02-19 16:08:33.973 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 58.0794 ms
+2026-02-19 16:08:40.214 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 7.7043 ms
+2026-02-19 16:08:40.228 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 22.3537 ms
+2026-02-19 16:08:54.486 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 3.2732 ms
+2026-02-19 16:08:54.497 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 20.1845 ms
+2026-02-19 16:09:04.609 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.4649 ms
+2026-02-19 16:09:04.626 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 19.7313 ms
+2026-02-19 16:09:14.569 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 6.0773 ms
+2026-02-19 16:09:14.583 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 16.3240 ms
+2026-02-19 16:09:18.377 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 0.9741 ms
+2026-02-19 16:09:18.399 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 21.4134 ms
+2026-02-19 16:09:19.975 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.5462 ms
+2026-02-19 16:09:19.995 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 20.0835 ms
+2026-02-19 16:09:32.009 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 3.9162 ms
+2026-02-19 16:09:32.040 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 37.1677 ms
+2026-02-19 16:09:37.332 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 0.7929 ms
+2026-02-19 16:09:37.342 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 13.2479 ms
+2026-02-19 16:09:38.678 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 3.4661 ms
+2026-02-19 16:09:38.693 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 16.1460 ms
+2026-02-19 16:09:39.322 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 0.9853 ms
+2026-02-19 16:09:39.329 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 10.4370 ms
+2026-02-19 16:09:40.132 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 6.3447 ms
+2026-02-19 16:09:40.142 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 17.6184 ms
+2026-02-19 16:09:43.188 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.5542 ms
+2026-02-19 16:09:43.196 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 7.9452 ms
+2026-02-19 16:09:44.725 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 7.5868 ms
+2026-02-19 16:09:44.756 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 45.6415 ms
+2026-02-19 16:10:51.478 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 51.0540 ms
+2026-02-19 16:10:51.536 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 107.7044 ms
+2026-02-19 16:11:01.346 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 4.9607 ms
+2026-02-19 16:11:01.366 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 28.7875 ms
+2026-02-19 16:11:03.639 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 11.3998 ms
+2026-02-19 16:11:03.728 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 96.7541 ms
+2026-02-19 16:11:06.972 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 4.1154 ms
+2026-02-19 16:11:06.985 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 18.2251 ms
+2026-02-19 16:11:11.492 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 7.1820 ms
+2026-02-19 16:11:11.507 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 22.7640 ms
+2026-02-19 16:11:13.663 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.0039 ms
+2026-02-19 16:11:13.681 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 21.3045 ms
+2026-02-19 16:11:32.125 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.4923 ms
+2026-02-19 16:11:32.128 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 11.0708 ms
+2026-02-19 16:12:18.734 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 8.7311 ms
+2026-02-19 16:12:18.739 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 14.2722 ms
+2026-02-19 16:12:22.024 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 5.9393 ms
+2026-02-19 16:12:22.036 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 21.9048 ms
+2026-02-19 16:12:24.014 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.5369 ms
+2026-02-19 16:12:24.020 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 11.8307 ms
+2026-02-19 16:12:43.330 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.1969 ms
+2026-02-19 16:12:43.347 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 17.3954 ms
+2026-02-19 16:12:49.956 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 7.4201 ms
+2026-02-19 16:12:49.967 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.1006 ms
+2026-02-19 16:13:39.981 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.8046 ms
+2026-02-19 16:13:40.017 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 36.7383 ms
+2026-02-19 16:13:45.501 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.3005 ms
+2026-02-19 16:13:45.534 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 33.0484 ms
+2026-02-19 16:13:53.635 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 6.5515 ms
+2026-02-19 16:13:53.660 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 39.6566 ms
+2026-02-19 17:11:49.532 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 160.6960 ms
+2026-02-19 17:11:50.219 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 849.5955 ms
+2026-02-19 17:21:08.083 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 27.9392 ms
+2026-02-19 17:21:08.358 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 302.6970 ms
+2026-02-19 17:21:25.878 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.2158 ms
+2026-02-19 17:21:25.890 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 13.0459 ms
+2026-02-19 17:22:34.955 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 13.0587 ms
+2026-02-19 17:22:35.010 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 70.6220 ms
+2026-02-19 17:23:16.758 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 5.3215 ms
+2026-02-19 17:23:16.877 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 122.6891 ms
+2026-02-19 17:23:34.560 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 11.0147 ms
+2026-02-19 17:23:34.680 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 139.9983 ms
+2026-02-19 17:23:41.905 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 0.9953 ms
+2026-02-19 17:23:41.946 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 37.8520 ms
+2026-02-19 17:24:19.161 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 15.7092 ms
+2026-02-19 17:24:19.334 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 188.7632 ms
+2026-02-19 17:24:22.943 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 5.1123 ms
+2026-02-19 17:24:22.978 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 41.7227 ms
+2026-02-19 17:24:26.825 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 2.9785 ms
+2026-02-19 17:24:26.861 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 38.8218 ms
+2026-02-19 17:24:30.043 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 3.4820 ms
+2026-02-19 17:24:30.098 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 59.4773 ms
+2026-02-19 17:30:43.420 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 63.6980 ms
+2026-02-19 17:30:44.003 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 646.2628 ms
+2026-02-19 17:33:08.472 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 27.8117 ms
+2026-02-19 17:33:08.536 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 92.3527 ms
+2026-02-19 17:33:29.659 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 3.0400 ms
+2026-02-19 17:33:29.713 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 54.8821 ms
+2026-02-19 17:34:17.486 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 8.5409 ms
+2026-02-19 17:34:17.593 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 115.4933 ms
+2026-02-19 17:36:08.644 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 36.1343 ms
+2026-02-19 17:36:08.777 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 170.4051 ms
+2026-02-19 17:38:24.464 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 2.2428 ms
+2026-02-19 17:38:24.515 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 57.1331 ms
+2026-02-19 17:38:40.737 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 5.2777 ms
+2026-02-19 17:38:40.750 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 22.2852 ms
+2026-02-19 17:40:08.923 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 71.0801 ms
+2026-02-19 17:40:09.197 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 346.9770 ms
+2026-02-19 17:43:47.343 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 34.4058 ms
+2026-02-19 17:43:47.366 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 53.1818 ms
+2026-02-19 17:43:49.561 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.9135 ms
+2026-02-19 17:43:49.597 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 33.4791 ms
+2026-02-19 17:43:59.971 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 2.1264 ms
+2026-02-19 17:44:00.028 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 48.9418 ms
+2026-02-19 17:44:04.116 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 3.4827 ms
+2026-02-19 17:44:04.186 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 94.9397 ms
+2026-02-19 17:48:33.006 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 46.6195 ms
+2026-02-19 17:48:33.360 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 401.7329 ms
+2026-02-19 18:32:37.432 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 137.4564 ms
+2026-02-19 18:32:37.988 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 693.9672 ms
+2026-02-19 18:32:46.333 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 4.6484 ms
+2026-02-19 18:32:46.418 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 89.8812 ms
+2026-02-19 18:32:48.694 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 8.2146 ms
+2026-02-19 18:32:48.734 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 49.9238 ms
+2026-02-19 18:32:54.682 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 9.4182 ms
+2026-02-19 18:32:54.708 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 33.8468 ms
+2026-02-19 18:33:42.692 +05:30 [INF] HTTP GET /api/connections responded 404 in 63.2383 ms
+2026-02-19 18:34:04.554 +05:30 [INF] HTTP GET /api/connections responded 404 in 1.0890 ms
+2026-02-19 18:35:11.362 +05:30 [INF] HTTP GET /api/connections responded 404 in 32.1696 ms
+2026-02-19 18:35:17.291 +05:30 [INF] HTTP GET /api/connections responded 404 in 1.1106 ms
+2026-02-19 18:35:31.072 +05:30 [INF] HTTP GET /api/connections responded 404 in 0.9242 ms
+2026-02-19 18:35:33.842 +05:30 [INF] HTTP GET /api/connections responded 404 in 1.1036 ms
+2026-02-19 18:35:34.185 +05:30 [INF] HTTP GET /api/connections responded 404 in 0.7300 ms
+2026-02-19 18:35:39.154 +05:30 [INF] HTTP GET /api/connections responded 404 in 0.7021 ms
+2026-02-19 18:35:43.738 +05:30 [INF] HTTP GET /api/connections responded 404 in 0.4338 ms
+2026-02-19 18:35:47.652 +05:30 [INF] HTTP GET /api/connections responded 404 in 1.0046 ms
+2026-02-19 18:35:49.325 +05:30 [INF] HTTP GET /api/connections responded 404 in 5.3735 ms
+2026-02-19 18:35:52.065 +05:30 [INF] HTTP GET /api/connections responded 404 in 0.7186 ms
+2026-02-19 18:36:03.693 +05:30 [INF] HTTP GET /api/connections responded 404 in 2.4195 ms
+2026-02-19 18:36:49.962 +05:30 [INF] HTTP GET /api/connections responded 404 in 0.8583 ms
+2026-02-19 18:39:02.409 +05:30 [INF] HTTP GET /api/connections responded 404 in 5.1496 ms
+2026-02-19 18:39:12.469 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 307.5163 ms
