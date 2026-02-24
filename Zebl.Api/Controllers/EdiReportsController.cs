@@ -15,6 +15,7 @@ public class EdiReportsController : ControllerBase
 {
     private readonly EdiReportService _ediReportService;
     private readonly IEdiExportService _ediExportService;
+    private readonly IClaimExportService _claimExportService;
     private readonly IConnectionLibraryRepository _connectionRepo;
     private readonly SftpTransportService _sftpTransport;
     private readonly ILogger<EdiReportsController> _logger;
@@ -22,12 +23,14 @@ public class EdiReportsController : ControllerBase
     public EdiReportsController(
         EdiReportService ediReportService,
         IEdiExportService ediExportService,
+        IClaimExportService claimExportService,
         IConnectionLibraryRepository connectionRepo,
         SftpTransportService sftpTransport,
         ILogger<EdiReportsController> logger)
     {
         _ediReportService = ediReportService;
         _ediExportService = ediExportService;
+        _claimExportService = claimExportService;
         _connectionRepo = connectionRepo;
         _sftpTransport = sftpTransport;
         _logger = logger;
@@ -97,6 +100,28 @@ public class EdiReportsController : ControllerBase
             report.ReceivedAt
         };
         return Ok(dto);
+    }
+
+    /// <summary>
+    /// Generates 837 for a claim using Payer rules, updates claim status to Submitted, and returns the 837 content.
+    /// </summary>
+    [HttpPost("claim/{claimId:int}/generate-837")]
+    public async Task<IActionResult> Generate837(int claimId)
+    {
+        try
+        {
+            var content = await _claimExportService.Generate837Async(claimId);
+            return Ok(new { content });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating 837 for claim {ClaimId}", claimId);
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     [HttpPost("generate")]

@@ -1,0 +1,1106 @@
+2026-02-23 11:29:26.223 +05:30 [INF] Zebl API starting
+2026-02-23 11:29:26.312 +05:30 [INF] Initializing UI Database
+2026-02-23 11:29:30.664 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 162.5401 ms
+2026-02-23 11:29:31.185 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 29.0046 ms
+2026-02-23 11:32:05.089 +05:30 [INF] HTTP GET /api/claims responded 200 in 1560.6245 ms
+2026-02-23 11:32:08.256 +05:30 [INF] HTTP GET /api/physicians responded 200 in 58.2875 ms
+2026-02-23 11:32:08.361 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 162.8009 ms
+2026-02-23 11:32:08.365 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 167.4721 ms
+2026-02-23 11:32:08.447 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 249.5581 ms
+2026-02-23 11:32:08.506 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 308.5148 ms
+2026-02-23 11:34:54.229 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 5.2730 ms
+2026-02-23 11:34:54.267 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 23.6798 ms
+2026-02-23 11:34:59.258 +05:30 [INF] HTTP GET /api/connections responded 200 in 34.7370 ms
+2026-02-23 11:35:06.582 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 29.6519 ms
+2026-02-23 11:35:08.091 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 7.1031 ms
+2026-02-23 11:35:13.663 +05:30 [INF] HTTP GET /api/connections responded 200 in 8.0606 ms
+2026-02-23 11:35:13.666 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 9.3968 ms
+2026-02-23 11:35:13.695 +05:30 [ERR] Failed executing DbCommand (13ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 11:35:13.727 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+2026-02-23 11:35:13.732 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+2026-02-23 11:35:13.770 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 113.4709 ms
+2026-02-23 11:35:37.999 +05:30 [ERR] Failed executing DbCommand (11ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 11:35:38.002 +05:30 [INF] HTTP GET /api/connections responded 200 in 22.0412 ms
+2026-02-23 11:35:38.003 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 21.9242 ms
+2026-02-23 11:35:38.003 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+2026-02-23 11:35:38.012 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+2026-02-23 11:35:38.018 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 33.6119 ms
+2026-02-23 11:36:00.452 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-23 11:36:00.474 +05:30 [INF] Retrieved 2 import history records
+2026-02-23 11:36:00.478 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 30.2507 ms
+2026-02-23 11:37:36.715 +05:30 [INF] HTTP GET /api/connections responded 200 in 15.3802 ms
+2026-02-23 11:37:36.715 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 14.7571 ms
+2026-02-23 11:37:36.719 +05:30 [ERR] Failed executing DbCommand (12ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 11:37:36.725 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:1ae8ed50-5eeb-4943-aa50-850dd3e5ccda
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:1ae8ed50-5eeb-4943-aa50-850dd3e5ccda
+Error Number:207,State:1,Class:16
+2026-02-23 11:37:36.734 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:1ae8ed50-5eeb-4943-aa50-850dd3e5ccda
+Error Number:207,State:1,Class:16
+2026-02-23 11:37:36.740 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 37.9840 ms
+2026-02-23 11:37:41.204 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 15.4266 ms
+2026-02-23 11:37:41.205 +05:30 [ERR] Failed executing DbCommand (3ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 11:37:41.207 +05:30 [INF] HTTP GET /api/connections responded 200 in 21.4852 ms
+2026-02-23 11:37:41.210 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:22401abd-2c92-474f-b4aa-5a3be87384e6
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:22401abd-2c92-474f-b4aa-5a3be87384e6
+Error Number:207,State:1,Class:16
+2026-02-23 11:37:41.217 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:22401abd-2c92-474f-b4aa-5a3be87384e6
+Error Number:207,State:1,Class:16
+2026-02-23 11:37:41.223 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 25.7885 ms
+2026-02-23 11:37:47.089 +05:30 [ERR] Failed executing DbCommand (14ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 11:37:47.094 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 23.2826 ms
+2026-02-23 11:37:47.094 +05:30 [INF] HTTP GET /api/connections responded 200 in 23.7585 ms
+2026-02-23 11:37:47.094 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+2026-02-23 11:37:47.104 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+2026-02-23 11:37:47.115 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 42.0438 ms
+2026-02-23 11:37:47.283 +05:30 [INF] HTTP GET /api/connections responded 200 in 10.4222 ms
+2026-02-23 11:37:47.283 +05:30 [ERR] Failed executing DbCommand (4ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 11:37:47.286 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 9.3690 ms
+2026-02-23 11:37:47.289 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:22401abd-2c92-474f-b4aa-5a3be87384e6
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:22401abd-2c92-474f-b4aa-5a3be87384e6
+Error Number:207,State:1,Class:16
+2026-02-23 11:37:47.308 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:22401abd-2c92-474f-b4aa-5a3be87384e6
+Error Number:207,State:1,Class:16
+2026-02-23 11:37:47.320 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 47.5272 ms
+2026-02-23 11:38:06.051 +05:30 [ERR] Failed executing DbCommand (7ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 11:38:06.055 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+2026-02-23 11:38:06.057 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 17.1116 ms
+2026-02-23 11:38:06.058 +05:30 [INF] HTTP GET /api/connections responded 200 in 17.1114 ms
+2026-02-23 11:38:06.063 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:ec10d547-baeb-470d-8672-9057f6ffdab2
+Error Number:207,State:1,Class:16
+2026-02-23 11:38:06.072 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 32.0411 ms
+2026-02-23 11:38:26.219 +05:30 [ERR] Failed executing DbCommand (7ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 11:38:26.222 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:1ae8ed50-5eeb-4943-aa50-850dd3e5ccda
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:1ae8ed50-5eeb-4943-aa50-850dd3e5ccda
+Error Number:207,State:1,Class:16
+2026-02-23 11:38:26.223 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 13.8528 ms
+2026-02-23 11:38:26.223 +05:30 [INF] HTTP GET /api/connections responded 200 in 14.9166 ms
+2026-02-23 11:38:26.227 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:1ae8ed50-5eeb-4943-aa50-850dd3e5ccda
+Error Number:207,State:1,Class:16
+2026-02-23 11:38:26.236 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 27.8657 ms
+2026-02-23 11:40:40.389 +05:30 [INF] HTTP GET /api/claims responded 200 in 81.3045 ms
+2026-02-23 11:40:42.986 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 23.2529 ms
+2026-02-23 11:40:42.997 +05:30 [INF] HTTP GET /api/physicians responded 200 in 32.2995 ms
+2026-02-23 11:40:43.013 +05:30 [INF] HTTP GET /api/claims/1059 responded 200 in 46.9788 ms
+2026-02-23 11:40:43.101 +05:30 [INF] HTTP GET /api/services/claims/1059 responded 200 in 134.8964 ms
+2026-02-23 11:40:43.104 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 141.1050 ms
+2026-02-23 11:40:50.181 +05:30 [INF] HTTP GET /api/claims responded 200 in 43.4363 ms
+2026-02-23 11:40:52.078 +05:30 [INF] HTTP GET /api/patients/available-columns responded 200 in 7.1986 ms
+2026-02-23 11:40:52.124 +05:30 [INF] HTTP GET /api/patients responded 200 in 51.5420 ms
+2026-02-23 11:40:53.940 +05:30 [INF] HTTP GET /api/physicians responded 200 in 21.6099 ms
+2026-02-23 11:40:53.944 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 26.5170 ms
+2026-02-23 11:40:53.953 +05:30 [INF] HTTP GET /api/payers responded 200 in 35.0630 ms
+2026-02-23 11:40:54.138 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 218.8593 ms
+2026-02-23 11:41:01.045 +05:30 [INF] HTTP GET /api/physicians responded 200 in 24.5165 ms
+2026-02-23 11:41:01.047 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 28.0735 ms
+2026-02-23 11:41:01.061 +05:30 [INF] HTTP GET /api/payers responded 200 in 41.2934 ms
+2026-02-23 11:41:01.097 +05:30 [INF] HTTP GET /api/patients/1048 responded 200 in 75.9338 ms
+2026-02-23 12:05:07.243 +05:30 [INF] HTTP GET /api/payers/available-columns responded 200 in 131.4077 ms
+2026-02-23 12:05:07.511 +05:30 [INF] HTTP GET /api/payers responded 200 in 404.0491 ms
+2026-02-23 12:05:31.743 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 18.0901 ms
+2026-02-23 12:05:31.839 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 65.3831 ms
+2026-02-23 12:05:33.282 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 14.1894 ms
+2026-02-23 12:05:33.704 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 17.5075 ms
+2026-02-23 12:05:34.221 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 18.2864 ms
+2026-02-23 12:05:34.696 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 9.9289 ms
+2026-02-23 12:05:35.322 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 31.7701 ms
+2026-02-23 12:05:35.743 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 56.6590 ms
+2026-02-23 12:05:36.297 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 33.4426 ms
+2026-02-23 12:05:36.794 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 30.8782 ms
+2026-02-23 12:05:37.190 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 9.2126 ms
+2026-02-23 12:05:38.589 +05:30 [INF] HTTP GET /api/physicians responded 200 in 58.3263 ms
+2026-02-23 12:05:48.178 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 0.8787 ms
+2026-02-23 12:05:48.225 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 20.6309 ms
+2026-02-23 12:06:03.332 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 1.0704 ms
+2026-02-23 12:06:03.372 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 24.7436 ms
+2026-02-23 12:06:12.839 +05:30 [INF] HTTP GET /api/payers/available-columns responded 200 in 1.1820 ms
+2026-02-23 12:06:12.852 +05:30 [INF] HTTP GET /api/payers responded 200 in 12.3709 ms
+2026-02-23 12:07:28.377 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 1.6305 ms
+2026-02-23 12:07:28.405 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 18.8198 ms
+2026-02-23 12:07:30.109 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 10.0914 ms
+2026-02-23 12:07:30.676 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 4.1135 ms
+2026-02-23 12:07:31.733 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 10.9381 ms
+2026-02-23 12:07:33.174 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 4.2937 ms
+2026-02-23 12:07:34.274 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 10.6295 ms
+2026-02-23 12:07:35.158 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.9809 ms
+2026-02-23 12:07:48.882 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 16.7097 ms
+2026-02-23 12:07:49.579 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.0051 ms
+2026-02-23 12:07:50.104 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 7.1351 ms
+2026-02-23 12:07:50.489 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 6.6986 ms
+2026-02-23 12:07:50.930 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 3.2843 ms
+2026-02-23 12:08:48.914 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 11.7401 ms
+2026-02-23 12:08:59.888 +05:30 [INF] Added list value Auto to Payer Classification by null
+2026-02-23 12:08:59.892 +05:30 [INF] HTTP POST /api/lists/values responded 200 in 308.2457 ms
+2026-02-23 12:09:04.738 +05:30 [INF] HTTP GET /api/payers/available-columns responded 200 in 0.6074 ms
+2026-02-23 12:09:04.746 +05:30 [INF] HTTP GET /api/payers responded 200 in 8.0680 ms
+2026-02-23 12:09:36.832 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 1.0662 ms
+2026-02-23 12:09:36.867 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 22.8184 ms
+2026-02-23 12:09:38.775 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 9.6619 ms
+2026-02-23 12:12:40.964 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 70.2125 ms
+2026-02-23 12:12:41.062 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 68.8802 ms
+2026-02-23 12:13:01.734 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 22.7210 ms
+2026-02-23 12:13:01.786 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 33.2503 ms
+2026-02-23 12:13:49.208 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 3.2869 ms
+2026-02-23 12:13:49.273 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 47.3474 ms
+2026-02-23 12:19:43.459 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 2.0469 ms
+2026-02-23 12:19:43.498 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 25.6437 ms
+2026-02-23 12:19:44.853 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 29.2343 ms
+2026-02-23 12:19:47.745 +05:30 [INF] HTTP GET /api/payers/available-columns responded 200 in 2.7635 ms
+2026-02-23 12:19:47.801 +05:30 [INF] HTTP GET /api/payers responded 200 in 60.2287 ms
+2026-02-23 12:19:53.482 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13.9689 ms
+2026-02-23 12:19:56.026 +05:30 [INF] HTTP GET /api/payers responded 200 in 25.7306 ms
+2026-02-23 13:27:57.701 +05:30 [INF] HTTP GET /api/payers/available-columns responded 200 in 131.4157 ms
+2026-02-23 13:27:58.492 +05:30 [INF] HTTP GET /api/payers responded 200 in 928.7728 ms
+2026-02-23 13:35:36.453 +05:30 [INF] HTTP GET /api/payers/available-columns responded 200 in 5.0295 ms
+2026-02-23 13:35:36.689 +05:30 [INF] HTTP GET /api/payers responded 200 in 236.0500 ms
+2026-02-23 13:36:17.623 +05:30 [INF] HTTP GET /api/payers/available-columns responded 200 in 1.3544 ms
+2026-02-23 13:36:17.654 +05:30 [INF] HTTP GET /api/payers responded 200 in 29.6730 ms
+2026-02-23 13:37:51.268 +05:30 [INF] HTTP GET /api/payers responded 200 in 58.4202 ms
+2026-02-23 13:37:51.336 +05:30 [INF] HTTP GET /api/payers/81 responded 404 in 43.2143 ms
+2026-02-23 13:37:51.398 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 103.2739 ms
+2026-02-23 14:13:49.647 +05:30 [INF] HTTP GET /api/payers/81 responded 404 in 47.2823 ms
+2026-02-23 14:13:50.025 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 426.1246 ms
+2026-02-23 14:13:50.028 +05:30 [INF] HTTP GET /api/payers responded 200 in 429.0996 ms
+2026-02-23 14:14:01.873 +05:30 [INF] HTTP GET /api/payers responded 200 in 25.6911 ms
+2026-02-23 14:14:01.910 +05:30 [INF] HTTP GET /api/payers/81 responded 404 in 0.2422 ms
+2026-02-23 14:14:01.922 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 12.2597 ms
+2026-02-23 15:55:40.661 +05:30 [INF] HTTP GET /api/payers/81 responded 404 in 38.6083 ms
+2026-02-23 15:55:40.968 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 345.7863 ms
+2026-02-23 15:55:41.038 +05:30 [INF] HTTP GET /api/payers responded 200 in 415.3020 ms
+2026-02-23 15:56:15.166 +05:30 [INF] HTTP GET /api/payers responded 200 in 81.0464 ms
+2026-02-23 15:56:15.219 +05:30 [INF] HTTP GET /favicon.ico responded 404 in 3.4716 ms
+2026-02-23 15:56:21.437 +05:30 [INF] HTTP GET /api/payers responded 200 in 38.9621 ms
+2026-02-23 15:56:28.903 +05:30 [INF] HTTP GET /api/payers/80 responded 404 in 0.2667 ms
+2026-02-23 15:56:28.923 +05:30 [INF] HTTP GET /api/payers responded 200 in 23.3797 ms
+2026-02-23 15:56:28.924 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 22.7532 ms
+2026-02-23 15:56:35.422 +05:30 [INF] HTTP GET /api/payers responded 307 in 42.8495 ms
+2026-02-23 15:56:35.478 +05:30 [INF] HTTP GET /api/payers responded 200 in 28.9402 ms
+2026-02-23 15:56:50.843 +05:30 [INF] HTTP GET /api/payers/80 responded 404 in 0.5757 ms
+2026-02-23 15:56:50.870 +05:30 [INF] HTTP GET /api/payers responded 200 in 27.1979 ms
+2026-02-23 15:56:50.871 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 27.6489 ms
+2026-02-23 15:58:22.069 +05:30 [INF] HTTP GET /api/payers/80 responded 404 in 33.9692 ms
+2026-02-23 15:58:22.119 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 89.8863 ms
+2026-02-23 15:58:22.136 +05:30 [INF] HTTP GET /api/payers responded 200 in 99.0960 ms
+2026-02-23 16:01:33.850 +05:30 [INF] HTTP GET /api/payers/80 responded 404 in 0.2027 ms
+2026-02-23 16:01:33.874 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 25.2176 ms
+2026-02-23 16:01:33.878 +05:30 [INF] HTTP GET /api/payers responded 200 in 29.6296 ms
+2026-02-23 16:04:07.617 +05:30 [INF] HTTP GET /api/payers/80 responded 404 in 2.3987 ms
+2026-02-23 16:04:07.789 +05:30 [INF] HTTP GET /api/payers responded 200 in 173.1084 ms
+2026-02-23 16:04:07.902 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 284.8224 ms
+2026-02-23 16:04:15.752 +05:30 [INF] HTTP GET /api/payers responded 200 in 9.7910 ms
+2026-02-23 16:04:15.777 +05:30 [INF] HTTP GET /api/payers/81 responded 404 in 0.3142 ms
+2026-02-23 16:04:15.787 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 10.0620 ms
+2026-02-23 16:05:23.998 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 107.4955 ms
+2026-02-23 16:05:23.999 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 111.2364 ms
+2026-02-23 16:05:23.999 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 108.5619 ms
+2026-02-23 16:05:24.056 +05:30 [INF] HTTP GET /api/payers responded 307 in 48.9571 ms
+2026-02-23 16:05:24.056 +05:30 [INF] HTTP GET /api/payers/81 responded 307 in 48.9587 ms
+2026-02-23 16:05:24.056 +05:30 [INF] HTTP GET /api/lists/values responded 307 in 48.5364 ms
+2026-02-23 16:05:24.117 +05:30 [INF] HTTP GET /api/payers/81 responded 404 in 2.9604 ms
+2026-02-23 16:05:24.160 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 42.6769 ms
+2026-02-23 16:05:24.187 +05:30 [INF] HTTP GET /api/payers responded 200 in 69.4548 ms
+2026-02-23 16:05:48.330 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 2.5513 ms
+2026-02-23 16:05:48.332 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.3140 ms
+2026-02-23 16:05:48.333 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.1474 ms
+2026-02-23 16:05:48.335 +05:30 [INF] HTTP GET /api/payers responded 307 in 0.8648 ms
+2026-02-23 16:05:48.336 +05:30 [INF] HTTP GET /api/lists/values responded 307 in 0.1666 ms
+2026-02-23 16:05:48.350 +05:30 [INF] HTTP GET /api/payers/81 responded 307 in 1.3763 ms
+2026-02-23 16:05:48.369 +05:30 [INF] HTTP GET /api/payers/81 responded 404 in 0.3288 ms
+2026-02-23 16:05:48.391 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 24.0448 ms
+2026-02-23 16:05:48.427 +05:30 [INF] HTTP GET /api/payers responded 200 in 59.6296 ms
+2026-02-23 16:42:55.739 +05:30 [INF] Zebl API starting
+2026-02-23 16:42:55.821 +05:30 [INF] Initializing UI Database
+2026-02-23 16:42:57.707 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 135.5596 ms
+2026-02-23 16:42:57.856 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 26.0420 ms
+2026-02-23 16:43:04.051 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.9571 ms
+2026-02-23 16:43:04.051 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 5.3573 ms
+2026-02-23 16:43:04.051 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 5.4521 ms
+2026-02-23 16:43:04.072 +05:30 [INF] HTTP GET /api/lists/values responded 307 in 4.6325 ms
+2026-02-23 16:43:04.072 +05:30 [INF] HTTP GET /api/payers/81 responded 307 in 4.6910 ms
+2026-02-23 16:43:04.072 +05:30 [INF] HTTP GET /api/payers responded 307 in 4.7070 ms
+2026-02-23 16:43:05.638 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 1545.1883 ms
+2026-02-23 16:43:05.652 +05:30 [INF] HTTP GET /api/payers responded 200 in 1559.6815 ms
+2026-02-23 16:43:05.691 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 1598.1939 ms
+2026-02-23 16:44:09.368 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 1.1575 ms
+2026-02-23 16:44:09.370 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.5107 ms
+2026-02-23 16:44:09.381 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.4197 ms
+2026-02-23 16:44:09.567 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 181.8913 ms
+2026-02-23 16:44:09.580 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 202.6655 ms
+2026-02-23 16:44:09.582 +05:30 [INF] HTTP GET /api/payers responded 200 in 207.0693 ms
+2026-02-23 16:55:25.068 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 1.2050 ms
+2026-02-23 16:55:25.068 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 1.2051 ms
+2026-02-23 16:55:25.068 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 1.2051 ms
+2026-02-23 16:55:25.249 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 171.0958 ms
+2026-02-23 16:55:25.374 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 290.7498 ms
+2026-02-23 16:55:25.384 +05:30 [INF] HTTP GET /api/payers responded 200 in 300.2218 ms
+2026-02-23 16:56:29.964 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.6426 ms
+2026-02-23 16:56:29.966 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 2.9034 ms
+2026-02-23 16:56:29.966 +05:30 [INF] HTTP OPTIONS /api/payers/57 responded 204 in 2.9036 ms
+2026-02-23 16:56:30.004 +05:30 [INF] HTTP GET /api/payers responded 200 in 33.0721 ms
+2026-02-23 16:56:30.006 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 35.2975 ms
+2026-02-23 16:56:30.108 +05:30 [INF] HTTP GET /api/payers/57 responded 200 in 135.3523 ms
+2026-02-23 16:56:39.323 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.6308 ms
+2026-02-23 16:56:39.323 +05:30 [INF] HTTP OPTIONS /api/payers/58 responded 204 in 0.2319 ms
+2026-02-23 16:56:39.323 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.2572 ms
+2026-02-23 16:56:39.350 +05:30 [INF] HTTP GET /api/payers/58 responded 200 in 19.0857 ms
+2026-02-23 16:56:39.354 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 23.7634 ms
+2026-02-23 16:56:39.355 +05:30 [INF] HTTP GET /api/payers responded 200 in 22.9503 ms
+2026-02-23 16:59:46.803 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 2.2395 ms
+2026-02-23 16:59:46.804 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.6851 ms
+2026-02-23 16:59:46.813 +05:30 [INF] HTTP OPTIONS /api/payers/76 responded 204 in 1.1426 ms
+2026-02-23 16:59:46.862 +05:30 [INF] HTTP GET /api/payers/76 responded 200 in 18.1158 ms
+2026-02-23 16:59:46.869 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 25.6852 ms
+2026-02-23 16:59:46.873 +05:30 [INF] HTTP GET /api/payers responded 200 in 30.0093 ms
+2026-02-23 17:00:07.604 +05:30 [INF] HTTP OPTIONS /api/payers/76 responded 204 in 0.4713 ms
+2026-02-23 17:00:07.604 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.4712 ms
+2026-02-23 17:00:07.604 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 1.0202 ms
+2026-02-23 17:00:07.627 +05:30 [INF] HTTP GET /api/payers/76 responded 200 in 18.8448 ms
+2026-02-23 17:00:07.629 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 18.8051 ms
+2026-02-23 17:00:07.631 +05:30 [INF] HTTP GET /api/payers responded 200 in 21.3696 ms
+2026-02-23 17:00:08.570 +05:30 [INF] HTTP OPTIONS /api/payers/80 responded 204 in 1.4255 ms
+2026-02-23 17:00:08.583 +05:30 [INF] HTTP GET /api/payers/80 responded 200 in 8.8829 ms
+2026-02-23 17:00:09.263 +05:30 [INF] HTTP OPTIONS /api/payers/77 responded 204 in 0.3462 ms
+2026-02-23 17:00:09.275 +05:30 [INF] HTTP GET /api/payers/77 responded 200 in 7.3778 ms
+2026-02-23 17:00:09.687 +05:30 [INF] HTTP OPTIONS /api/payers/75 responded 204 in 0.3851 ms
+2026-02-23 17:00:09.698 +05:30 [INF] HTTP GET /api/payers/75 responded 200 in 6.4549 ms
+2026-02-23 17:00:10.066 +05:30 [INF] HTTP OPTIONS /api/payers/70 responded 204 in 0.2611 ms
+2026-02-23 17:00:10.079 +05:30 [INF] HTTP GET /api/payers/70 responded 200 in 8.6844 ms
+2026-02-23 17:00:10.962 +05:30 [INF] HTTP OPTIONS /api/payers/60 responded 204 in 0.2741 ms
+2026-02-23 17:00:10.973 +05:30 [INF] HTTP GET /api/payers/60 responded 200 in 5.2871 ms
+2026-02-23 17:00:11.360 +05:30 [INF] HTTP OPTIONS /api/payers/62 responded 204 in 0.1658 ms
+2026-02-23 17:00:11.374 +05:30 [INF] HTTP GET /api/payers/62 responded 200 in 10.2942 ms
+2026-02-23 17:00:11.987 +05:30 [INF] HTTP OPTIONS /api/payers/66 responded 204 in 0.1749 ms
+2026-02-23 17:00:11.997 +05:30 [INF] HTTP GET /api/payers/66 responded 200 in 6.2857 ms
+2026-02-23 17:00:12.849 +05:30 [INF] HTTP OPTIONS /api/payers/56 responded 204 in 0.1689 ms
+2026-02-23 17:00:12.860 +05:30 [INF] HTTP GET /api/payers/56 responded 200 in 7.6999 ms
+2026-02-23 17:00:13.601 +05:30 [INF] HTTP OPTIONS /api/payers/39 responded 204 in 0.5323 ms
+2026-02-23 17:00:13.619 +05:30 [INF] HTTP GET /api/payers/39 responded 200 in 14.1900 ms
+2026-02-23 17:00:13.937 +05:30 [INF] HTTP OPTIONS /api/payers/44 responded 204 in 0.4894 ms
+2026-02-23 17:00:13.948 +05:30 [INF] HTTP GET /api/payers/44 responded 200 in 7.5274 ms
+2026-02-23 17:01:27.477 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.3972 ms
+2026-02-23 17:01:27.477 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.3945 ms
+2026-02-23 17:01:27.477 +05:30 [INF] HTTP OPTIONS /api/payers/44 responded 204 in 0.6918 ms
+2026-02-23 17:01:27.530 +05:30 [INF] HTTP GET /api/payers/44 responded 200 in 26.1468 ms
+2026-02-23 17:01:27.545 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 64.4104 ms
+2026-02-23 17:01:27.550 +05:30 [INF] HTTP GET /api/payers responded 200 in 56.6483 ms
+2026-02-23 17:02:18.416 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.3595 ms
+2026-02-23 17:02:18.443 +05:30 [INF] HTTP GET /api/payers responded 200 in 22.7944 ms
+2026-02-23 17:02:18.452 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.0679 ms
+2026-02-23 17:02:18.452 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.0977 ms
+2026-02-23 17:02:18.459 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 4.8459 ms
+2026-02-23 17:02:18.468 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 12.5364 ms
+2026-02-23 17:02:58.982 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.9234 ms
+2026-02-23 17:02:58.982 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 1.1551 ms
+2026-02-23 17:02:58.982 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.7593 ms
+2026-02-23 17:02:59.036 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 28.1189 ms
+2026-02-23 17:02:59.052 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 38.0671 ms
+2026-02-23 17:02:59.054 +05:30 [INF] HTTP GET /api/payers responded 200 in 44.2527 ms
+2026-02-23 17:03:30.619 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.2812 ms
+2026-02-23 17:03:30.622 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.3504 ms
+2026-02-23 17:03:30.622 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.3758 ms
+2026-02-23 17:03:30.665 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 33.0208 ms
+2026-02-23 17:03:30.675 +05:30 [INF] HTTP GET /api/payers responded 200 in 43.8052 ms
+2026-02-23 17:03:30.727 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 94.2375 ms
+2026-02-23 17:04:58.985 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.2168 ms
+2026-02-23 17:04:58.985 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.2740 ms
+2026-02-23 17:04:59.007 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 16.2662 ms
+2026-02-23 17:04:59.010 +05:30 [INF] HTTP GET /api/payers responded 200 in 19.9410 ms
+2026-02-23 17:04:59.020 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.1769 ms
+2026-02-23 17:04:59.025 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 4.9427 ms
+2026-02-23 17:04:59.029 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 5.5123 ms
+2026-02-23 17:06:08.278 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 1.6878 ms
+2026-02-23 17:06:08.280 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 1.4870 ms
+2026-02-23 17:06:08.280 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 1.7509 ms
+2026-02-23 17:06:08.316 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 24.2674 ms
+2026-02-23 17:06:08.327 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 37.5769 ms
+2026-02-23 17:06:08.331 +05:30 [INF] HTTP GET /api/payers responded 200 in 45.0530 ms
+2026-02-23 17:11:14.122 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.8006 ms
+2026-02-23 17:11:14.123 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 2.1637 ms
+2026-02-23 17:11:14.266 +05:30 [INF] HTTP GET /api/payers responded 200 in 137.8786 ms
+2026-02-23 17:11:14.366 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 238.0802 ms
+2026-02-23 17:11:16.110 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.1181 ms
+2026-02-23 17:11:16.126 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 14.4228 ms
+2026-02-23 17:11:16.133 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 23.1564 ms
+2026-02-23 17:12:21.263 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.6042 ms
+2026-02-23 17:12:21.263 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.4144 ms
+2026-02-23 17:12:21.263 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 1.2385 ms
+2026-02-23 17:12:21.300 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 30.9346 ms
+2026-02-23 17:12:21.309 +05:30 [INF] HTTP GET /api/payers responded 200 in 31.4199 ms
+2026-02-23 17:12:21.422 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 148.1907 ms
+2026-02-23 17:12:49.929 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.2184 ms
+2026-02-23 17:12:49.930 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.1002 ms
+2026-02-23 17:12:49.964 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 27.4009 ms
+2026-02-23 17:12:49.969 +05:30 [INF] HTTP GET /api/payers responded 200 in 32.0792 ms
+2026-02-23 17:12:51.974 +05:30 [INF] HTTP OPTIONS /api/payers/81 responded 204 in 0.1113 ms
+2026-02-23 17:12:51.983 +05:30 [INF] HTTP GET /api/payers/81 responded 200 in 6.5198 ms
+2026-02-23 17:12:51.985 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 9.2867 ms
+2026-02-23 17:31:07.545 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 201.6518 ms
+2026-02-23 18:15:51.128 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 11.4759 ms
+2026-02-23 18:15:51.128 +05:30 [INF] HTTP OPTIONS /api/payers/available-columns responded 204 in 6.0301 ms
+2026-02-23 18:15:51.327 +05:30 [INF] HTTP GET /api/payers/available-columns responded 200 in 178.3531 ms
+2026-02-23 18:15:51.510 +05:30 [INF] HTTP GET /api/payers responded 200 in 362.6230 ms
+2026-02-23 18:15:54.388 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.9021 ms
+2026-02-23 18:15:54.390 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.0883 ms
+2026-02-23 18:15:54.418 +05:30 [INF] HTTP GET /api/payers responded 200 in 26.1234 ms
+2026-02-23 18:15:54.449 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 54.9254 ms
+2026-02-23 18:16:04.269 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.0945 ms
+2026-02-23 18:16:04.436 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 162.7720 ms
+2026-02-23 18:16:05.622 +05:30 [INF] HTTP OPTIONS /api/receiver-library/export-formats responded 204 in 0.0879 ms
+2026-02-23 18:16:05.653 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 26.4840 ms
+2026-02-23 18:16:07.105 +05:30 [INF] HTTP OPTIONS /api/connections responded 204 in 0.1106 ms
+2026-02-23 18:16:07.105 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.0710 ms
+2026-02-23 18:16:07.123 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 17.9697 ms
+2026-02-23 18:16:07.154 +05:30 [INF] HTTP GET /api/connections responded 200 in 41.5066 ms
+2026-02-23 18:16:07.205 +05:30 [ERR] Failed executing DbCommand (24ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 18:16:07.282 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:e48bb343-bd59-452e-9bbc-0cb46e922953
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:e48bb343-bd59-452e-9bbc-0cb46e922953
+Error Number:207,State:1,Class:16
+2026-02-23 18:16:07.288 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 44
+ClientConnectionId:e48bb343-bd59-452e-9bbc-0cb46e922953
+Error Number:207,State:1,Class:16
+2026-02-23 18:16:07.334 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 220.3047 ms
+2026-02-23 18:16:10.273 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.1157 ms
+2026-02-23 18:16:10.288 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 11.9737 ms
+2026-02-23 18:16:11.678 +05:30 [INF] HTTP OPTIONS /api/receiver-library/export-formats responded 204 in 0.1155 ms
+2026-02-23 18:16:11.683 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.0553 ms
+2026-02-23 18:16:13.888 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.6300 ms
+2026-02-23 18:16:14.015 +05:30 [INF] HTTP GET /api/physicians responded 200 in 123.6911 ms
+2026-02-23 18:16:15.664 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.1402 ms
+2026-02-23 18:16:15.668 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.2187 ms
+2026-02-23 18:16:15.688 +05:30 [INF] HTTP GET /api/payers responded 200 in 19.4369 ms
+2026-02-23 18:16:15.818 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 145.1829 ms
+2026-02-23 18:16:30.606 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.1513 ms
+2026-02-23 18:16:30.606 +05:30 [INF] HTTP OPTIONS /api/connections responded 204 in 0.5213 ms
+2026-02-23 18:16:30.606 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.6775 ms
+2026-02-23 18:16:30.622 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 13.2479 ms
+2026-02-23 18:16:30.623 +05:30 [INF] HTTP GET /api/connections responded 200 in 13.2449 ms
+2026-02-23 18:16:30.731 +05:30 [ERR] Failed executing DbCommand (4ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 18:16:30.733 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:bc555a0a-27bb-49d4-98d1-68d63abf1b59
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:bc555a0a-27bb-49d4-98d1-68d63abf1b59
+Error Number:207,State:1,Class:16
+2026-02-23 18:16:30.738 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 44
+ClientConnectionId:bc555a0a-27bb-49d4-98d1-68d63abf1b59
+Error Number:207,State:1,Class:16
+2026-02-23 18:16:30.742 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 130.6670 ms
+2026-02-23 18:16:38.845 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 1.4085 ms
+2026-02-23 18:16:38.845 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 1.0017 ms
+2026-02-23 18:16:38.845 +05:30 [INF] HTTP OPTIONS /api/connections responded 204 in 1.4199 ms
+2026-02-23 18:16:38.875 +05:30 [ERR] Failed executing DbCommand (12ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 18:16:38.880 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:4c7610c1-773c-4f10-8c76-a752e419a2b8
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:4c7610c1-773c-4f10-8c76-a752e419a2b8
+Error Number:207,State:1,Class:16
+2026-02-23 18:16:38.884 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 31.5802 ms
+2026-02-23 18:16:38.886 +05:30 [INF] HTTP GET /api/connections responded 200 in 31.9490 ms
+2026-02-23 18:16:38.888 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 44
+ClientConnectionId:4c7610c1-773c-4f10-8c76-a752e419a2b8
+Error Number:207,State:1,Class:16
+2026-02-23 18:16:38.902 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 51.4750 ms
+2026-02-23 18:21:20.582 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 8.0309 ms
+2026-02-23 18:21:20.582 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 8.0300 ms
+2026-02-23 18:21:20.582 +05:30 [INF] HTTP OPTIONS /api/connections responded 204 in 8.0309 ms
+2026-02-23 18:21:20.635 +05:30 [ERR] Failed executing DbCommand (19ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-23 18:21:20.639 +05:30 [INF] HTTP GET /api/connections responded 200 in 42.3858 ms
+2026-02-23 18:21:20.642 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 52.6540 ms
+2026-02-23 18:21:20.647 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:e48bb343-bd59-452e-9bbc-0cb46e922953
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:e48bb343-bd59-452e-9bbc-0cb46e922953
+Error Number:207,State:1,Class:16
+2026-02-23 18:21:20.653 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 44
+ClientConnectionId:e48bb343-bd59-452e-9bbc-0cb46e922953
+Error Number:207,State:1,Class:16
+2026-02-23 18:21:20.667 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 72.6826 ms
+2026-02-23 18:22:54.823 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 2.1072 ms
+2026-02-23 18:22:54.824 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 2.5229 ms
+2026-02-23 18:22:54.824 +05:30 [INF] HTTP OPTIONS /api/connections responded 204 in 3.0050 ms
+2026-02-23 18:22:54.881 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 47.1633 ms
+2026-02-23 18:22:54.891 +05:30 [INF] HTTP GET /api/connections responded 200 in 53.6454 ms
+2026-02-23 18:22:54.972 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 138.8613 ms

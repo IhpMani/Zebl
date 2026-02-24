@@ -1941,3 +1941,291 @@ Error Number:208,State:1,Class:16
 2026-02-20 16:01:41.980 +05:30 [INF] HTTP GET /api/physicians/available-columns responded 200 in 26.6525 ms
 2026-02-20 16:01:42.251 +05:30 [INF] HTTP GET /api/physicians responded 200 in 297.2971 ms
 2026-02-20 16:50:08.486 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 485.2631 ms
+2026-02-20 18:20:51.290 +05:30 [INF] Zebl API starting
+2026-02-20 18:20:51.457 +05:30 [INF] Initializing UI Database
+2026-02-20 18:20:57.255 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 206.4660 ms
+2026-02-20 18:20:57.647 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 26.5213 ms
+2026-02-20 18:27:57.655 +05:30 [INF] Login succeeded. UserGuid="bb22638f-9097-42f3-a069-2f9ba4e4a004", UserName=Ranjit
+2026-02-20 18:27:57.691 +05:30 [INF] HTTP POST /api/auth/login responded 200 in 2132.0716 ms
+2026-02-20 18:28:03.765 +05:30 [INF] HTTP GET /api/claims responded 200 in 252.7331 ms
+2026-02-20 18:28:07.465 +05:30 [INF] HTTP GET /api/services/available-columns responded 200 in 8.0233 ms
+2026-02-20 18:28:07.570 +05:30 [INF] HTTP GET /api/services responded 200 in 112.8573 ms
+2026-02-20 18:28:17.236 +05:30 [INF] HTTP GET /api/services/claims/556 responded 200 in 49.3824 ms
+2026-02-20 18:28:17.355 +05:30 [INF] HTTP GET /api/physicians responded 200 in 168.0930 ms
+2026-02-20 18:28:17.392 +05:30 [INF] HTTP GET /api/claims/556 responded 200 in 206.2715 ms
+2026-02-20 18:28:17.465 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 278.6684 ms
+2026-02-20 18:28:17.465 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 279.0280 ms
+2026-02-20 18:51:41.600 +05:30 [INF] HTTP GET /api/physicians responded 200 in 436.1430 ms
+2026-02-20 18:51:50.385 +05:30 [INF] HTTP GET /api/connections responded 200 in 100.4685 ms
+2026-02-20 18:51:50.498 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 186.7190 ms
+2026-02-20 18:51:50.536 +05:30 [ERR] Failed executing DbCommand (29ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-20 18:51:50.603 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:735cdc5f-0072-4afe-8ce7-aa7809ecce24
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:735cdc5f-0072-4afe-8ce7-aa7809ecce24
+Error Number:207,State:1,Class:16
+2026-02-20 18:51:50.610 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at Microsoft.Data.SqlClient.SqlCommand.<>c.<ExecuteDbDataReaderAsync>b__195_0(Task`1 result)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:735cdc5f-0072-4afe-8ce7-aa7809ecce24
+Error Number:207,State:1,Class:16
+2026-02-20 18:51:50.672 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 342.9663 ms
+2026-02-20 19:07:59.002 +05:30 [INF] HTTP GET /api/physicians responded 200 in 201.4382 ms
+2026-02-20 19:07:59.133 +05:30 [INF] HTTP GET /api/payers responded 200 in 331.4062 ms
+2026-02-20 19:07:59.147 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 346.1563 ms
+2026-02-20 19:07:59.388 +05:30 [INF] HTTP GET /api/patients/555 responded 200 in 586.6055 ms
+2026-02-20 19:08:12.546 +05:30 [INF] HTTP GET /api/patients/available-columns responded 200 in 3.2375 ms
+2026-02-20 19:08:12.599 +05:30 [INF] HTTP GET /api/patients responded 200 in 59.5358 ms
+2026-02-20 19:08:15.035 +05:30 [INF] HTTP GET /api/physicians responded 200 in 18.7506 ms
+2026-02-20 19:08:15.039 +05:30 [INF] HTTP GET /api/payers responded 200 in 23.9725 ms
+2026-02-20 19:08:15.072 +05:30 [INF] HTTP GET /api/patients/555 responded 200 in 56.3072 ms
+2026-02-20 19:08:15.137 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 119.8223 ms
+2026-02-20 19:13:04.667 +05:30 [INF] HTTP GET /api/physicians responded 200 in 28.3151 ms
+2026-02-20 19:13:04.668 +05:30 [INF] HTTP GET /api/payers responded 200 in 22.7148 ms
+2026-02-20 19:13:04.671 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 31.6014 ms
+2026-02-20 19:13:04.728 +05:30 [INF] HTTP GET /api/patients/555 responded 200 in 83.0485 ms
+2026-02-20 19:13:18.097 +05:30 [INF] HTTP GET /api/physicians responded 200 in 23.7367 ms
+2026-02-20 19:13:18.098 +05:30 [INF] HTTP GET /api/payers responded 200 in 30.3311 ms
+2026-02-20 19:13:18.102 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 28.4166 ms
+2026-02-20 19:13:18.132 +05:30 [INF] HTTP GET /api/patients/555 responded 200 in 63.4576 ms
+2026-02-20 19:13:41.775 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 31.7040 ms
+2026-02-20 19:13:41.776 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 33.7875 ms
+2026-02-20 19:13:41.786 +05:30 [INF] HTTP GET /api/physicians responded 200 in 45.0946 ms
+2026-02-20 19:13:41.801 +05:30 [INF] HTTP GET /api/claims/556 responded 200 in 57.8598 ms
+2026-02-20 19:13:41.868 +05:30 [INF] HTTP GET /api/services/claims/556 responded 200 in 124.8848 ms
+2026-02-20 19:14:12.859 +05:30 [ERR] Failed executing DbCommand (12ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [c].[ClaID], [c].[ClaAccidentDate], [c].[ClaAcuteManifestationDate], [c].[ClaAdditionalData], [c].[ClaAdmissionHour], [c].[ClaAdmissionSource], [c].[ClaAdmissionType], [c].[ClaAdmittedDate], [c].[ClaAdmittingDiagnosis], [c].[ClaArchived], [c].[ClaAssumedCareDate], [c].[ClaAttendingPhyFID], [c].[ClaAuthorizedReturnToWorkDate], [c].[ClaBillDate], [c].[ClaBillTo], [c].[ClaBillingPhyFID], [c].[ClaBox10dClaimCodes], [c].[ClaBox11bOtherClaimIDQualifier], [c].[ClaBox22CodeOverride], [c].[ClaBox33bOverride], [c].[ClaCLIANumber], [c].[ClaCMNCertOnFile], [c].[ClaCMNCertTypeCode], [c].[ClaCMNFormIdentificationCode], [c].[ClaCMNInitialDate], [c].[ClaCMNLengthOfNeed], [c].[ClaCMNRevisedDate], [c].[ClaCMNSignedDate], [c].[ClaCN1Segment], [c].[ClaClassification], [c].[ClaConditionCode1], [c].[ClaConditionCode2], [c].[ClaConditionCode3], [c].[ClaConditionCode4], [c].[ClaCreatedComputerName], [c].[ClaCreatedUserGUID], [c].[ClaCreatedUserName], [c].[ClaCustomField1], [c].[ClaCustomField2], [c].[ClaCustomField3], [c].[ClaCustomField4], [c].[ClaCustomField5], [c].[ClaDMEFormData], [c].[ClaDateLastSeen], [c].[ClaDateOfCurrent], [c].[ClaDateTimeCreated], [c].[ClaDateTimeModified], [c].[ClaDateTotalFrom], [c].[ClaDateTotalThrough], [c].[ClaDelayCode], [c].[ClaDiagnosis1], [c].[ClaDiagnosis10], [c].[ClaDiagnosis11], [c].[ClaDiagnosis12], [c].[ClaDiagnosis13], [c].[ClaDiagnosis14], [c].[ClaDiagnosis15], [c].[ClaDiagnosis16], [c].[ClaDiagnosis17], [c].[ClaDiagnosis18], [c].[ClaDiagnosis19], [c].[ClaDiagnosis2], [c].[ClaDiagnosis20], [c].[ClaDiagnosis21], [c].[ClaDiagnosis22], [c].[ClaDiagnosis23], [c].[ClaDiagnosis24], [c].[ClaDiagnosis25], [c].[ClaDiagnosis3], [c].[ClaDiagnosis4], [c].[ClaDiagnosis5], [c].[ClaDiagnosis6], [c].[ClaDiagnosis7], [c].[ClaDiagnosis8], [c].[ClaDiagnosis9], [c].[ClaDiagnosisCodesCC], [c].[ClaDisabilityBeginDate], [c].[ClaDisabilityEndDate], [c].[ClaDischargedDate], [c].[ClaDischargedHour], [c].[ClaEDINotes], [c].[ClaEPSDTReferral], [c].[ClaExternalFID], [c].[ClaFacilityPhyFID], [c].[ClaFirstDateOfInjury], [c].[ClaFirstDateTRIG], [c].[ClaFirstInsPaymentDateTRIG], [c].[ClaHearingAndPrescriptionDate], [c].[ClaHomeboundInd], [c].[ClaHospiceInd], [c].[ClaICDIndicator], [c].[ClaIDENumber], [c].[ClaIgnoreAppliedAmount], [c].[ClaInitialTreatmentDate], [c].[ClaInsuranceTypeCodeOverride], [c].[ClaInvoiceNumber], [c].[ClaK3FileInformation], [c].[ClaLabCharges], [c].[ClaLastComputerName], [c].[ClaLastDateTRIG], [c].[ClaLastExportedDate], [c].[ClaLastMenstrualDate], [c].[ClaLastPrintedDate], [c].[ClaLastUserGUID], [c].[ClaLastUserName], [c].[ClaLastWorkedDate], [c].[ClaLastXRayDate], [c].[ClaLocked], [c].[ClaMOASegment], [c].[ClaMammographyCert], [c].[ClaMedicaidResubmissionCode], [c].[ClaMedicalRecordNumber], [c].[ClaOperatingPhyFID], [c].[ClaOrderingPhyFID], [c].[ClaOriginalRefNo], [c].[ClaOutsideLab], [c].[ClaPOAIndicator], [c].[ClaPPSCode], [c].[ClaPaidDateTRIG], [c].[ClaPaperWorkControlNumber], [c].[ClaPaperWorkInd], [c].[ClaPaperWorkTransmissionCode], [c].[ClaPatFID], [c].[ClaPatientReasonDiagnosis1], [c].[ClaPatientReasonDiagnosis2], [c].[ClaPatientReasonDiagnosis3], [c].[ClaPatientStatus], [c].[ClaPricingExceptionCode], [c].[ClaPrincipalProcedureCode], [c].[ClaPrincipalProcedureDate], [c].[ClaPrintUnitCharge], [c].[ClaProviderAgreementCode], [c].[ClaRecurUntilDate], [c].[ClaRecurringTimeFrame], [c].[ClaReferralNumber], [c].[ClaReferringPhyFID], [c].[ClaRelatedTo], [c].[ClaRelatedToState], [c].[ClaRelinquishedCareDate], [c].[ClaRemarks], [c].[ClaRenderingPhyFID], [c].[ClaReserved10], [c].[ClaReserved19], [c].[ClaSimilarIllnessDate], [c].[ClaSpecialProgramIndicator], [c].[ClaStatementCoversFromOverride], [c].[ClaStatementCoversThroughOverride], [c].[ClaStatus], [c].[ClaSubmissionMethod], [c].[ClaSupervisingPhyFID], [c].[ClaTotalAdjCC], [c].[ClaTotalAmtAppliedCC], [c].[ClaTotalAmtPaidCC], [c].[ClaTotalBalanceCC], [c].[ClaTotalCOAdjTRIG], [c].[ClaTotalCRAdjTRIG], [c].[ClaTotalChargeTRIG], [c].[ClaTotalInsAmtPaidTRIG], [c].[ClaTotalInsBalanceTRIG], [c].[ClaTotalOAAdjTRIG], [c].[ClaTotalPIAdjTRIG], [c].[ClaTotalPRAdjTRIG], [c].[ClaTotalPatAmtPaidTRIG], [c].[ClaTotalPatBalanceTRIG], [c].[ClaTotalServiceLineCountTRIG], [c].[ClaTypeOfBill]
+FROM [Claim] AS [c]
+WHERE [c].[ClaID] = @__p_0
+2026-02-20 19:14:12.863 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:4936b186-64e8-4e7a-b538-7c1673a3f610
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:4936b186-64e8-4e7a-b538-7c1673a3f610
+Error Number:207,State:1,Class:16
+2026-02-20 19:14:12.870 +05:30 [ERR] Error updating claim 556
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.UpdateClaim(Int32 claId, UpdateClaimRequest request) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 997
+ClientConnectionId:4936b186-64e8-4e7a-b538-7c1673a3f610
+Error Number:207,State:1,Class:16
+2026-02-20 19:14:12.878 +05:30 [ERR] HTTP PUT /api/claims/556 responded 500 in 110.7460 ms
+2026-02-20 19:14:54.320 +05:30 [INF] HTTP GET /api/adjustments/claims/556 responded 200 in 32.9583 ms
+2026-02-20 19:14:55.603 +05:30 [INF] HTTP GET /api/disbursements/claims/556 responded 200 in 52.6372 ms
+2026-02-20 19:14:56.768 +05:30 [INF] HTTP GET /api/payments/claims/556 responded 200 in 33.8432 ms
+2026-02-20 19:15:27.587 +05:30 [ERR] Failed executing DbCommand (5ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [c].[ClaID], [c].[ClaAccidentDate], [c].[ClaAcuteManifestationDate], [c].[ClaAdditionalData], [c].[ClaAdmissionHour], [c].[ClaAdmissionSource], [c].[ClaAdmissionType], [c].[ClaAdmittedDate], [c].[ClaAdmittingDiagnosis], [c].[ClaArchived], [c].[ClaAssumedCareDate], [c].[ClaAttendingPhyFID], [c].[ClaAuthorizedReturnToWorkDate], [c].[ClaBillDate], [c].[ClaBillTo], [c].[ClaBillingPhyFID], [c].[ClaBox10dClaimCodes], [c].[ClaBox11bOtherClaimIDQualifier], [c].[ClaBox22CodeOverride], [c].[ClaBox33bOverride], [c].[ClaCLIANumber], [c].[ClaCMNCertOnFile], [c].[ClaCMNCertTypeCode], [c].[ClaCMNFormIdentificationCode], [c].[ClaCMNInitialDate], [c].[ClaCMNLengthOfNeed], [c].[ClaCMNRevisedDate], [c].[ClaCMNSignedDate], [c].[ClaCN1Segment], [c].[ClaClassification], [c].[ClaConditionCode1], [c].[ClaConditionCode2], [c].[ClaConditionCode3], [c].[ClaConditionCode4], [c].[ClaCreatedComputerName], [c].[ClaCreatedUserGUID], [c].[ClaCreatedUserName], [c].[ClaCustomField1], [c].[ClaCustomField2], [c].[ClaCustomField3], [c].[ClaCustomField4], [c].[ClaCustomField5], [c].[ClaDMEFormData], [c].[ClaDateLastSeen], [c].[ClaDateOfCurrent], [c].[ClaDateTimeCreated], [c].[ClaDateTimeModified], [c].[ClaDateTotalFrom], [c].[ClaDateTotalThrough], [c].[ClaDelayCode], [c].[ClaDiagnosis1], [c].[ClaDiagnosis10], [c].[ClaDiagnosis11], [c].[ClaDiagnosis12], [c].[ClaDiagnosis13], [c].[ClaDiagnosis14], [c].[ClaDiagnosis15], [c].[ClaDiagnosis16], [c].[ClaDiagnosis17], [c].[ClaDiagnosis18], [c].[ClaDiagnosis19], [c].[ClaDiagnosis2], [c].[ClaDiagnosis20], [c].[ClaDiagnosis21], [c].[ClaDiagnosis22], [c].[ClaDiagnosis23], [c].[ClaDiagnosis24], [c].[ClaDiagnosis25], [c].[ClaDiagnosis3], [c].[ClaDiagnosis4], [c].[ClaDiagnosis5], [c].[ClaDiagnosis6], [c].[ClaDiagnosis7], [c].[ClaDiagnosis8], [c].[ClaDiagnosis9], [c].[ClaDiagnosisCodesCC], [c].[ClaDisabilityBeginDate], [c].[ClaDisabilityEndDate], [c].[ClaDischargedDate], [c].[ClaDischargedHour], [c].[ClaEDINotes], [c].[ClaEPSDTReferral], [c].[ClaExternalFID], [c].[ClaFacilityPhyFID], [c].[ClaFirstDateOfInjury], [c].[ClaFirstDateTRIG], [c].[ClaFirstInsPaymentDateTRIG], [c].[ClaHearingAndPrescriptionDate], [c].[ClaHomeboundInd], [c].[ClaHospiceInd], [c].[ClaICDIndicator], [c].[ClaIDENumber], [c].[ClaIgnoreAppliedAmount], [c].[ClaInitialTreatmentDate], [c].[ClaInsuranceTypeCodeOverride], [c].[ClaInvoiceNumber], [c].[ClaK3FileInformation], [c].[ClaLabCharges], [c].[ClaLastComputerName], [c].[ClaLastDateTRIG], [c].[ClaLastExportedDate], [c].[ClaLastMenstrualDate], [c].[ClaLastPrintedDate], [c].[ClaLastUserGUID], [c].[ClaLastUserName], [c].[ClaLastWorkedDate], [c].[ClaLastXRayDate], [c].[ClaLocked], [c].[ClaMOASegment], [c].[ClaMammographyCert], [c].[ClaMedicaidResubmissionCode], [c].[ClaMedicalRecordNumber], [c].[ClaOperatingPhyFID], [c].[ClaOrderingPhyFID], [c].[ClaOriginalRefNo], [c].[ClaOutsideLab], [c].[ClaPOAIndicator], [c].[ClaPPSCode], [c].[ClaPaidDateTRIG], [c].[ClaPaperWorkControlNumber], [c].[ClaPaperWorkInd], [c].[ClaPaperWorkTransmissionCode], [c].[ClaPatFID], [c].[ClaPatientReasonDiagnosis1], [c].[ClaPatientReasonDiagnosis2], [c].[ClaPatientReasonDiagnosis3], [c].[ClaPatientStatus], [c].[ClaPricingExceptionCode], [c].[ClaPrincipalProcedureCode], [c].[ClaPrincipalProcedureDate], [c].[ClaPrintUnitCharge], [c].[ClaProviderAgreementCode], [c].[ClaRecurUntilDate], [c].[ClaRecurringTimeFrame], [c].[ClaReferralNumber], [c].[ClaReferringPhyFID], [c].[ClaRelatedTo], [c].[ClaRelatedToState], [c].[ClaRelinquishedCareDate], [c].[ClaRemarks], [c].[ClaRenderingPhyFID], [c].[ClaReserved10], [c].[ClaReserved19], [c].[ClaSimilarIllnessDate], [c].[ClaSpecialProgramIndicator], [c].[ClaStatementCoversFromOverride], [c].[ClaStatementCoversThroughOverride], [c].[ClaStatus], [c].[ClaSubmissionMethod], [c].[ClaSupervisingPhyFID], [c].[ClaTotalAdjCC], [c].[ClaTotalAmtAppliedCC], [c].[ClaTotalAmtPaidCC], [c].[ClaTotalBalanceCC], [c].[ClaTotalCOAdjTRIG], [c].[ClaTotalCRAdjTRIG], [c].[ClaTotalChargeTRIG], [c].[ClaTotalInsAmtPaidTRIG], [c].[ClaTotalInsBalanceTRIG], [c].[ClaTotalOAAdjTRIG], [c].[ClaTotalPIAdjTRIG], [c].[ClaTotalPRAdjTRIG], [c].[ClaTotalPatAmtPaidTRIG], [c].[ClaTotalPatBalanceTRIG], [c].[ClaTotalServiceLineCountTRIG], [c].[ClaTypeOfBill]
+FROM [Claim] AS [c]
+WHERE [c].[ClaID] = @__p_0
+2026-02-20 19:15:27.591 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:4936b186-64e8-4e7a-b538-7c1673a3f610
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:4936b186-64e8-4e7a-b538-7c1673a3f610
+Error Number:207,State:1,Class:16
+2026-02-20 19:15:27.596 +05:30 [ERR] Error updating claim 556
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'ClaAdditionalData'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.ClaimsController.UpdateClaim(Int32 claId, UpdateClaimRequest request) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ClaimsController.cs:line 997
+ClientConnectionId:4936b186-64e8-4e7a-b538-7c1673a3f610
+Error Number:207,State:1,Class:16
+2026-02-20 19:15:27.601 +05:30 [ERR] HTTP PUT /api/claims/556 responded 500 in 24.3384 ms
+2026-02-20 19:15:47.438 +05:30 [INF] HTTP GET /api/physicians responded 200 in 31.6538 ms
+2026-02-20 19:15:47.445 +05:30 [INF] HTTP GET /api/physicians/available-columns responded 200 in 1.5328 ms
+2026-02-20 19:16:02.730 +05:30 [INF] HTTP GET /api/physicians responded 200 in 33.5465 ms
+2026-02-20 19:16:15.073 +05:30 [INF] HTTP GET /api/physicians responded 200 in 30.3256 ms
+2026-02-20 19:25:32.414 +05:30 [INF] HTTP GET /api/physicians responded 200 in 197.2578 ms
+2026-02-20 19:25:55.566 +05:30 [INF] HTTP GET /api/connections responded 200 in 10.4018 ms
+2026-02-20 19:25:55.591 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 5.9700 ms
+2026-02-20 19:25:55.697 +05:30 [ERR] Failed executing DbCommand (4ms) [Parameters=[@__isArchived_Value_0='?' (DbType = Boolean)], CommandType='"Text"', CommandTimeout='30']
+SELECT [e].[Id], [e].[ConnectionLibraryId], [e].[CreatedAt], [e].[Direction], [e].[FileContent], [e].[FileName], [e].[FileSize], [e].[FileType], [e].[IsArchived], [e].[IsRead], [e].[Note], [e].[PayerName], [e].[PaymentAmount], [e].[ReceivedAt], [e].[ReceiverLibraryId], [e].[SentAt], [e].[Status], [e].[TraceNumber]
+FROM [EdiReport] AS [e]
+WHERE [e].[IsArchived] = @__isArchived_Value_0
+ORDER BY [e].[CreatedAt] DESC
+2026-02-20 19:25:55.705 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d6de38cf-f181-451f-92aa-a6fe632bcdf9
+Error Number:207,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d6de38cf-f181-451f-92aa-a6fe632bcdf9
+Error Number:207,State:1,Class:16
+2026-02-20 19:25:55.709 +05:30 [ERR] Error getting EDI reports
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid column name 'FileContent'.
+Invalid column name 'FileSize'.
+Invalid column name 'IsRead'.
+Invalid column name 'Note'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Repositories.EdiReportRepository.GetAllAsync(Nullable`1 isArchived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Repositories\EdiReportRepository.cs:line 22
+   at Zebl.Api.Controllers.EdiReportsController.GetAll(Nullable`1 archived) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\EdiReportsController.cs:line 41
+ClientConnectionId:d6de38cf-f181-451f-92aa-a6fe632bcdf9
+Error Number:207,State:1,Class:16
+2026-02-20 19:25:55.718 +05:30 [ERR] HTTP GET /api/edi-reports responded 500 in 133.6020 ms
+2026-02-20 19:25:58.689 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 10.2762 ms
+2026-02-20 19:26:01.625 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 16.1362 ms
+2026-02-20 19:26:06.834 +05:30 [INF] Fetching import history from Interface_Import_Log table
+2026-02-20 19:26:06.857 +05:30 [INF] Retrieved 2 import history records
+2026-02-20 19:26:06.860 +05:30 [INF] HTTP GET /api/interface/history responded 200 in 35.3398 ms

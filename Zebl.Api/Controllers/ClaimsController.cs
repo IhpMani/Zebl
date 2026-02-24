@@ -7,6 +7,7 @@ using System.Threading;
 using System.Xml.Serialization;
 using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.Claims;
+using Zebl.Application.Services;
 using Zebl.Application.Dtos.Common;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
@@ -24,12 +25,14 @@ namespace Zebl.Api.Controllers
     {
         private readonly ZeblDbContext _db;
         private readonly ICurrentUserContext _userContext;
+        private readonly IClaimExportService _claimExportService;
         private readonly ILogger<ClaimsController> _logger;
 
-        public ClaimsController(ZeblDbContext db, ICurrentUserContext userContext, ILogger<ClaimsController> logger)
+        public ClaimsController(ZeblDbContext db, ICurrentUserContext userContext, IClaimExportService claimExportService, ILogger<ClaimsController> logger)
         {
             _db = db;
             _userContext = userContext;
+            _claimExportService = claimExportService;
             _logger = logger;
         }
 
@@ -624,6 +627,29 @@ namespace Zebl.Api.Controllers
             {
                 _logger.LogWarning(ex, "Claim_Audit/GetClaimNotes failed. Table may not exist.");
                 return Ok(new { data = Array.Empty<object>(), meta = new { page, pageSize, totalCount = 0 } });
+            }
+        }
+
+        /// <summary>
+        /// Generates 837 for the claim (Payer rules), updates status to Submitted, returns 837 content.
+        /// </summary>
+        [HttpPost("{claId:int}/export837")]
+        public async Task<IActionResult> Export837([FromRoute] int claId)
+        {
+            if (claId <= 0) return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Claim ID must be greater than 0" });
+            try
+            {
+                var content = await _claimExportService.Generate837Async(claId);
+                return Ok(new { content });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "EXPORT_RULE", Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Export 837 failed for claim {ClaId}", claId);
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = "EXPORT_ERROR", Message = ex.Message });
             }
         }
 
