@@ -155,6 +155,8 @@ builder.Services.AddScoped<Zebl.Application.Services.ReceiverLibraryService>();
 // EDI Export
 builder.Services.AddScoped<Zebl.Application.Repositories.IClaimRepository, Zebl.Infrastructure.Repositories.ClaimRepository>();
 builder.Services.AddScoped<Zebl.Application.Services.IEdiExportService, Zebl.Application.Services.EdiExportService>();
+builder.Services.AddScoped<Zebl.Application.Services.IClaimExportDataProvider, Zebl.Infrastructure.Services.ClaimExportDataProvider>();
+builder.Services.AddScoped<Zebl.Application.Services.IClaimExportService, Zebl.Application.Services.ClaimExportService>();
 
 // Connection Library
 builder.Services.AddScoped<Zebl.Application.Repositories.IConnectionLibraryRepository, Zebl.Infrastructure.Repositories.ConnectionLibraryRepository>();
@@ -166,6 +168,16 @@ builder.Services.AddScoped<Zebl.Infrastructure.Services.SftpTransportService>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IEdiReportRepository, Zebl.Infrastructure.Repositories.EdiReportRepository>();
 builder.Services.AddScoped<Zebl.Application.Services.EdiReportService>();
 // IEdiReportFileStore removed - FileContent now stored in database
+
+// Payer Library
+builder.Services.AddScoped<Zebl.Application.Repositories.IPayerRepository, Zebl.Infrastructure.Repositories.PayerRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.PayerService>();
+
+// ERA Posting & Payments
+builder.Services.AddScoped<Zebl.Application.Repositories.IPaymentRepository, Zebl.Infrastructure.Repositories.PaymentRepository>();
+builder.Services.AddScoped<Zebl.Application.Repositories.IAdjustmentRepository, Zebl.Infrastructure.Repositories.AdjustmentRepository>();
+builder.Services.AddScoped<Zebl.Application.Repositories.IImportLogRepository, Zebl.Infrastructure.Repositories.ImportLogRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.IEraPostingService, Zebl.Application.Services.EraPostingService>();
 #endregion
 
 #region Controllers

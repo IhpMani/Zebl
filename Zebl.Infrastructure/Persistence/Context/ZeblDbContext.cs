@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Zebl.Application.Abstractions;
 using Zebl.Application.Domain;
 using Zebl.Infrastructure.Persistence.Entities;
+using PayerEntity = Zebl.Infrastructure.Persistence.Entities.Payer;
 
 namespace Zebl.Infrastructure.Persistence.Context;
 
@@ -36,7 +37,7 @@ public partial class ZeblDbContext : DbContext
 
     public virtual DbSet<Patient_Insured> Patient_Insureds { get; set; }
 
-    public virtual DbSet<Payer> Payers { get; set; }
+    public virtual DbSet<PayerEntity> Payers { get; set; }
 
     public virtual DbSet<Payment> Payments { get; set; }
 
@@ -998,7 +999,7 @@ public partial class ZeblDbContext : DbContext
                 .HasConstraintName("FK_PatientInsured_Patient");
         });
 
-        modelBuilder.Entity<Payer>(entity =>
+        modelBuilder.Entity<PayerEntity>(entity =>
         {
             entity.HasKey(e => e.PayID).HasName("PK__Payer__EE8FCE2FDCFA87D9");
 
