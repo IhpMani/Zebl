@@ -93,6 +93,45 @@ public class AuthController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Register a new user account. No authentication required; use from Swagger to create users.
+    /// Returns 409 if UserName already exists.
+    /// </summary>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken = default)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return BadRequest(new { error = "UserName and Password are required." });
+        }
+
+        var userName = request.UserName.Trim();
+        var email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+
+        var existing = await _db.AppUsers.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
+        if (existing != null)
+        {
+            return Conflict(new { error = "UserName already exists." });
+        }
+
+        var newUser = PasswordHelper.CreateUser(userName, email, request.Password);
+        await _db.AppUsers.AddAsync(newUser, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("User registered. UserGuid={UserGuid}, UserName={UserName}", newUser.UserGuid, newUser.UserName);
+
+        return CreatedAtAction(nameof(Login), new { userName = newUser.UserName }, new
+        {
+            newUser.UserGuid,
+            newUser.UserName,
+            newUser.Email,
+            newUser.IsActive,
+            newUser.CreatedAt
+        });
+    }
+
     // TEMP – REMOVE AFTER SETUP
     // Dev-only helper endpoint to set initial passwords without migrations/Identity.
     [HttpPost("set-password")]
@@ -161,6 +200,16 @@ public class AuthController : ControllerBase
 public class LoginRequest
 {
     public string UserName { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
+
+public class RegisterRequest
+{
+    /// <summary>User name for login.</summary>
+    public string UserName { get; set; } = string.Empty;
+    /// <summary>Optional email.</summary>
+    public string? Email { get; set; }
+    /// <summary>Plain-text password; will be hashed and not stored as plain text.</summary>
     public string Password { get; set; } = string.Empty;
 }
 

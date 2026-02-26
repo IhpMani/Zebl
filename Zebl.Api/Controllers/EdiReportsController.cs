@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zebl.Application.Domain;
@@ -18,6 +19,7 @@ public class EdiReportsController : ControllerBase
     private readonly IClaimExportService _claimExportService;
     private readonly IConnectionLibraryRepository _connectionRepo;
     private readonly SftpTransportService _sftpTransport;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<EdiReportsController> _logger;
 
     public EdiReportsController(
@@ -26,6 +28,7 @@ public class EdiReportsController : ControllerBase
         IClaimExportService claimExportService,
         IConnectionLibraryRepository connectionRepo,
         SftpTransportService sftpTransport,
+        IHttpClientFactory httpClientFactory,
         ILogger<EdiReportsController> logger)
     {
         _ediReportService = ediReportService;
@@ -33,6 +36,7 @@ public class EdiReportsController : ControllerBase
         _claimExportService = claimExportService;
         _connectionRepo = connectionRepo;
         _sftpTransport = sftpTransport;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -205,22 +209,37 @@ public class EdiReportsController : ControllerBase
 
         try
         {
+            var host = (connection.Host ?? "").Trim();
+            string? httpUrl = null;
+            if (host.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || host.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                httpUrl = host;
+            else if (connection.Port == 5001 || connection.Port == 80 || connection.Port == 443)
+                httpUrl = (connection.Port == 443 ? "https" : "http") + "://" + host + ":" + connection.Port;
+            else if (host.Contains(":5001", StringComparison.OrdinalIgnoreCase) && !host.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                httpUrl = "http://" + host;
+
+            if (httpUrl != null)
+            {
+                var createdFromHttp = await DownloadFromHttpMockAsync(httpUrl, request.ReceiverLibraryId.Value, request.ConnectionLibraryId);
+                return Ok(new { count = createdFromHttp.Count, reports = createdFromHttp });
+            }
+
             var files = await _sftpTransport.DownloadFilesAsync(connection);
-            var created = new List<object>();
+            var createdReports = new List<object>();
 
             foreach (var (fileName, content) in files)
             {
                 var fileContentBytes = Encoding.UTF8.GetBytes(content);
                 var fileType = InferFileType(fileName, content);
-                
+
                 var report = await _ediReportService.CreateReceivedAsync(
                     request.ReceiverLibraryId.Value,
                     request.ConnectionLibraryId,
                     fileName,
                     fileType,
                     fileContentBytes);
-                
-                created.Add(new
+
+                createdReports.Add(new
                 {
                     report.Id,
                     report.FileName,
@@ -232,13 +251,67 @@ public class EdiReportsController : ControllerBase
                 });
             }
 
-            return Ok(new { count = created.Count, reports = created });
+            return Ok(new { count = createdReports.Count, reports = createdReports });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error downloading EDI reports");
             return StatusCode(500, new { error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Downloads report metadata from HTTP mock (e.g. GET /api/get-reports) and creates EDI report records.
+    /// </summary>
+    private async Task<List<object>> DownloadFromHttpMockAsync(string baseUrl, Guid receiverLibraryId, Guid? connectionLibraryId)
+    {
+        var baseNormalized = baseUrl.TrimEnd('/');
+        var client = _httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(30);
+        var url = baseNormalized + "/api/get-reports";
+        var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        if (root.ValueKind != JsonValueKind.Array)
+            return new List<object>();
+
+        var created = new List<object>();
+        foreach (var item in root.EnumerateArray())
+        {
+            var fileName = item.TryGetProperty("fileName", out var fn) ? fn.GetString() ?? "report.edi" : "report.edi";
+            var fileType = item.TryGetProperty("fileType", out var ft) ? ft.GetString() ?? ".EDI" : ".EDI";
+            var payer = item.TryGetProperty("payer", out var p) ? p.GetString() : null;
+            decimal? paymentAmount = null;
+            if (item.TryGetProperty("paymentAmount", out var pa) && pa.ValueKind == JsonValueKind.Number)
+                paymentAmount = pa.GetDecimal();
+            var note = item.TryGetProperty("note", out var n) ? n.GetString() : null;
+            var traceNumber = item.TryGetProperty("traceNumber", out var tn) ? tn.GetString() : null;
+
+            var report = await _ediReportService.CreateReceivedFromMetadataAsync(
+                receiverLibraryId,
+                connectionLibraryId,
+                fileName,
+                fileType.TrimStart('.'),
+                payerName: payer,
+                paymentAmount: paymentAmount,
+                note: note,
+                traceNumber: traceNumber);
+
+            created.Add(new
+            {
+                report.Id,
+                report.FileName,
+                report.FileType,
+                report.Status,
+                report.PayerName,
+                report.PaymentAmount,
+                report.Note
+            });
+        }
+
+        return created;
     }
 
     [HttpGet("{id:guid}/content")]

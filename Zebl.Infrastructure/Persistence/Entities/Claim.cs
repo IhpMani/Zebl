@@ -307,6 +307,12 @@ public partial class Claim
 
     public string? ClaTypeOfBill { get; set; }
 
+    /// <summary>Primary | Secondary. When Secondary, ClaPrimaryClaimFID links to primary claim.</summary>
+    public string? ClaClaimType { get; set; }
+
+    /// <summary>When ClaClaimType = Secondary, the primary claim ID.</summary>
+    public int? ClaPrimaryClaimFID { get; set; }
+
     public decimal? ClaTotalCOAdjTRIG { get; set; }
 
     public decimal? ClaTotalCRAdjTRIG { get; set; }

@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Zebl.Application.Dtos.Common;
-using System.Collections.Generic;
 using Zebl.Application.Dtos.Payments;
-using Zebl.Infrastructure.Persistence.Context;
-using Zebl.Infrastructure.Persistence.Entities;
+using Zebl.Application.Exceptions;
+using Zebl.Application.Repositories;
+using Zebl.Application.Services;
 
 namespace Zebl.Api.Controllers
 {
@@ -14,13 +13,119 @@ namespace Zebl.Api.Controllers
     [Authorize(Policy = "RequireAuth")]
     public class PaymentsController : ControllerBase
     {
-        private readonly ZeblDbContext _db;
+        private readonly IPaymentRepository _paymentRepo;
+        private readonly IPaymentService _paymentService;
+        private readonly IServiceLineRepository _serviceLineRepo;
         private readonly ILogger<PaymentsController> _logger;
 
-        public PaymentsController(ZeblDbContext db, ILogger<PaymentsController> logger)
+        public PaymentsController(IPaymentRepository paymentRepo, IPaymentService paymentService, IServiceLineRepository serviceLineRepo, ILogger<PaymentsController> logger)
         {
-            _db = db;
+            _paymentRepo = paymentRepo;
+            _paymentService = paymentService;
+            _serviceLineRepo = serviceLineRepo;
             _logger = logger;
+        }
+
+        /// <summary>Get service lines for payment entry grid by patient (and optional payer).</summary>
+        [HttpGet("entry/service-lines"), ActionName(nameof(GetServiceLinesForEntry))]
+        public async Task<IActionResult> GetServiceLinesForEntry([FromQuery] int patientId, [FromQuery] int? payerId = null)
+        {
+            if (patientId <= 0)
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "patientId is required and must be greater than 0." });
+            var isPayerSource = payerId.HasValue && payerId.Value > 0;
+            var lines = await _serviceLineRepo.GetPaymentEntryLinesAsync(patientId, payerId, isPayerSource);
+            return Ok(new ApiResponse<List<PaymentEntryServiceLineDto>> { Data = lines });
+        }
+
+        /// <summary>Get a single payment by ID for the edit form.</summary>
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetPaymentById(int id)
+        {
+            var p = await _paymentRepo.GetPaymentForEditAsync(id);
+            if (p == null)
+                return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Payment not found." });
+            return Ok(new ApiResponse<PaymentForEditDto> { Data = p });
+        }
+
+        /// <summary>Create payment (payment entry). Validates source, duplicate, applies to service lines, creates adjustments, recalculates claim totals.</summary>
+        [HttpPost]
+        public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentCommand command)
+        {
+            if (command == null)
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Request body required." });
+            try
+            {
+                var paymentId = await _paymentService.CreatePaymentAsync(command);
+                return Ok(new ApiResponse<int> { Data = paymentId });
+            }
+            catch (DuplicatePaymentException ex)
+            {
+                return Conflict(new ErrorResponseDto { ErrorCode = "DUPLICATE_PAYMENT", Message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "VALIDATION", Message = ex.Message });
+            }
+        }
+
+        /// <summary>Auto-apply remaining payment amount to service lines (oldest claim first).</summary>
+        [HttpPost("{id:int}/auto-apply")]
+        public async Task<IActionResult> AutoApply(int id)
+        {
+            try
+            {
+                await _paymentService.AutoApplyPaymentAsync(id);
+                return Ok(new ApiResponse<object> { Data = new { paymentId = id } });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "VALIDATION", Message = ex.Message });
+            }
+        }
+
+        /// <summary>Disburse remaining amount to given service line applications.</summary>
+        [HttpPost("{id:int}/disburse")]
+        public async Task<IActionResult> Disburse(int id, [FromBody] List<ServiceLineApplicationDto> applications)
+        {
+            if (applications == null) applications = new List<ServiceLineApplicationDto>();
+            try
+            {
+                await _paymentService.DisburseRemainingAsync(id, applications);
+                return Ok(new ApiResponse<object> { Data = new { paymentId = id } });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "VALIDATION", Message = ex.Message });
+            }
+        }
+
+        /// <summary>Modify payment (reverses and recreates with new command). Recalculates balances. Returns new payment ID.</summary>
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Modify(int id, [FromBody] CreatePaymentCommand command)
+        {
+            if (command == null)
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Request body required." });
+            try
+            {
+                var newId = await _paymentService.ModifyPaymentAsync(id, command);
+                return Ok(new ApiResponse<int> { Data = newId });
+            }
+            catch (DuplicatePaymentException ex)
+            {
+                return Conflict(new ErrorResponseDto { ErrorCode = "DUPLICATE_PAYMENT", Message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "VALIDATION", Message = ex.Message });
+            }
+        }
+
+        /// <summary>Delete payment: reverse disbursements, delete adjustments, recalculate service lines and claim totals.</summary>
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _paymentService.RemovePaymentAsync(id);
+            return NoContent();
         }
 
         // =========================================================
@@ -39,34 +144,9 @@ namespace Zebl.Api.Controllers
                 });
             }
 
-            // Resolve patient from claim (1 cheap query)
-            var patientId = await _db.Claims
-                .AsNoTracking()
-                .Where(c => c.ClaID == claId)
-                .Select(c => c.ClaPatFID)
-                .FirstOrDefaultAsync();
-
-            if (patientId == 0)
+            var (payments, claimFound) = await _paymentRepo.GetPaymentsForClaimAsync(claId);
+            if (!claimFound)
                 return NotFound();
-
-            // Pull payments for patient (NO includes, NO joins)
-            var payments = await _db.Payments
-                .AsNoTracking()
-                .Where(p => p.PmtPatFID == patientId)
-                .OrderByDescending(p => p.PmtDate)
-                .Select(p => new PaymentDto
-                {
-                    PmtID = p.PmtID,
-                    PmtDate = p.PmtDate == default
-                        ? (DateTime?)null
-                        : p.PmtDate.ToDateTime(TimeOnly.MinValue),
-                    PmtAmount = p.PmtAmount,
-                    PmtMethod = p.PmtMethod,
-                    PmtRemainingCC = p.PmtRemainingCC,
-                    PmtNote = p.PmtNote
-                })
-                .Take(200) // 🔴 HARD LIMIT
-                .ToListAsync();
 
             return Ok(new ApiResponse<List<PaymentDto>>
             {
@@ -94,46 +174,7 @@ namespace Zebl.Api.Controllers
                 });
             }
 
-            IQueryable<Payment> query = _db.Payments.AsNoTracking();
-            if (patientId.HasValue && patientId.Value > 0)
-                query = query.Where(p => p.PmtPatFID == patientId.Value);
-            query = query.OrderByDescending(p => p.PmtDateTimeCreated);
-
-            var totalCount = await query.CountAsync();
-
-            var data = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => new PaymentListItemDto
-                {
-                    PmtID = p.PmtID,
-                    PmtDateTimeCreated = p.PmtDateTimeCreated,
-                    PmtDateTimeModified = p.PmtDateTimeModified,
-                    PmtCreatedUserName = p.PmtCreatedUserName,
-                    PmtLastUserName = p.PmtLastUserName,
-                    PmtDate = p.PmtDate,
-                    PmtAmount = p.PmtAmount,
-                    PmtRemainingCC = p.PmtRemainingCC,
-                    PmtChargedPlatformFee = p.PmtChargedPlatformFee,
-                    PmtMethod = p.PmtMethod,
-                    PmtNote = p.PmtNote,
-                    Pmt835Ref = p.Pmt835Ref,
-                    PmtOtherReference1 = p.PmtOtherReference1,
-                    PmtPatFID = p.PmtPatFID,
-                    PmtPayFID = p.PmtPayFID,
-                    PmtBFEPFID = p.PmtBFEPFID,
-                    PmtAuthCode = p.PmtAuthCode,
-                    PmtDisbursedTRIG = p.PmtDisbursedTRIG,
-                    PmtPayerName = p.PmtPayF != null ? p.PmtPayF.PayName : null,
-                    PayClassification = p.PmtPayF != null ? p.PmtPayF.PayClassification : null,
-                    PatAccountNo = p.PmtPatF != null ? p.PmtPatF.PatAccountNo : null,
-                    PatLastName = p.PmtPatF != null ? p.PmtPatF.PatLastName : null,
-                    PatFirstName = p.PmtPatF != null ? p.PmtPatF.PatFirstName : null,
-                    PatFullNameCC = p.PmtPatF != null ? p.PmtPatF.PatFullNameCC : null,
-                    PatClassification = p.PmtPatF != null ? p.PmtPatF.PatClassification : null,
-                    AdditionalColumns = new Dictionary<string, object?>()
-                })
-                .ToListAsync();
+            var (data, totalCount) = await _paymentRepo.GetPaymentListAsync(page, pageSize, patientId);
 
             return Ok(new ApiResponse<List<PaymentListItemDto>>
             {

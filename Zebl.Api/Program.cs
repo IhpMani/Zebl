@@ -145,7 +145,7 @@ builder.Services.AddScoped<Zebl.Application.Abstractions.ICurrentUserContext, Ze
 builder.Services.AddSingleton<Zebl.Api.Services.IAdminUserService, Zebl.Api.Services.AdminUserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ParserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ImportService>();
-builder.Services.AddScoped<Zebl.Api.Services.ClaimAuditService>();
+builder.Services.AddScoped<Zebl.Application.Abstractions.IClaimAuditService, Zebl.Infrastructure.Services.ClaimAuditService>();
 builder.Services.AddScoped<Zebl.Api.Services.EntityMetadataService>();
 
 // Receiver Library
@@ -159,6 +159,7 @@ builder.Services.AddScoped<Zebl.Application.Services.IClaimExportDataProvider, Z
 builder.Services.AddScoped<Zebl.Application.Services.IClaimExportService, Zebl.Application.Services.ClaimExportService>();
 
 // Connection Library
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<Zebl.Application.Repositories.IConnectionLibraryRepository, Zebl.Infrastructure.Repositories.ConnectionLibraryRepository>();
 builder.Services.AddScoped<Zebl.Application.Services.ConnectionLibraryService>();
 builder.Services.AddScoped<Zebl.Application.Services.IEncryptionService, Zebl.Infrastructure.Services.AesEncryptionService>();
@@ -178,6 +179,18 @@ builder.Services.AddScoped<Zebl.Application.Repositories.IPaymentRepository, Zeb
 builder.Services.AddScoped<Zebl.Application.Repositories.IAdjustmentRepository, Zebl.Infrastructure.Repositories.AdjustmentRepository>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IImportLogRepository, Zebl.Infrastructure.Repositories.ImportLogRepository>();
 builder.Services.AddScoped<Zebl.Application.Services.IEraPostingService, Zebl.Application.Services.EraPostingService>();
+
+// Payment Engine (full payment entry, disbursement, claim totals)
+builder.Services.AddScoped<Zebl.Application.Repositories.IServiceLineRepository, Zebl.Infrastructure.Repositories.ServiceLineRepository>();
+builder.Services.AddScoped<Zebl.Application.Repositories.IDisbursementRepository, Zebl.Infrastructure.Repositories.DisbursementRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.IClaimTotalsService, Zebl.Application.Services.ClaimTotalsService>();
+builder.Services.AddScoped<Zebl.Application.Abstractions.ITransactionScope, Zebl.Infrastructure.Services.PaymentTransactionScope>();
+builder.Services.AddScoped<Zebl.Application.Services.IReconciliationService, Zebl.Infrastructure.Services.ReconciliationService>();
+builder.Services.AddScoped<Zebl.Application.Services.IPaymentService, Zebl.Application.Services.PaymentService>();
+
+// Secondary claim trigger (rule-driven, after ERA or manual posting)
+builder.Services.AddScoped<Zebl.Application.Repositories.ISecondaryForwardableRulesRepository, Zebl.Infrastructure.Repositories.SecondaryForwardableRulesRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.ISecondaryTriggerService, Zebl.Application.Services.SecondaryTriggerService>();
 #endregion
 
 #region Controllers
@@ -206,6 +219,42 @@ builder.Services.AddSwaggerGen(c =>
 #endregion
 
 var app = builder.Build();
+
+#region Apply pending migrations and ensure Claim columns exist
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ZeblDbContext>();
+    try
+    {
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Database migration failed (app will continue). Ensure DB is reachable and migrations are valid.");
+    }
+
+    // Ensure Claim table has columns that may be missing (fixes PUT /api/claims/{id} 500)
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Claim') AND name = 'ClaAdditionalData')
+    ALTER TABLE [Claim] ADD [ClaAdditionalData] xml NULL;
+");
+        db.Database.ExecuteSqlRaw(@"
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Claim') AND name = 'ClaClaimType')
+    ALTER TABLE [Claim] ADD [ClaClaimType] nvarchar(20) NULL;
+");
+        db.Database.ExecuteSqlRaw(@"
+IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Claim') AND name = 'ClaPrimaryClaimFID')
+    ALTER TABLE [Claim] ADD [ClaPrimaryClaimFID] int NULL;
+");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Ensure Claim columns failed (non-fatal).");
+    }
+}
+#endregion
 
 #region Middleware Pipeline
 app.UseSerilogRequestLogging();

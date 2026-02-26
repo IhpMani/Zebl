@@ -23,21 +23,26 @@ public class SftpTransportService
 
     /// <summary>
     /// Tests SFTP connection using the provided connection library.
+    /// Throws InvalidOperationException with a descriptive message when the test fails.
     /// </summary>
     public async Task<bool> TestConnectionAsync(ConnectionLibrary connection)
     {
         if (string.IsNullOrEmpty(connection.EncryptedPassword))
         {
             _logger.LogWarning("Connection {Id} has no password set", connection.Id);
-            return false;
+            throw new InvalidOperationException("Connection has no password set. Please save the connection with a password and try again.");
+        }
+        if (string.IsNullOrWhiteSpace(connection.Host))
+        {
+            throw new InvalidOperationException("Connection has no host configured.");
         }
         try
         {
             // Decrypt password ONLY inside this service
             var decryptedPassword = _encryptionService.Decrypt(connection.EncryptedPassword);
 
-            using var client = new Renci.SshNet.SftpClient(connection.Host, connection.Port, connection.Username, decryptedPassword);
-            
+            using var client = new Renci.SshNet.SftpClient(connection.Host, connection.Port, connection.Username ?? "", decryptedPassword);
+
             await Task.Run(() =>
             {
                 client.Connect();
@@ -51,7 +56,14 @@ public class SftpTransportService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "SFTP connection test failed for {Host}:{Port}", connection.Host, connection.Port);
-            return false;
+            var message = ex.InnerException?.Message ?? ex.Message;
+            if (message.Contains("Connection refused", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Cannot reach {connection.Host}:{connection.Port}. Connection refused. Is the SFTP server running? (Note: HTTP URLs like http://localhost:5001 are not SFTP.)");
+            if (message.Contains("No such host", StringComparison.OrdinalIgnoreCase) || message.Contains("could not be resolved", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Host '{connection.Host}' could not be resolved. Check the host name.");
+            if (message.Contains("authentication", StringComparison.OrdinalIgnoreCase) || message.Contains("password", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Authentication failed. Check username and password.");
+            throw new InvalidOperationException($"Connection test failed: {message}");
         }
     }
 

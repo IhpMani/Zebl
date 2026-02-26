@@ -15,17 +15,20 @@ public class ConnectionLibraryController : ControllerBase
     private readonly ConnectionLibraryService _service;
     private readonly Infrastructure.Services.SftpTransportService _sftpService;
     private readonly Zebl.Application.Repositories.IConnectionLibraryRepository _repository;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ConnectionLibraryController> _logger;
 
     public ConnectionLibraryController(
         ConnectionLibraryService service,
         Infrastructure.Services.SftpTransportService sftpService,
         Zebl.Application.Repositories.IConnectionLibraryRepository repository,
+        IHttpClientFactory httpClientFactory,
         ILogger<ConnectionLibraryController> logger)
     {
         _service = service;
         _sftpService = sftpService;
         _repository = repository;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -176,7 +179,7 @@ public class ConnectionLibraryController : ControllerBase
     }
 
     /// <summary>
-    /// Tests SFTP connection for a connection library.
+    /// Tests connection: HTTP(S) URL (e.g. http://localhost:5001) or SFTP.
     /// </summary>
     [HttpPost("{id}/test")]
     public async Task<IActionResult> TestConnection(Guid id)
@@ -193,7 +196,33 @@ public class ConnectionLibraryController : ControllerBase
                 });
             }
 
-            var isConnected = await _sftpService.TestConnectionAsync(entity);
+            var host = (entity.Host ?? "").Trim();
+            bool isConnected;
+            string? httpUrl = null;
+
+            if (host.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || host.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                httpUrl = host;
+            }
+            // Treat Host + Port as HTTP when port is common for HTTP (e.g. mock on 5001, or 80/443)
+            else if (entity.Port == 5001 || entity.Port == 80 || entity.Port == 443)
+            {
+                var scheme = entity.Port == 443 ? "https" : "http";
+                httpUrl = $"{scheme}://{host}:{entity.Port}";
+            }
+            else if (host.Contains(":5001", StringComparison.OrdinalIgnoreCase) && !host.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                httpUrl = "http://" + host;
+            }
+
+            if (httpUrl != null)
+            {
+                isConnected = await TestHttpConnectionAsync(httpUrl);
+            }
+            else
+            {
+                isConnected = await _sftpService.TestConnectionAsync(entity);
+            }
 
             if (isConnected)
             {
@@ -211,6 +240,15 @@ public class ConnectionLibraryController : ControllerBase
                 });
             }
         }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Connection test failed for library {Id}", id);
+            return BadRequest(new ErrorResponseDto
+            {
+                ErrorCode = "CONNECTION_FAILED",
+                Message = ex.Message
+            });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error testing connection for library {Id}", id);
@@ -220,5 +258,41 @@ public class ConnectionLibraryController : ControllerBase
                 Message = ex.Message
             });
         }
+    }
+
+    /// <summary>
+    /// Tests HTTP(S) endpoint (e.g. http://localhost:5001). Tries /api/get-reports first, then base URL.
+    /// </summary>
+    private async Task<bool> TestHttpConnectionAsync(string baseUrl)
+    {
+        var baseNormalized = baseUrl.TrimEnd('/');
+        var client = _httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(10);
+
+        Exception? lastEx = null;
+        var urlsToTry = new[] { $"{baseNormalized}/api/get-reports", baseNormalized + "/" };
+        foreach (var url in urlsToTry)
+        {
+            try
+            {
+                var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("HTTP connection test succeeded: {Url}", url);
+                    return true;
+                }
+                lastEx = new InvalidOperationException($"HTTP {(int)response.StatusCode} at {url}");
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                _logger.LogDebug(ex, "HTTP test failed for {Url}", url);
+            }
+        }
+
+        var msg = lastEx?.Message ?? "Request failed.";
+        if (lastEx is HttpRequestException)
+            throw new InvalidOperationException($"Cannot reach {baseUrl}. Is the server running? {msg}");
+        throw new InvalidOperationException($"HTTP connection test failed: {msg}");
     }
 }

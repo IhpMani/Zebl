@@ -26,14 +26,33 @@ namespace Zebl.Api.Controllers
         private readonly ZeblDbContext _db;
         private readonly ICurrentUserContext _userContext;
         private readonly IClaimExportService _claimExportService;
+        private readonly ISecondaryTriggerService _secondaryTriggerService;
         private readonly ILogger<ClaimsController> _logger;
 
-        public ClaimsController(ZeblDbContext db, ICurrentUserContext userContext, IClaimExportService claimExportService, ILogger<ClaimsController> logger)
+        public ClaimsController(ZeblDbContext db, ICurrentUserContext userContext, IClaimExportService claimExportService, ISecondaryTriggerService secondaryTriggerService, ILogger<ClaimsController> logger)
         {
             _db = db;
             _userContext = userContext;
             _claimExportService = claimExportService;
+            _secondaryTriggerService = secondaryTriggerService;
             _logger = logger;
+        }
+
+        /// <summary>
+        /// Evaluate claim for secondary: rule-driven PR/CO forwardable amount, create secondary if eligible.
+        /// Call after ERA is posted and reconciliation passes, or after manual posting.
+        /// </summary>
+        [HttpPost("{id:int}/evaluate-secondary")]
+        public async Task<IActionResult> EvaluateSecondary(int id)
+        {
+            var result = await _secondaryTriggerService.EvaluateAndTriggerAsync(id);
+            return Ok(new
+            {
+                triggered = result.Triggered,
+                reason = result.Reason,
+                forwardAmount = result.ForwardAmount,
+                secondaryClaimId = result.SecondaryClaimId
+            });
         }
 
         [HttpGet]
@@ -52,6 +71,7 @@ namespace Zebl.Api.Controllers
             [FromQuery] decimal? minTotalBalance = null,
             [FromQuery] decimal? maxTotalBalance = null,
             [FromQuery] int? patientId = null, // Filter by patient (ClaPatFID)
+            [FromQuery] string? patAccountNo = null, // Filter by patient account number (exact match; from Account # column filter)
             [FromQuery] string? additionalColumns = null) // Comma-separated list of additional column keys to include
         {
             // Validate input
@@ -181,6 +201,13 @@ namespace Zebl.Api.Controllers
                 query = query.Where(c => c.ClaPatFID == patientId.Value);
             }
 
+            // Patient account number filter (from Claim List Account # column filter – exact match)
+            if (!string.IsNullOrWhiteSpace(patAccountNo))
+            {
+                var accountNoTrimmed = patAccountNo.Trim();
+                query = query.Where(c => c.ClaPatF != null && c.ClaPatF.PatAccountNo != null && c.ClaPatF.PatAccountNo == accountNoTrimmed);
+            }
+
             // Text search across multiple columns (optimized for SQL)
             // Note: Avoid ToString().Contains() as it's very slow - use direct comparisons instead
             if (!string.IsNullOrWhiteSpace(searchText))
@@ -223,6 +250,7 @@ namespace Zebl.Api.Controllers
                              minTotalBalance.HasValue || 
                              maxTotalBalance.HasValue ||
                              patientId.HasValue ||
+                             !string.IsNullOrWhiteSpace(patAccountNo) ||
                              !string.IsNullOrWhiteSpace(searchText);
 
             if (!hasFilters)
