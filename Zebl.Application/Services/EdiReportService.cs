@@ -20,6 +20,10 @@ public class EdiReportService
 
     public Task<EdiReport?> GetByIdAsync(Guid id) => _repository.GetByIdAsync(id);
 
+    /// <summary>Deletes all reports for the given receiver + connection (e.g. before re-fetching). Returns number deleted.</summary>
+    public Task<int> DeleteByReceiverAndConnectionAsync(Guid receiverLibraryId, Guid? connectionLibraryId) =>
+        _repository.DeleteByReceiverAndConnectionAsync(receiverLibraryId, connectionLibraryId);
+
     /// <summary>
     /// Creates a new EdiReport with Status = "Generated". FileContent and FileSize must be set by caller.
     /// </summary>
@@ -78,6 +82,43 @@ public class EdiReportService
             PayerName = payerName,
             PaymentAmount = paymentAmount,
             Note = note,
+            IsRead = false,
+            IsArchived = false,
+            CreatedAt = DateTime.UtcNow,
+            ReceivedAt = DateTime.UtcNow
+        };
+        await _repository.AddAsync(report);
+        return report;
+    }
+
+    /// <summary>
+    /// Creates an inbound EdiReport from metadata (e.g. HTTP mock API) with no file content.
+    /// </summary>
+    public async Task<EdiReport> CreateReceivedFromMetadataAsync(
+        Guid receiverLibraryId,
+        Guid? connectionLibraryId,
+        string fileName,
+        string fileType,
+        string? payerName = null,
+        decimal? paymentAmount = null,
+        string? note = null,
+        string? traceNumber = null)
+    {
+        var report = new EdiReport
+        {
+            Id = Guid.NewGuid(),
+            ReceiverLibraryId = receiverLibraryId,
+            ConnectionLibraryId = connectionLibraryId,
+            FileName = fileName ?? throw new ArgumentNullException(nameof(fileName)),
+            FileType = fileType ?? throw new ArgumentNullException(nameof(fileType)),
+            Direction = "Inbound",
+            Status = "Received",
+            FileContent = null,
+            FileSize = 0,
+            PayerName = payerName,
+            PaymentAmount = paymentAmount,
+            Note = note != null && note.Length > 255 ? note.Substring(0, 255) : note,
+            TraceNumber = traceNumber,
             IsRead = false,
             IsArchived = false,
             CreatedAt = DateTime.UtcNow,

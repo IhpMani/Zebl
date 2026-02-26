@@ -16,14 +16,14 @@ public class Hl7ImportService
     private readonly ILogger<Hl7ImportService> _logger;
     private readonly Hl7ParserService _parser;
     private readonly ICurrentUserContext _userContext;
-    private readonly ClaimAuditService _claimAuditService;
+    private readonly IClaimAuditService _claimAuditService;
 
     public Hl7ImportService(
         ZeblDbContext db,
         ILogger<Hl7ImportService> logger,
         Hl7ParserService parser,
         ICurrentUserContext userContext,
-        ClaimAuditService claimAuditService)
+        IClaimAuditService claimAuditService)
     {
         _db = db;
         _logger = logger;

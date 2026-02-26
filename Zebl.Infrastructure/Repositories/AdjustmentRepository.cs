@@ -36,4 +36,44 @@ public class AdjustmentRepository : IAdjustmentRepository
         _context.Adjustments.Add(adj);
         await _context.SaveChangesAsync();
     }
+
+    public async Task AddAsync(int paymentId, int payerId, int serviceLineId, Guid serviceLineGuid, string groupCode, string? reasonCode, string? remarkCode, decimal amount, decimal reasonAmount)
+    {
+        if (payerId <= 0) return;
+        var now = DateTime.UtcNow;
+        var gc = groupCode.Trim().Length > 2 ? groupCode.Trim().Substring(0, 2) : groupCode.Trim();
+        var adj = new Adjustment
+        {
+            AdjPmtFID = paymentId,
+            AdjPayFID = payerId,
+            AdjSrvFID = serviceLineId,
+            AdjSrvGUID = serviceLineGuid,
+            AdjTaskFID = serviceLineId,
+            AdjGroupCode = gc,
+            AdjReasonCode = reasonCode,
+            AdjRemarkCode = remarkCode,
+            AdjAmount = amount,
+            AdjReasonAmount = reasonAmount,
+            AdjDateTimeCreated = now,
+            AdjDateTimeModified = now
+        };
+        _context.Adjustments.Add(adj);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<(int AdjId, int SrvId, string GroupCode, decimal Amount)>> GetByPaymentIdAsync(int paymentId)
+    {
+        var list = await _context.Adjustments.AsNoTracking()
+            .Where(a => a.AdjPmtFID == paymentId)
+            .Select(a => new { a.AdjID, a.AdjSrvFID, a.AdjGroupCode, a.AdjAmount })
+            .ToListAsync();
+        return list.Select(a => (a.AdjID, a.AdjSrvFID, a.AdjGroupCode, a.AdjAmount)).ToList();
+    }
+
+    public async Task DeleteByPaymentIdAsync(int paymentId)
+    {
+        var list = await _context.Adjustments.Where(a => a.AdjPmtFID == paymentId).ToListAsync();
+        _context.Adjustments.RemoveRange(list);
+        await _context.SaveChangesAsync();
+    }
 }

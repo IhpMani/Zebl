@@ -1065,6 +1065,14 @@ namespace Zebl.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(4)");
 
+                    b.Property<string>("ClaClaimType")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("ClaPrimaryClaimFID")
+                        .HasColumnType("int");
+
                     b.HasKey("ClaID")
                         .HasName("PK__Claim__E8193A9B6764AAF8");
 
@@ -3709,6 +3717,27 @@ namespace Zebl.Infrastructure.Migrations
                     b.Navigation("Payments");
 
                     b.Navigation("Procedure_Codes");
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.SecondaryForwardableAdjustmentRule", b =>
+                {
+                    b.Property<string>("GroupCode")
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("ReasonCode")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("ForwardToSecondary")
+                        .HasColumnType("bit");
+
+                    b.HasKey("GroupCode", "ReasonCode")
+                        .HasName("PK_SecondaryForwardableAdjustmentRules");
+
+                    b.ToTable("SecondaryForwardableAdjustmentRules", (string)null);
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Service_Line", b =>

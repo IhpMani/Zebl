@@ -27,6 +27,16 @@ public class EdiReportRepository : IEdiReportRepository
         return await _context.EdiReports.FirstOrDefaultAsync(r => r.Id == id);
     }
 
+    public async Task<int> DeleteByReceiverAndConnectionAsync(Guid receiverLibraryId, Guid? connectionLibraryId)
+    {
+        var toRemove = await _context.EdiReports
+            .Where(r => r.ReceiverLibraryId == receiverLibraryId && r.ConnectionLibraryId == connectionLibraryId)
+            .ToListAsync();
+        _context.EdiReports.RemoveRange(toRemove);
+        await _context.SaveChangesAsync();
+        return toRemove.Count;
+    }
+
     public async Task AddAsync(EdiReport report)
     {
         await _context.EdiReports.AddAsync(report);

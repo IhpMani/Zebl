@@ -63,6 +63,8 @@ public partial class ZeblDbContext : DbContext
 
     public virtual DbSet<EdiReport> EdiReports { get; set; }
 
+    public virtual DbSet<SecondaryForwardableAdjustmentRule> SecondaryForwardableAdjustmentRules { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Adjustment>(entity =>
@@ -441,6 +443,10 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.ClaTypeOfBill)
                 .HasMaxLength(4)
                 .IsUnicode(false);
+            entity.Property(e => e.ClaClaimType)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.ClaPrimaryClaimFID);
 
             entity.HasOne(d => d.ClaAttendingPhyF).WithMany(p => p.ClaimClaAttendingPhyFs)
                 .HasForeignKey(d => d.ClaAttendingPhyFID)
@@ -1539,6 +1545,7 @@ public partial class ZeblDbContext : DbContext
         ConfigureReceiverLibrary(modelBuilder);
         ConfigureConnectionLibrary(modelBuilder);
         ConfigureEdiReport(modelBuilder);
+        ConfigureSecondaryForwardableAdjustmentRules(modelBuilder);
 
         OnModelCreatingPartial(modelBuilder);
     }
@@ -1752,6 +1759,18 @@ public partial class ZeblDbContext : DbContext
 
             entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_EdiReport_CreatedAt");
             entity.HasIndex(e => e.Status).HasDatabaseName("IX_EdiReport_Status");
+        });
+    }
+
+    private void ConfigureSecondaryForwardableAdjustmentRules(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SecondaryForwardableAdjustmentRule>(entity =>
+        {
+            entity.HasKey(e => new { e.GroupCode, e.ReasonCode }).HasName("PK_SecondaryForwardableAdjustmentRules");
+            entity.ToTable("SecondaryForwardableAdjustmentRules");
+            entity.Property(e => e.GroupCode).HasMaxLength(10).IsUnicode(false);
+            entity.Property(e => e.ReasonCode).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.ForwardToSecondary).IsRequired();
         });
     }
 }
