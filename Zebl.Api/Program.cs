@@ -191,6 +191,12 @@ builder.Services.AddScoped<Zebl.Application.Services.IPaymentService, Zebl.Appli
 // Secondary claim trigger (rule-driven, after ERA or manual posting)
 builder.Services.AddScoped<Zebl.Application.Repositories.ISecondaryForwardableRulesRepository, Zebl.Infrastructure.Repositories.SecondaryForwardableRulesRepository>();
 builder.Services.AddScoped<Zebl.Application.Services.ISecondaryTriggerService, Zebl.Application.Services.SecondaryTriggerService>();
+
+// Procedure Code Library (lookup, fee schedule, charge calculation, NOC 837)
+builder.Services.AddScoped<Zebl.Application.Services.IProcedureCodeLookupService, Zebl.Infrastructure.Services.ProcedureCodeLookupService>();
+builder.Services.AddScoped<Zebl.Application.Services.IFeeScheduleResolver, Zebl.Infrastructure.Services.FeeScheduleResolver>();
+builder.Services.AddScoped<Zebl.Application.Services.IClaimChargeCalculator, Zebl.Infrastructure.Services.ClaimChargeCalculator>();
+builder.Services.AddScoped<Zebl.Application.Services.INOC837Formatter, Zebl.Infrastructure.Services.NOC837Formatter>();
 #endregion
 
 #region Controllers

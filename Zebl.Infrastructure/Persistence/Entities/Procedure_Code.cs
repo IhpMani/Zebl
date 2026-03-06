@@ -1,10 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using Zebl.Application.Domain;
 
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public partial class Procedure_Code
+public partial class Procedure_Code : IProcedureCode
 {
+    DateTime? IProcedureCode.ProcStart => ProcStart.HasValue ? ProcStart.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null;
+    DateTime? IProcedureCode.ProcEnd => ProcEnd.HasValue ? ProcEnd.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null;
+    int IProcedureCode.ProcUnits => (int)ProcUnits;
+    int? IProcedureCode.ProcBillingPhyFID => ProcBillingPhyFID;
+    int? IProcedureCode.ProcPayFID => ProcPayFID;
+
     public int ProcID { get; set; }
 
     public DateTime ProcDateTimeCreated { get; set; }
@@ -83,7 +90,7 @@ public partial class Procedure_Code
 
     public string ProcModifiersCC { get; set; } = null!;
 
-    public virtual Physician ProcBillingPhyF { get; set; } = null!;
+    public virtual Physician? ProcBillingPhyF { get; set; } = null!;
 
-    public virtual Payer ProcPayF { get; set; } = null!;
+    public virtual Payer? ProcPayF { get; set; } = null!;
 }

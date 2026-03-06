@@ -1271,6 +1271,10 @@ public partial class ZeblDbContext : DbContext
 
             entity.ToTable("Procedure_Code");
 
+            entity.HasIndex(e => new { e.ProcCode, e.ProcProductCode })
+                .IsUnique()
+                .HasDatabaseName("IX_Procedure_Code_ProcCode_ProcProductCode");
+
             entity.Property(e => e.ProcAdjust).HasColumnType("money");
             entity.Property(e => e.ProcAllowed).HasColumnType("money");
             entity.Property(e => e.ProcCategory)
