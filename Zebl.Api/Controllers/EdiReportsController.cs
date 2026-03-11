@@ -20,6 +20,7 @@ public class EdiReportsController : ControllerBase
     private readonly IConnectionLibraryRepository _connectionRepo;
     private readonly SftpTransportService _sftpTransport;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IEncryptionService _encryptionService;
     private readonly ILogger<EdiReportsController> _logger;
 
     public EdiReportsController(
@@ -29,6 +30,7 @@ public class EdiReportsController : ControllerBase
         IConnectionLibraryRepository connectionRepo,
         SftpTransportService sftpTransport,
         IHttpClientFactory httpClientFactory,
+        IEncryptionService encryptionService,
         ILogger<EdiReportsController> logger)
     {
         _ediReportService = ediReportService;
@@ -37,6 +39,7 @@ public class EdiReportsController : ControllerBase
         _connectionRepo = connectionRepo;
         _sftpTransport = sftpTransport;
         _httpClientFactory = httpClientFactory;
+        _encryptionService = encryptionService;
         _logger = logger;
     }
 
@@ -220,7 +223,7 @@ public class EdiReportsController : ControllerBase
 
             if (httpUrl != null)
             {
-                var createdFromHttp = await DownloadFromHttpMockAsync(httpUrl, request.ReceiverLibraryId.Value, request.ConnectionLibraryId);
+                var createdFromHttp = await DownloadFromHttpMockAsync(httpUrl, connection, request.ReceiverLibraryId.Value, request.ConnectionLibraryId);
                 return Ok(new { count = createdFromHttp.Count, reports = createdFromHttp });
             }
 
@@ -256,62 +259,127 @@ public class EdiReportsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error downloading EDI reports");
-            return StatusCode(500, new { error = ex.Message });
+            var message = ex.Message;
+            if (ex.InnerException != null)
+                message += " " + ex.InnerException.Message;
+            return StatusCode(500, new { error = message });
         }
     }
 
     /// <summary>
     /// Downloads report metadata from HTTP mock (e.g. GET /api/get-reports) and creates EDI report records.
     /// </summary>
-    private async Task<List<object>> DownloadFromHttpMockAsync(string baseUrl, Guid receiverLibraryId, Guid? connectionLibraryId)
+    private async Task<List<object>> DownloadFromHttpMockAsync(string baseUrl, ConnectionLibrary connection, Guid receiverLibraryId, Guid? connectionLibraryId)
     {
         var baseNormalized = baseUrl.TrimEnd('/');
         var client = _httpClientFactory.CreateClient();
         client.Timeout = TimeSpan.FromSeconds(30);
-        var url = baseNormalized + "/api/get-reports";
-        var response = await client.GetAsync(url);
-        response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        if (root.ValueKind != JsonValueKind.Array)
-            return new List<object>();
 
-        var created = new List<object>();
-        foreach (var item in root.EnumerateArray())
+        // Mock server requires Basic auth.
+        // Many connections store SFTP credentials (not HTTP). So we try connection credentials first, and if the mock returns 401,
+        // we retry once using the documented defaults (Admin / Admin@123).
+        string? connectionUsername = string.IsNullOrWhiteSpace(connection.Username) ? null : connection.Username.Trim();
+        string? connectionPassword = null;
+        if (!string.IsNullOrWhiteSpace(connection.EncryptedPassword))
         {
-            var fileName = item.TryGetProperty("fileName", out var fn) ? fn.GetString() ?? "report.edi" : "report.edi";
-            var fileType = item.TryGetProperty("fileType", out var ft) ? ft.GetString() ?? ".EDI" : ".EDI";
-            var payer = item.TryGetProperty("payer", out var p) ? p.GetString() : null;
-            decimal? paymentAmount = null;
-            if (item.TryGetProperty("paymentAmount", out var pa) && pa.ValueKind == JsonValueKind.Number)
-                paymentAmount = pa.GetDecimal();
-            var note = item.TryGetProperty("note", out var n) ? n.GetString() : null;
-            var traceNumber = item.TryGetProperty("traceNumber", out var tn) ? tn.GetString() : null;
-
-            var report = await _ediReportService.CreateReceivedFromMetadataAsync(
-                receiverLibraryId,
-                connectionLibraryId,
-                fileName,
-                fileType.TrimStart('.'),
-                payerName: payer,
-                paymentAmount: paymentAmount,
-                note: note,
-                traceNumber: traceNumber);
-
-            created.Add(new
-            {
-                report.Id,
-                report.FileName,
-                report.FileType,
-                report.Status,
-                report.PayerName,
-                report.PaymentAmount,
-                report.Note
-            });
+            // Decrypt only in backend (never send encrypted text).
+            connectionPassword = _encryptionService.Decrypt(connection.EncryptedPassword);
         }
 
-        return created;
+        void SetBasicAuth(string user, string pass)
+        {
+            var token = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{user}:{pass}"));
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", token);
+        }
+
+        if (!string.IsNullOrWhiteSpace(connectionUsername) && !string.IsNullOrWhiteSpace(connectionPassword))
+            SetBasicAuth(connectionUsername!, connectionPassword!);
+        else
+            SetBasicAuth("Admin", "Admin@123");
+
+        var url = baseNormalized + "/api/get-reports";
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.GetAsync(url);
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized &&
+                (connectionUsername != "Admin" || connectionPassword != "Admin@123"))
+            {
+                // Retry with documented defaults
+                response.Dispose();
+                SetBasicAuth("Admin", "Admin@123");
+                response = await client.GetAsync(url);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Could not reach the report server at {url}. Ensure the connection host is correct and the server is running. {ex.Message}", ex);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            var preview = body.Length > 200 ? body.AsSpan(0, 200).ToString() + "..." : body;
+            throw new InvalidOperationException(
+                $"Report server returned {(int)response.StatusCode} {response.ReasonPhrase}. URL: {url}. Response: {preview}");
+        }
+
+        var json = await response.Content.ReadAsStringAsync();
+        JsonDocument doc;
+        try
+        {
+            doc = JsonDocument.Parse(json);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Report server returned invalid JSON from {url}. Expected a JSON array. {ex.Message}", ex);
+        }
+
+        using (doc)
+        {
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Array)
+                return new List<object>();
+
+            var created = new List<object>();
+            foreach (var item in root.EnumerateArray())
+            {
+                var fileName = item.TryGetProperty("fileName", out var fn) ? fn.GetString() ?? "report.edi" : "report.edi";
+                var fileType = item.TryGetProperty("fileType", out var ft) ? ft.GetString() ?? ".EDI" : ".EDI";
+                var payer = item.TryGetProperty("payer", out var p) ? p.GetString() : null;
+                decimal? paymentAmount = null;
+                if (item.TryGetProperty("paymentAmount", out var pa) && pa.ValueKind == JsonValueKind.Number)
+                    paymentAmount = pa.GetDecimal();
+                var note = item.TryGetProperty("note", out var n) ? n.GetString() : null;
+                var traceNumber = item.TryGetProperty("traceNumber", out var tn) ? tn.GetString() : null;
+
+                var report = await _ediReportService.CreateReceivedFromMetadataAsync(
+                    receiverLibraryId,
+                    connectionLibraryId,
+                    fileName,
+                    fileType.TrimStart('.'),
+                    payerName: payer,
+                    paymentAmount: paymentAmount,
+                    note: note,
+                    traceNumber: traceNumber);
+
+                created.Add(new
+                {
+                    report.Id,
+                    report.FileName,
+                    report.FileType,
+                    report.Status,
+                    report.PayerName,
+                    report.PaymentAmount,
+                    report.Note
+                });
+            }
+
+            return created;
+        }
     }
 
     [HttpGet("{id:guid}/content")]

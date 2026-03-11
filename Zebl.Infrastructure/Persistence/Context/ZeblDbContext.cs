@@ -65,6 +65,12 @@ public partial class ZeblDbContext : DbContext
 
     public virtual DbSet<SecondaryForwardableAdjustmentRule> SecondaryForwardableAdjustmentRules { get; set; }
 
+    public virtual DbSet<Diagnosis_Code> Diagnosis_Codes { get; set; }
+    public virtual DbSet<Modifier_Code> Modifier_Codes { get; set; }
+    public virtual DbSet<Place_of_Service> Place_of_Services { get; set; }
+    public virtual DbSet<Reason_Code> Reason_Codes { get; set; }
+    public virtual DbSet<Remark_Code> Remark_Codes { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Adjustment>(entity =>
@@ -1546,6 +1552,7 @@ public partial class ZeblDbContext : DbContext
         });
 
         ConfigureListValue(modelBuilder);
+        ConfigureCodeLibrary(modelBuilder);
         ConfigureReceiverLibrary(modelBuilder);
         ConfigureConnectionLibrary(modelBuilder);
         ConfigureEdiReport(modelBuilder);
@@ -1605,6 +1612,70 @@ public partial class ZeblDbContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     
+    private void ConfigureCodeLibrary(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Diagnosis_Code>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Diagnosis_Code_Id");
+            entity.ToTable("Diagnosis_Code");
+            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Diagnosis_Code_Code");
+            entity.Property(e => e.Code).HasMaxLength(20).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
+            entity.Property(e => e.CodeType).HasMaxLength(10).IsUnicode(false).IsRequired();
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+        });
+
+        modelBuilder.Entity<Modifier_Code>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Modifier_Code_Id");
+            entity.ToTable("Modifier_Code");
+            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Modifier_Code_Code");
+            entity.Property(e => e.Code).HasMaxLength(10).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+        });
+
+        modelBuilder.Entity<Place_of_Service>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Place_of_Service_Id");
+            entity.ToTable("Place_of_Service");
+            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Place_of_Service_Code");
+            entity.Property(e => e.Code).HasMaxLength(10).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+        });
+
+        modelBuilder.Entity<Reason_Code>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Reason_Code_Id");
+            entity.ToTable("Reason_Code");
+            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Reason_Code_Code");
+            entity.Property(e => e.Code).HasMaxLength(10).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+        });
+
+        modelBuilder.Entity<Remark_Code>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Remark_Code_Id");
+            entity.ToTable("Remark_Code");
+            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Remark_Code_Code");
+            entity.Property(e => e.Code).HasMaxLength(20).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+        });
+    }
+
     private void ConfigureListValue(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ListValue>(entity =>

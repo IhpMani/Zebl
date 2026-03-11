@@ -3740,6 +3740,191 @@ namespace Zebl.Infrastructure.Migrations
                     b.ToTable("SecondaryForwardableAdjustmentRules", (string)null);
                 });
 
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Diagnosis_Code", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("CodeType")
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id")
+                        .HasName("PK_Diagnosis_Code_Id");
+
+                    b.HasIndex("Code")
+                        .HasDatabaseName("IX_Diagnosis_Code_Code");
+
+                    b.ToTable("Diagnosis_Code", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Modifier_Code", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id")
+                        .HasName("PK_Modifier_Code_Id");
+
+                    b.HasIndex("Code")
+                        .HasDatabaseName("IX_Modifier_Code_Code");
+
+                    b.ToTable("Modifier_Code", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Place_of_Service", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id")
+                        .HasName("PK_Place_of_Service_Id");
+
+                    b.HasIndex("Code")
+                        .HasDatabaseName("IX_Place_of_Service_Code");
+
+                    b.ToTable("Place_of_Service", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Reason_Code", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id")
+                        .HasName("PK_Reason_Code_Id");
+
+                    b.HasIndex("Code")
+                        .HasDatabaseName("IX_Reason_Code_Code");
+
+                    b.ToTable("Reason_Code", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Remark_Code", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id")
+                        .HasName("PK_Remark_Code_Id");
+
+                    b.HasIndex("Code")
+                        .HasDatabaseName("IX_Remark_Code_Code");
+
+                    b.ToTable("Remark_Code", (string)null);
+                });
+
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Service_Line", b =>
                 {
                     b.Navigation("AdjustmentAdjSrvFs");

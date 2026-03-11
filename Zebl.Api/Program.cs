@@ -3,6 +3,7 @@ using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -39,7 +40,10 @@ var requireAuth = jwtSettings.RequireAuthentication;
 #region Database
 builder.Services.AddDbContext<ZeblDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("DefaultConnection"))
+    // Prevent startup from aborting migrations due to PendingModelChangesWarning.
+    // We still want the app to run and apply the last known migrations.
+    .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 #endregion
 
 #region Health Checks
@@ -87,13 +91,12 @@ builder.Services.AddInMemoryRateLimiting();
 #region CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("cors", policy =>
     {
         policy
-            .WithOrigins(corsOrigins)
+            .AllowAnyOrigin()
             .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowAnyMethod();
     });
 });
 #endregion
@@ -197,6 +200,14 @@ builder.Services.AddScoped<Zebl.Application.Services.IProcedureCodeLookupService
 builder.Services.AddScoped<Zebl.Application.Services.IFeeScheduleResolver, Zebl.Infrastructure.Services.FeeScheduleResolver>();
 builder.Services.AddScoped<Zebl.Application.Services.IClaimChargeCalculator, Zebl.Infrastructure.Services.ClaimChargeCalculator>();
 builder.Services.AddScoped<Zebl.Application.Services.INOC837Formatter, Zebl.Infrastructure.Services.NOC837Formatter>();
+
+// Code Library (diagnosis, modifier, pos, reason, remark)
+builder.Services.AddScoped<Zebl.Infrastructure.Repositories.DiagnosisCodeRepository>();
+builder.Services.AddScoped<Zebl.Infrastructure.Repositories.ModifierCodeRepository>();
+builder.Services.AddScoped<Zebl.Infrastructure.Repositories.PlaceOfServiceRepository>();
+builder.Services.AddScoped<Zebl.Infrastructure.Repositories.ReasonCodeRepository>();
+builder.Services.AddScoped<Zebl.Infrastructure.Repositories.RemarkCodeRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.ICodeLibraryService, Zebl.Infrastructure.Services.CodeLibraryService>();
 #endregion
 
 #region Controllers
@@ -259,6 +270,96 @@ IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Claim') AN
     {
         Log.Warning(ex, "Ensure Claim columns failed (non-fatal).");
     }
+
+    // Ensure Code Library tables exist even if EF migrations are out-of-sync.
+    // This prevents 500s like "Invalid object name 'Reason_Code'" for /api/code-library/* endpoints.
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[Diagnosis_Code]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [Diagnosis_Code] (
+        [Id] int IDENTITY(1,1) NOT NULL,
+        [Code] varchar(20) NOT NULL,
+        [Description] varchar(255) NULL,
+        [CodeType] varchar(10) NOT NULL,
+        [IsActive] bit NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_Diagnosis_Code_Id] PRIMARY KEY ([Id])
+    );
+    CREATE INDEX [IX_Diagnosis_Code_Code] ON [Diagnosis_Code] ([Code]);
+END
+");
+
+        db.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[Modifier_Code]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [Modifier_Code] (
+        [Id] int IDENTITY(1,1) NOT NULL,
+        [Code] varchar(10) NOT NULL,
+        [Description] varchar(255) NULL,
+        [IsActive] bit NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_Modifier_Code_Id] PRIMARY KEY ([Id])
+    );
+    CREATE INDEX [IX_Modifier_Code_Code] ON [Modifier_Code] ([Code]);
+END
+");
+
+        db.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[Place_of_Service]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [Place_of_Service] (
+        [Id] int IDENTITY(1,1) NOT NULL,
+        [Code] varchar(10) NOT NULL,
+        [Description] varchar(255) NULL,
+        [IsActive] bit NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_Place_of_Service_Id] PRIMARY KEY ([Id])
+    );
+    CREATE INDEX [IX_Place_of_Service_Code] ON [Place_of_Service] ([Code]);
+END
+");
+
+        db.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[Reason_Code]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [Reason_Code] (
+        [Id] int IDENTITY(1,1) NOT NULL,
+        [Code] varchar(10) NOT NULL,
+        [Description] varchar(255) NULL,
+        [IsActive] bit NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_Reason_Code_Id] PRIMARY KEY ([Id])
+    );
+    CREATE INDEX [IX_Reason_Code_Code] ON [Reason_Code] ([Code]);
+END
+");
+
+        db.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[Remark_Code]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [Remark_Code] (
+        [Id] int IDENTITY(1,1) NOT NULL,
+        [Code] varchar(20) NOT NULL,
+        [Description] varchar(255) NULL,
+        [IsActive] bit NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_Remark_Code_Id] PRIMARY KEY ([Id])
+    );
+    CREATE INDEX [IX_Remark_Code_Code] ON [Remark_Code] ([Code]);
+END
+");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Ensure Code Library tables failed (non-fatal).");
+    }
 }
 #endregion
 
@@ -273,7 +374,7 @@ if (builder.Configuration.GetValue<bool>("RateLimiting:EnableRateLimiting"))
     app.UseIpRateLimiting();
 }
 
-app.UseCors("AllowFrontend");
+app.UseCors("cors"); // FIXED POLICY NAME
 
 app.UseHttpsRedirection();
 

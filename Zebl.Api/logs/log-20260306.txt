@@ -756,3 +756,432 @@ System.InvalidOperationException: An error was generated for warning 'Microsoft.
 2026-03-06 15:59:51.765 +05:30 [INF] HTTP OPTIONS /api/payments/list responded 204 in 0.1109 ms
 2026-03-06 15:59:51.879 +05:30 [INF] HTTP GET /api/payments/available-columns responded 200 in 108.3163 ms
 2026-03-06 15:59:52.083 +05:30 [INF] HTTP GET /api/payments/list responded 200 in 312.4425 ms
+2026-03-06 16:01:14.346 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 19.4193 ms
+2026-03-06 16:01:14.348 +05:30 [INF] HTTP OPTIONS /api/payments/available-columns responded 204 in 17.4542 ms
+2026-03-06 16:01:14.350 +05:30 [INF] HTTP OPTIONS /api/payments/list responded 204 in 19.1881 ms
+2026-03-06 16:01:14.426 +05:30 [INF] HTTP GET /api/payments/available-columns responded 200 in 67.3561 ms
+2026-03-06 16:01:14.473 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 114.1292 ms
+2026-03-06 16:01:14.548 +05:30 [INF] HTTP GET /api/payments/list responded 200 in 189.3772 ms
+2026-03-06 16:05:57.975 +05:30 [WRN] Database migration failed (app will continue). Ensure DB is reachable and migrations are valid.
+System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'ZeblDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.Migrate(String targetMigration)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(DatabaseFacade databaseFacade)
+   at Program.<Main>$(String[] args) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Program.cs:line 235
+2026-03-06 16:06:42.041 +05:30 [WRN] Database migration failed (app will continue). Ensure DB is reachable and migrations are valid.
+System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'ZeblDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.Migrate(String targetMigration)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(DatabaseFacade databaseFacade)
+   at Program.<Main>$(String[] args) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Program.cs:line 235
+2026-03-06 16:06:44.142 +05:30 [INF] Zebl API starting
+2026-03-06 16:06:44.222 +05:30 [INF] Initializing UI Database
+2026-03-06 16:06:48.072 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 249.6077 ms
+2026-03-06 16:06:48.984 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 39.1920 ms
+2026-03-06 16:09:12.758 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 145.6407 ms
+2026-03-06 16:09:12.758 +05:30 [INF] HTTP OPTIONS /api/payments/list responded 204 in 145.7160 ms
+2026-03-06 16:09:12.758 +05:30 [INF] HTTP OPTIONS /api/payments/available-columns responded 204 in 145.6407 ms
+2026-03-06 16:09:13.572 +05:30 [INF] HTTP GET /api/payments/available-columns responded 200 in 725.4029 ms
+2026-03-06 16:09:14.346 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 1499.3547 ms
+2026-03-06 16:09:14.380 +05:30 [INF] HTTP GET /api/payments/list responded 200 in 1534.0028 ms
+2026-03-06 16:10:12.666 +05:30 [INF] HTTP OPTIONS /api/payments/list responded 204 in 16.5425 ms
+2026-03-06 16:10:12.672 +05:30 [INF] HTTP OPTIONS /api/payments/available-columns responded 204 in 24.8497 ms
+2026-03-06 16:10:12.688 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 41.2419 ms
+2026-03-06 16:10:12.737 +05:30 [INF] HTTP GET /api/payments/available-columns responded 200 in 46.4059 ms
+2026-03-06 16:10:12.930 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 239.0966 ms
+2026-03-06 16:10:12.981 +05:30 [INF] HTTP GET /api/payments/list responded 200 in 290.2082 ms
+2026-03-06 16:12:36.289 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.8885 ms
+2026-03-06 16:12:36.327 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 30.3529 ms
+2026-03-06 16:13:01.718 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 1.1778 ms
+2026-03-06 16:13:01.738 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 15.7979 ms
+2026-03-06 16:14:55.485 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 74.1287 ms
+2026-03-06 16:14:56.176 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 610.7651 ms
+2026-03-06 16:16:18.147 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 207.8936 ms
+2026-03-06 16:16:19.094 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 728.7755 ms
+2026-03-06 16:19:56.349 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 57.0702 ms
+2026-03-06 16:19:56.349 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 57.4270 ms
+2026-03-06 16:19:56.349 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 57.0631 ms
+2026-03-06 16:19:56.349 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 57.4228 ms
+2026-03-06 16:19:57.183 +05:30 [INF] HTTP GET /api/payers responded 200 in 791.3476 ms
+2026-03-06 16:19:57.260 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 868.5297 ms
+2026-03-06 16:19:57.269 +05:30 [INF] HTTP GET /api/physicians responded 200 in 877.7705 ms
+2026-03-06 16:19:57.271 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 880.2788 ms
+2026-03-06 16:25:06.443 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 65.4326 ms
+2026-03-06 16:25:06.443 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 69.8995 ms
+2026-03-06 16:25:06.443 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 69.8995 ms
+2026-03-06 16:25:06.443 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 66.8265 ms
+2026-03-06 16:25:06.443 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 64.4008 ms
+2026-03-06 16:25:06.777 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 221.0205 ms
+2026-03-06 16:25:06.781 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 225.0547 ms
+2026-03-06 16:25:06.787 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 230.8126 ms
+2026-03-06 16:25:06.857 +05:30 [INF] HTTP GET /api/payers responded 200 in 300.8682 ms
+2026-03-06 16:25:06.917 +05:30 [INF] HTTP GET /api/physicians responded 200 in 360.4928 ms
+2026-03-06 16:35:20.743 +05:30 [INF] HTTP OPTIONS /api/lists/types responded 204 in 53.9894 ms
+2026-03-06 16:35:21.196 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 392.7571 ms
+2026-03-06 16:35:21.216 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 2.5466 ms
+2026-03-06 16:35:22.066 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 842.4884 ms
+2026-03-06 16:35:26.833 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.3093 ms
+2026-03-06 16:35:26.974 +05:30 [INF] HTTP GET /api/physicians responded 200 in 134.9143 ms
+2026-03-06 16:35:39.178 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 35.8733 ms
+2026-03-06 16:35:39.178 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 37.7319 ms
+2026-03-06 16:35:39.347 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 140.0297 ms
+2026-03-06 16:35:39.517 +05:30 [INF] HTTP GET /api/physicians responded 200 in 310.5383 ms
+2026-03-06 16:35:43.911 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.7063 ms
+2026-03-06 16:35:43.911 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 1.0679 ms
+2026-03-06 16:35:43.911 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.6977 ms
+2026-03-06 16:35:43.913 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 1.8257 ms
+2026-03-06 16:35:43.945 +05:30 [INF] HTTP GET /api/physicians responded 200 in 25.1103 ms
+2026-03-06 16:35:43.988 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 67.9780 ms
+2026-03-06 16:35:44.105 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 184.6361 ms
+2026-03-06 16:35:44.128 +05:30 [INF] HTTP GET /api/payers responded 200 in 207.0470 ms
+2026-03-06 16:36:45.230 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 19.4943 ms
+2026-03-06 16:36:45.378 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 131.7343 ms
+2026-03-06 16:36:45.457 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.1726 ms
+2026-03-06 16:36:45.475 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.1696 ms
+2026-03-06 16:36:45.476 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.1146 ms
+2026-03-06 16:36:45.482 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.2946 ms
+2026-03-06 16:36:45.553 +05:30 [INF] HTTP GET /api/payers responded 200 in 91.9284 ms
+2026-03-06 16:36:45.556 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 69.4643 ms
+2026-03-06 16:36:45.559 +05:30 [INF] HTTP GET /api/physicians responded 200 in 79.4603 ms
+2026-03-06 16:36:45.685 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 207.3558 ms
+2026-03-06 16:37:00.415 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 4.0551 ms
+2026-03-06 16:37:00.493 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 1.1214 ms
+2026-03-06 16:37:00.493 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.7596 ms
+2026-03-06 16:37:00.493 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.1412 ms
+2026-03-06 16:37:00.495 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 1.9150 ms
+2026-03-06 16:37:00.505 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 74.6879 ms
+2026-03-06 16:37:00.533 +05:30 [INF] HTTP GET /api/payers responded 200 in 35.3841 ms
+2026-03-06 16:37:00.543 +05:30 [INF] HTTP GET /api/physicians responded 200 in 41.9042 ms
+2026-03-06 16:37:14.379 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 13877.5761 ms
+2026-03-06 16:37:14.437 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 13932.6053 ms
+2026-03-06 16:39:21.493 +05:30 [INF] HTTP OPTIONS /api/procedure-codes/bulk-save responded 204 in 55.4634 ms
+2026-03-06 16:39:22.712 +05:30 [INF] HTTP POST /api/procedure-codes/bulk-save responded 200 in 1175.9597 ms
+2026-03-06 16:39:22.725 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.1416 ms
+2026-03-06 16:39:37.252 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 14522.3163 ms
+2026-03-06 16:41:29.692 +05:30 [INF] HTTP OPTIONS /api/procedure-codes/bulk-save responded 204 in 18.2871 ms
+2026-03-06 16:41:30.133 +05:30 [INF] HTTP POST /api/procedure-codes/bulk-save responded 200 in 424.1389 ms
+2026-03-06 16:41:30.142 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.0804 ms
+2026-03-06 16:41:42.899 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 12752.6583 ms
+2026-03-06 16:43:43.433 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 40.7445 ms
+2026-03-06 16:43:43.433 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 40.7469 ms
+2026-03-06 16:43:43.433 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 40.7527 ms
+2026-03-06 16:43:43.433 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 40.7549 ms
+2026-03-06 16:43:43.433 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 40.7637 ms
+2026-03-06 16:43:43.804 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 329.5375 ms
+2026-03-06 16:43:43.940 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 464.0305 ms
+2026-03-06 16:43:44.072 +05:30 [INF] HTTP GET /api/payers responded 200 in 596.9474 ms
+2026-03-06 16:43:44.207 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 732.0520 ms
+2026-03-06 16:43:44.228 +05:30 [INF] HTTP GET /api/physicians responded 200 in 752.7533 ms
+2026-03-06 16:46:08.182 +05:30 [INF] HTTP OPTIONS /api/procedure-codes/3 responded 204 in 19.8888 ms
+2026-03-06 16:46:08.836 +05:30 [INF] HTTP DELETE /api/procedure-codes/3 responded 200 in 608.7701 ms
+2026-03-06 16:46:08.848 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.1761 ms
+2026-03-06 16:46:08.893 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 37.8449 ms
+2026-03-06 16:46:28.012 +05:30 [INF] HTTP OPTIONS /api/procedure-codes/bulk-save responded 204 in 0.7719 ms
+2026-03-06 16:46:28.137 +05:30 [INF] HTTP POST /api/procedure-codes/bulk-save responded 200 in 119.9443 ms
+2026-03-06 16:46:28.141 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.9753 ms
+2026-03-06 16:46:28.155 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 11.0884 ms
+2026-03-06 16:46:34.105 +05:30 [INF] HTTP OPTIONS /api/procedure-codes/6 responded 204 in 0.0983 ms
+2026-03-06 16:46:34.123 +05:30 [INF] HTTP DELETE /api/procedure-codes/6 responded 200 in 15.5721 ms
+2026-03-06 16:46:34.126 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.0869 ms
+2026-03-06 16:46:34.135 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 6.6382 ms
+2026-03-06 16:48:08.374 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 14.1454 ms
+2026-03-06 16:48:08.379 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.5444 ms
+2026-03-06 16:48:08.380 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.1648 ms
+2026-03-06 16:48:08.380 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.1918 ms
+2026-03-06 16:48:08.389 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 13.4276 ms
+2026-03-06 16:48:08.576 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 187.7307 ms
+2026-03-06 16:48:08.596 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 207.5437 ms
+2026-03-06 16:48:08.610 +05:30 [INF] HTTP GET /api/payers responded 200 in 217.1627 ms
+2026-03-06 16:48:08.715 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 326.4025 ms
+2026-03-06 16:48:08.776 +05:30 [INF] HTTP GET /api/physicians responded 200 in 388.2397 ms
+2026-03-06 16:48:21.702 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 1.8671 ms
+2026-03-06 16:48:21.726 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 17.1109 ms
+2026-03-06 16:48:21.731 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.5403 ms
+2026-03-06 16:48:21.732 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.2633 ms
+2026-03-06 16:48:21.732 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.1232 ms
+2026-03-06 16:48:21.732 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.6446 ms
+2026-03-06 16:48:21.752 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 15.5108 ms
+2026-03-06 16:48:21.756 +05:30 [INF] HTTP GET /api/payers responded 200 in 21.0722 ms
+2026-03-06 16:48:21.764 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 24.6180 ms
+2026-03-06 16:48:21.787 +05:30 [INF] HTTP GET /api/physicians responded 200 in 49.1985 ms
+2026-03-06 16:50:37.404 +05:30 [INF] HTTP OPTIONS /api/procedure-codes/bulk-save responded 204 in 15.8153 ms
+2026-03-06 16:50:37.775 +05:30 [INF] HTTP POST /api/procedure-codes/bulk-save responded 200 in 356.3925 ms
+2026-03-06 16:50:37.791 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.1683 ms
+2026-03-06 16:50:37.872 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 77.8321 ms
+2026-03-06 16:50:52.572 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.1688 ms
+2026-03-06 16:50:52.701 +05:30 [INF] HTTP GET /api/physicians responded 200 in 122.8676 ms
+2026-03-06 16:51:46.341 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.6499 ms
+2026-03-06 16:51:46.341 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.6135 ms
+2026-03-06 16:51:46.389 +05:30 [INF] HTTP GET /api/payers responded 200 in 41.4194 ms
+2026-03-06 16:51:46.488 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 140.4121 ms
+2026-03-06 16:51:59.283 +05:30 [INF] HTTP OPTIONS /api/lists/types responded 204 in 0.4918 ms
+2026-03-06 16:51:59.294 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 7.4056 ms
+2026-03-06 16:51:59.297 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.1482 ms
+2026-03-06 16:51:59.329 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 28.6703 ms
+2026-03-06 16:53:33.919 +05:30 [INF] HTTP OPTIONS /api/lists/types responded 204 in 28.6562 ms
+2026-03-06 16:53:33.919 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 30.0173 ms
+2026-03-06 16:53:34.006 +05:30 [INF] HTTP GET /api/lists/types responded 200 in 63.0725 ms
+2026-03-06 16:53:34.012 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.1306 ms
+2026-03-06 16:53:34.082 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 138.2117 ms
+2026-03-06 16:53:34.098 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 83.1767 ms
+2026-03-06 16:54:00.979 +05:30 [INF] HTTP OPTIONS /api/procedure-codes responded 204 in 0.3253 ms
+2026-03-06 16:54:00.979 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.8625 ms
+2026-03-06 16:54:00.979 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.3252 ms
+2026-03-06 16:54:00.979 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.4968 ms
+2026-03-06 16:54:01.010 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 24.4622 ms
+2026-03-06 16:54:01.029 +05:30 [INF] HTTP GET /api/procedure-codes responded 200 in 45.0372 ms
+2026-03-06 16:54:01.066 +05:30 [INF] HTTP GET /api/physicians responded 200 in 78.8693 ms
+2026-03-06 16:54:01.170 +05:30 [INF] HTTP GET /api/payers responded 200 in 180.6552 ms
+2026-03-06 16:54:28.379 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.1478 ms
+2026-03-06 16:54:28.411 +05:30 [INF] HTTP GET /api/physicians responded 200 in 24.7858 ms
+2026-03-06 16:55:15.170 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 1.0625 ms
+2026-03-06 16:55:15.174 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.2405 ms
+2026-03-06 16:55:15.191 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 8.4956 ms
+2026-03-06 16:55:15.212 +05:30 [INF] HTTP GET /api/physicians responded 200 in 27.0337 ms
+2026-03-06 16:56:08.270 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 28.0499 ms
+2026-03-06 16:56:08.754 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 459.0972 ms
+2026-03-06 16:56:32.236 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 3.9914 ms
+2026-03-06 16:56:32.919 +05:30 [INF] HTTP GET /api/physicians responded 200 in 666.2507 ms
+2026-03-06 16:56:38.873 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.4590 ms
+2026-03-06 16:56:38.888 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 9.3958 ms
+2026-03-06 16:56:38.943 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.0926 ms
+2026-03-06 16:56:38.994 +05:30 [INF] HTTP GET /api/physicians responded 200 in 48.9018 ms
+2026-03-06 16:57:10.838 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.1700 ms
+2026-03-06 16:57:10.853 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 10.9977 ms
+2026-03-06 16:57:10.858 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.1322 ms
+2026-03-06 16:57:10.912 +05:30 [INF] HTTP GET /api/physicians responded 200 in 51.5466 ms
+2026-03-06 16:57:16.894 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.1876 ms
+2026-03-06 16:57:17.216 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 316.7055 ms
+2026-03-06 16:57:18.374 +05:30 [INF] HTTP OPTIONS /api/receiver-library/export-formats responded 204 in 0.5966 ms
+2026-03-06 16:57:18.404 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 24.9456 ms
+2026-03-06 16:57:39.345 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.7065 ms
+2026-03-06 16:57:39.375 +05:30 [INF] HTTP GET /api/physicians responded 200 in 26.3333 ms
+2026-03-06 16:57:43.656 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.7547 ms
+2026-03-06 16:57:43.657 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.5184 ms
+2026-03-06 16:57:43.725 +05:30 [INF] HTTP GET /api/payers responded 200 in 61.6064 ms
+2026-03-06 16:57:43.727 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 64.7215 ms
+2026-03-06 16:58:35.032 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 0.9096 ms
+2026-03-06 16:58:35.115 +05:30 [INF] HTTP GET /api/users responded 401 in 77.6975 ms
+2026-03-06 16:58:36.634 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.1546 ms
+2026-03-06 16:58:36.908 +05:30 [INF] Login succeeded. UserGuid="95a78904-3e1e-4e1c-a1d0-34e303273811", UserName=Admin
+2026-03-06 16:58:36.929 +05:30 [INF] HTTP POST /api/auth/login responded 200 in 289.9291 ms
+2026-03-06 16:58:40.214 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 0.2183 ms
+2026-03-06 16:58:40.300 +05:30 [INF] HTTP GET /api/users responded 200 in 81.4705 ms
+2026-03-06 16:58:57.879 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.9774 ms
+2026-03-06 16:58:57.894 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 0.1668 ms
+2026-03-06 16:58:57.941 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 56.4337 ms
+2026-03-06 16:58:57.941 +05:30 [INF] HTTP GET /api/users responded 200 in 35.6354 ms
+2026-03-06 16:59:07.220 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 1.2385 ms
+2026-03-06 16:59:07.254 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 29.0460 ms
+2026-03-06 16:59:10.123 +05:30 [INF] HTTP OPTIONS /api/receiver-library/export-formats responded 204 in 0.2031 ms
+2026-03-06 16:59:10.135 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 4.1359 ms
+2026-03-06 16:59:23.558 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 1.0959 ms
+2026-03-06 16:59:23.606 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 41.8217 ms
+2026-03-06 16:59:23.607 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.3038 ms
+2026-03-06 16:59:23.610 +05:30 [INF] HTTP OPTIONS /api/receiver-library/export-formats responded 204 in 0.6811 ms
+2026-03-06 16:59:23.620 +05:30 [INF] HTTP GET /api/receiver-library/export-formats responded 200 in 1.6643 ms
+2026-03-06 16:59:23.629 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 10.7001 ms
+2026-03-06 16:59:43.620 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 0.6059 ms
+2026-03-06 16:59:45.484 +05:30 [INF] HTTP GET /api/claims responded 200 in 1843.5748 ms
+2026-03-06 17:00:07.540 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.3799 ms
+2026-03-06 17:00:07.570 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 0.1805 ms
+2026-03-06 17:00:07.591 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 46.0003 ms
+2026-03-06 17:00:07.693 +05:30 [INF] HTTP GET /api/claims responded 200 in 116.5701 ms
+2026-03-06 17:00:27.460 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.1951 ms
+2026-03-06 17:00:27.461 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.5966 ms
+2026-03-06 17:00:27.462 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.9829 ms
+2026-03-06 17:00:27.465 +05:30 [INF] HTTP OPTIONS /api/claims/256 responded 204 in 0.7132 ms
+2026-03-06 17:00:27.465 +05:30 [INF] HTTP OPTIONS /api/services/claims/256 responded 204 in 0.8912 ms
+2026-03-06 17:00:27.531 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 63.9740 ms
+2026-03-06 17:00:27.539 +05:30 [INF] HTTP GET /api/physicians responded 200 in 72.4937 ms
+2026-03-06 17:00:27.556 +05:30 [INF] HTTP GET /api/services/claims/256 responded 200 in 83.5022 ms
+2026-03-06 17:00:27.687 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 220.0827 ms
+2026-03-06 17:00:27.696 +05:30 [INF] HTTP GET /api/claims/256 responded 200 in 224.5517 ms
+2026-03-06 17:00:29.725 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.3114 ms
+2026-03-06 17:00:29.997 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 268.6729 ms
+2026-03-06 17:00:30.008 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 273.8718 ms
+2026-03-06 17:00:30.038 +05:30 [INF] HTTP GET /api/services/claims/256 responded 200 in 300.3338 ms
+2026-03-06 17:00:30.047 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 312.9504 ms
+2026-03-06 17:00:30.062 +05:30 [INF] HTTP GET /api/physicians responded 200 in 324.3765 ms
+2026-03-06 17:00:30.140 +05:30 [INF] HTTP GET /api/claims/256 responded 200 in 401.8349 ms
+2026-03-06 17:01:37.694 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 15.5108 ms
+2026-03-06 17:01:37.761 +05:30 [INF] HTTP GET /api/users responded 200 in 57.3611 ms
+2026-03-06 17:01:44.265 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 0.2294 ms
+2026-03-06 17:01:44.275 +05:30 [INF] HTTP GET /api/users responded 200 in 5.7047 ms
+2026-03-06 17:01:55.322 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 0.1099 ms
+2026-03-06 17:01:55.403 +05:30 [INF] HTTP GET /api/claims responded 200 in 77.5116 ms
+2026-03-06 17:04:17.478 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.1886 ms
+2026-03-06 17:04:17.529 +05:30 [INF] HTTP GET /api/payers responded 200 in 46.8157 ms
+2026-03-06 17:04:22.010 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.7584 ms
+2026-03-06 17:04:22.056 +05:30 [INF] HTTP GET /api/physicians responded 200 in 42.0395 ms
+2026-03-06 17:05:50.067 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 38.2971 ms
+2026-03-06 17:05:50.067 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 38.5525 ms
+2026-03-06 17:05:50.448 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 349.2953 ms
+2026-03-06 17:05:50.592 +05:30 [INF] HTTP GET /api/physicians responded 200 in 493.3848 ms
+2026-03-06 17:05:56.848 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 3.3822 ms
+2026-03-06 17:05:56.860 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 1.8618 ms
+2026-03-06 17:05:56.871 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 18.3278 ms
+2026-03-06 17:05:56.913 +05:30 [INF] HTTP GET /api/physicians responded 200 in 47.1939 ms
+2026-03-06 17:06:03.779 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 4.7110 ms
+2026-03-06 17:06:03.795 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 9.0284 ms
+2026-03-06 17:06:03.924 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.3275 ms
+2026-03-06 17:06:03.994 +05:30 [INF] HTTP GET /api/physicians responded 200 in 63.1258 ms
+2026-03-06 17:06:46.340 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 1.4824 ms
+2026-03-06 17:06:46.477 +05:30 [INF] HTTP GET /api/claims responded 200 in 131.3605 ms
+2026-03-06 17:07:19.301 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.3224 ms
+2026-03-06 17:07:19.304 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 0.2394 ms
+2026-03-06 17:07:19.326 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 18.8484 ms
+2026-03-06 17:07:19.374 +05:30 [INF] HTTP GET /api/claims responded 200 in 65.5502 ms
+2026-03-06 17:07:35.016 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.7684 ms
+2026-03-06 17:07:35.017 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 0.6218 ms
+2026-03-06 17:07:35.053 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 30.5408 ms
+2026-03-06 17:07:35.093 +05:30 [INF] HTTP GET /api/claims responded 200 in 63.0984 ms
+2026-03-06 17:09:45.728 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 318.6531 ms
+2026-03-06 17:09:52.191 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.4290 ms
+2026-03-06 17:09:59.094 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.6533 ms
+2026-03-06 17:09:59.617 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.1182 ms
+2026-03-06 17:09:59.771 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.1169 ms
+2026-03-06 17:10:14.643 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.5471 ms
+2026-03-06 17:10:18.659 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 1.5922 ms
+2026-03-06 17:10:18.664 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 0.7850 ms
+2026-03-06 17:10:18.781 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 53.4984 ms
+2026-03-06 17:10:19.063 +05:30 [INF] HTTP GET /api/claims responded 200 in 307.2961 ms
+2026-03-06 17:10:42.145 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.2858 ms
+2026-03-06 17:10:47.310 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.0924 ms
+2026-03-06 17:11:18.410 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.7492 ms
+2026-03-06 17:12:00.196 +05:30 [WRN] Database migration failed (app will continue). Ensure DB is reachable and migrations are valid.
+System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'ZeblDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.Migrate(String targetMigration)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(DatabaseFacade databaseFacade)
+   at Program.<Main>$(String[] args) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Program.cs:line 235
+2026-03-06 17:12:00.784 +05:30 [INF] Zebl API starting
+2026-03-06 17:12:00.817 +05:30 [INF] Initializing UI Database
+2026-03-06 17:12:01.886 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 93.7021 ms
+2026-03-06 17:12:02.067 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 44.2957 ms
+2026-03-06 17:18:52.871 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 987.2539 ms
+2026-03-06 17:18:57.338 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.5828 ms
+2026-03-06 17:19:02.704 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 1.9054 ms
+2026-03-06 17:19:34.922 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.8773 ms
+2026-03-06 17:19:39.283 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.4324 ms
+2026-03-06 17:20:23.099 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 3.8363 ms
+2026-03-06 17:20:23.103 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.6153 ms
+2026-03-06 17:20:23.314 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 143.1624 ms
+2026-03-06 17:20:23.590 +05:30 [INF] HTTP GET /api/claims responded 200 in 423.8718 ms
+2026-03-06 17:20:38.129 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 18.2443 ms
+2026-03-06 17:20:50.074 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.7423 ms
+2026-03-06 17:20:59.271 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.7222 ms
+2026-03-06 17:21:17.903 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.4027 ms
+2026-03-06 17:22:02.761 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 0.8127 ms
+2026-03-06 17:22:02.843 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 8.4301 ms
+2026-03-06 17:22:05.223 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 0.2593 ms
+2026-03-06 17:22:05.365 +05:30 [INF] HTTP GET /api/users responded 200 in 50.4685 ms
+2026-03-06 17:22:10.137 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.2544 ms
+2026-03-06 17:22:10.283 +05:30 [INF] Login succeeded. UserGuid="95a78904-3e1e-4e1c-a1d0-34e303273811", UserName=Admin
+2026-03-06 17:22:10.290 +05:30 [INF] HTTP POST /api/auth/login responded 200 in 86.1798 ms
+2026-03-06 17:23:24.451 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 720.2493 ms
+2026-03-06 17:23:57.305 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 21.9345 ms
+2026-03-06 17:24:08.001 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 1.9399 ms
+2026-03-06 17:25:00.926 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 2.2026 ms
+2026-03-06 17:25:52.021 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 2.4802 ms
+2026-03-06 17:25:54.895 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.1719 ms
+2026-03-06 17:26:01.333 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 21.3078 ms
+2026-03-06 17:26:04.030 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 2.0740 ms
+2026-03-06 17:26:04.147 +05:30 [INF] Login succeeded. UserGuid="95a78904-3e1e-4e1c-a1d0-34e303273811", UserName=Admin
+2026-03-06 17:26:04.153 +05:30 [INF] HTTP POST /api/auth/login responded 200 in 89.3760 ms
+2026-03-06 17:26:07.243 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 0.2515 ms
+2026-03-06 17:26:07.302 +05:30 [INF] HTTP GET /api/users responded 200 in 28.9638 ms
+2026-03-06 17:26:13.035 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 1.0155 ms
+2026-03-06 17:26:13.179 +05:30 [INF] HTTP POST /api/users responded 409 in 119.1397 ms
+2026-03-06 17:26:14.518 +05:30 [INF] HTTP POST /api/users responded 409 in 6.1021 ms
+2026-03-06 17:26:14.745 +05:30 [INF] HTTP POST /api/users responded 409 in 6.2942 ms
+2026-03-06 17:26:29.818 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 0.1797 ms
+2026-03-06 17:26:30.067 +05:30 [INF] Created AppUser. UserGuid="d017bc5c-eb16-4b62-929c-45450fed3a93", UserName=User
+2026-03-06 17:26:30.112 +05:30 [INF] HTTP POST /api/users responded 201 in 252.3227 ms
+2026-03-06 17:26:30.151 +05:30 [INF] HTTP GET /api/users responded 200 in 4.4701 ms
+2026-03-06 17:26:39.880 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 1.1073 ms
+2026-03-06 17:26:45.522 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.2747 ms
+2026-03-06 17:27:36.954 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 1.4867 ms
+2026-03-06 17:31:21.421 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 21.7090 ms
+2026-03-06 17:31:21.421 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 21.7100 ms
+2026-03-06 17:31:22.496 +05:30 [INF] HTTP GET /api/claims responded 200 in 998.8518 ms
+2026-03-06 17:34:38.832 +05:30 [WRN] Database migration failed (app will continue). Ensure DB is reachable and migrations are valid.
+System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'ZeblDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.Migrate(String targetMigration)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(DatabaseFacade databaseFacade)
+   at Program.<Main>$(String[] args) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Program.cs:line 231
+2026-03-06 17:34:39.711 +05:30 [INF] Zebl API starting
+2026-03-06 17:34:39.752 +05:30 [INF] Initializing UI Database
+2026-03-06 17:34:41.170 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 99.9116 ms
+2026-03-06 17:34:41.244 +05:30 [INF] HTTP GET /swagger/swagger-ui-bundle.js responded 200 in 40.7141 ms
+2026-03-06 17:34:41.447 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 65.9690 ms
+2026-03-06 17:36:02.584 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 558.3620 ms
+2026-03-06 17:36:07.497 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 405 in 0.8383 ms
+2026-03-06 17:36:19.050 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 405 in 2.6529 ms
+2026-03-06 17:36:26.497 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 405 in 0.4488 ms
+2026-03-06 17:38:59.087 +05:30 [WRN] Database migration failed (app will continue). Ensure DB is reachable and migrations are valid.
+System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'ZeblDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.Migrate(String targetMigration)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.Migrate(DatabaseFacade databaseFacade)
+   at Program.<Main>$(String[] args) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Program.cs:line 234
+2026-03-06 17:38:59.740 +05:30 [INF] Zebl API starting
+2026-03-06 17:38:59.773 +05:30 [INF] Initializing UI Database
+2026-03-06 17:39:00.558 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 97.4458 ms
+2026-03-06 17:39:00.872 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 48.8140 ms
+2026-03-06 17:40:25.418 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 867.4931 ms
+2026-03-06 17:40:31.629 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 0.7456 ms
+2026-03-06 17:40:31.783 +05:30 [INF] Login succeeded. UserGuid="95a78904-3e1e-4e1c-a1d0-34e303273811", UserName=Admin
+2026-03-06 17:40:31.792 +05:30 [INF] HTTP POST /api/auth/login responded 200 in 135.3833 ms
+2026-03-06 17:42:31.129 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 109.9669 ms
+2026-03-06 17:42:41.266 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 18.9974 ms
+2026-03-06 18:07:14.690 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 260.0321 ms
+2026-03-06 18:07:26.264 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 9.6905 ms
+2026-03-06 18:07:32.572 +05:30 [INF] HTTP OPTIONS /api/auth/login responded 204 in 2.4190 ms
+2026-03-06 18:07:32.768 +05:30 [INF] Login succeeded. UserGuid="95a78904-3e1e-4e1c-a1d0-34e303273811", UserName=Admin
+2026-03-06 18:07:32.771 +05:30 [INF] HTTP POST /api/auth/login responded 200 in 64.8521 ms
+2026-03-06 18:07:44.406 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 1.0669 ms
+2026-03-06 18:07:44.890 +05:30 [INF] HTTP GET /api/claims responded 200 in 369.7025 ms
+2026-03-06 18:07:59.329 +05:30 [INF] HTTP OPTIONS /api/services responded 204 in 0.3432 ms
+2026-03-06 18:07:59.337 +05:30 [INF] HTTP OPTIONS /api/services/available-columns responded 204 in 0.2283 ms
+2026-03-06 18:07:59.450 +05:30 [INF] HTTP GET /api/services/available-columns responded 200 in 7.4779 ms
+2026-03-06 18:07:59.523 +05:30 [INF] HTTP GET /api/services responded 200 in 69.5791 ms
+2026-03-06 18:08:03.401 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.8881 ms
+2026-03-06 18:08:03.403 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 2.8975 ms
+2026-03-06 18:08:03.404 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.6030 ms
+2026-03-06 18:08:03.405 +05:30 [INF] HTTP OPTIONS /api/services/claims/256 responded 204 in 0.1646 ms
+2026-03-06 18:08:03.406 +05:30 [INF] HTTP OPTIONS /api/claims/256 responded 204 in 0.1129 ms
+2026-03-06 18:08:03.575 +05:30 [INF] HTTP GET /api/services/claims/256 responded 200 in 51.3824 ms
+2026-03-06 18:08:03.639 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 107.2365 ms
+2026-03-06 18:08:03.735 +05:30 [INF] HTTP GET /api/physicians responded 200 in 203.0654 ms
+2026-03-06 18:08:03.814 +05:30 [INF] HTTP GET /api/claims/256 responded 200 in 290.0256 ms
+2026-03-06 18:08:03.834 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 303.6653 ms
+2026-03-06 18:36:24.574 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 16.2341 ms
+2026-03-06 18:36:24.915 +05:30 [INF] HTTP GET /api/claims responded 200 in 233.4214 ms
+2026-03-06 18:36:48.940 +05:30 [INF] HTTP OPTIONS /api/payments/available-columns responded 204 in 1.3048 ms
+2026-03-06 18:36:48.991 +05:30 [INF] HTTP OPTIONS /api/payments/list responded 204 in 0.1763 ms
+2026-03-06 18:36:49.063 +05:30 [INF] HTTP GET /api/payments/available-columns responded 200 in 12.8606 ms
+2026-03-06 18:36:49.221 +05:30 [INF] HTTP GET /api/payments/list responded 200 in 129.6046 ms
+2026-03-06 18:36:57.776 +05:30 [INF] HTTP OPTIONS /api/claims responded 204 in 0.4415 ms
+2026-03-06 18:36:58.190 +05:30 [INF] HTTP GET /api/claims responded 200 in 337.0951 ms
+2026-03-06 18:37:03.265 +05:30 [INF] HTTP OPTIONS /api/lists/values responded 204 in 0.3744 ms
+2026-03-06 18:37:03.271 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.1984 ms
+2026-03-06 18:37:03.287 +05:30 [INF] HTTP OPTIONS /api/patients/252 responded 204 in 0.4775 ms
+2026-03-06 18:37:03.300 +05:30 [INF] HTTP OPTIONS /api/payers responded 204 in 0.1537 ms
+2026-03-06 18:37:03.393 +05:30 [INF] HTTP GET /api/physicians responded 200 in 41.7890 ms
+2026-03-06 18:37:03.493 +05:30 [INF] HTTP GET /api/lists/values responded 200 in 141.2524 ms
+2026-03-06 18:37:03.624 +05:30 [INF] HTTP GET /api/patients/252 responded 200 in 262.8408 ms
+2026-03-06 18:37:03.632 +05:30 [INF] HTTP GET /api/payers responded 200 in 252.7939 ms
+2026-03-06 18:37:22.017 +05:30 [INF] HTTP OPTIONS /api/users responded 204 in 0.6997 ms
+2026-03-06 18:37:22.122 +05:30 [INF] HTTP GET /api/users responded 200 in 30.5196 ms
