@@ -208,6 +208,9 @@ builder.Services.AddScoped<Zebl.Infrastructure.Repositories.PlaceOfServiceReposi
 builder.Services.AddScoped<Zebl.Infrastructure.Repositories.ReasonCodeRepository>();
 builder.Services.AddScoped<Zebl.Infrastructure.Repositories.RemarkCodeRepository>();
 builder.Services.AddScoped<Zebl.Application.Services.ICodeLibraryService, Zebl.Infrastructure.Services.CodeLibraryService>();
+
+// Claim Template Library
+builder.Services.AddScoped<Zebl.Application.Services.IClaimTemplateService, Zebl.Infrastructure.Services.ClaimTemplateService>();
 #endregion
 
 #region Controllers
@@ -359,6 +362,36 @@ END
     catch (Exception ex)
     {
         Log.Warning(ex, "Ensure Code Library tables failed (non-fatal).");
+    }
+
+    // Ensure City / State / ZIP library table exists even if EF migrations are out-of-sync.
+    // This prevents runtime 500s for the CityStateZip library endpoints.
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[CityStateZipLibrary]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [CityStateZipLibrary] (
+        [Id] int IDENTITY(1,1) NOT NULL,
+        [City] nvarchar(100) NOT NULL,
+        [State] nvarchar(10) NOT NULL,
+        [Zip] nvarchar(15) NOT NULL,
+        [IsActive] bit NOT NULL CONSTRAINT [DF_CityStateZipLibrary_IsActive] DEFAULT ((1)),
+        [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_CityStateZipLibrary_CreatedAt] DEFAULT (sysutcdatetime()),
+        [UpdatedAt] datetime2 NOT NULL CONSTRAINT [DF_CityStateZipLibrary_UpdatedAt] DEFAULT (sysutcdatetime()),
+        CONSTRAINT [PK_CityStateZipLibrary_Id] PRIMARY KEY ([Id])
+    );
+END
+");
+
+        db.Database.ExecuteSqlRaw(@"
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_CityStateZip_State' AND object_id = OBJECT_ID('CityStateZipLibrary'))
+    CREATE INDEX [IX_CityStateZip_State] ON [CityStateZipLibrary] ([State]);
+");
+    }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Ensure CityStateZipLibrary table failed (non-fatal).");
     }
 }
 #endregion

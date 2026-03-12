@@ -65,6 +65,10 @@ public partial class ZeblDbContext : DbContext
 
     public virtual DbSet<SecondaryForwardableAdjustmentRule> SecondaryForwardableAdjustmentRules { get; set; }
 
+    public virtual DbSet<ClaimTemplate> ClaimTemplates { get; set; }
+
+    public virtual DbSet<CityStateZipLibrary> CityStateZipLibraries { get; set; }
+
     public virtual DbSet<Diagnosis_Code> Diagnosis_Codes { get; set; }
     public virtual DbSet<Modifier_Code> Modifier_Codes { get; set; }
     public virtual DbSet<Place_of_Service> Place_of_Services { get; set; }
@@ -1557,6 +1561,8 @@ public partial class ZeblDbContext : DbContext
         ConfigureConnectionLibrary(modelBuilder);
         ConfigureEdiReport(modelBuilder);
         ConfigureSecondaryForwardableAdjustmentRules(modelBuilder);
+        ConfigureClaimTemplates(modelBuilder);
+        ConfigureCityStateZipLibrary(modelBuilder);
 
         OnModelCreatingPartial(modelBuilder);
     }
@@ -1846,6 +1852,52 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.GroupCode).HasMaxLength(10).IsUnicode(false);
             entity.Property(e => e.ReasonCode).HasMaxLength(20).IsUnicode(false);
             entity.Property(e => e.ForwardToSecondary).IsRequired();
+        });
+    }
+
+    private void ConfigureClaimTemplates(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClaimTemplate>(entity =>
+        {
+            entity.ToTable("ClaimTemplates");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TemplateName)
+                .HasMaxLength(255)
+                .IsRequired();
+        });
+    }
+
+    private void ConfigureCityStateZipLibrary(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CityStateZipLibrary>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_CityStateZipLibrary_Id");
+            entity.ToTable("CityStateZipLibrary");
+
+            entity.Property(e => e.City)
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(e => e.State)
+                .HasMaxLength(10)
+                .IsRequired();
+            entity.Property(e => e.Zip)
+                .HasMaxLength(15)
+                .IsRequired();
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime2")
+                .HasDefaultValueSql("(sysutcdatetime())")
+                .IsRequired();
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime2")
+                .HasDefaultValueSql("(sysutcdatetime())")
+                .IsRequired();
+
+            entity.HasIndex(e => e.State)
+                .HasDatabaseName("IX_CityStateZip_State");
         });
     }
 }
