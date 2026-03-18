@@ -10,10 +10,20 @@ namespace Zebl.Application.Services;
 public class EdiReportService
 {
     private readonly IEdiReportRepository _repository;
+    private readonly IClaimRejectionRepository _claimRejectionRepository;
+    private readonly IClaimSubmissionRepository _claimSubmissionRepository;
+    private readonly Parser999Service _parser999;
 
-    public EdiReportService(IEdiReportRepository repository)
+    public EdiReportService(
+        IEdiReportRepository repository,
+        IClaimRejectionRepository claimRejectionRepository,
+        IClaimSubmissionRepository claimSubmissionRepository,
+        Parser999Service parser999)
     {
         _repository = repository;
+        _claimRejectionRepository = claimRejectionRepository;
+        _claimSubmissionRepository = claimSubmissionRepository;
+        _parser999 = parser999;
     }
 
     public Task<List<EdiReport>> GetAllAsync(bool? isArchived = null) => _repository.GetAllAsync(isArchived);
@@ -88,6 +98,32 @@ public class EdiReportService
             ReceivedAt = DateTime.UtcNow
         };
         await _repository.AddAsync(report);
+
+        if (string.Equals(fileType, "999", StringComparison.OrdinalIgnoreCase))
+        {
+            var rejections = _parser999.Parse(content);
+            foreach (var r in rejections)
+            {
+                var submission = await _claimSubmissionRepository.GetByTransactionControlNumberAsync(r.TransactionControlNumber);
+                var rejection = new ClaimRejection
+                {
+                    ClaimId = submission?.ClaimId,
+                    EdiReportId = report.Id,
+                    ErrorCode = submission == null ? "UNMATCHED_999" : r.ErrorCode,
+                    Description = submission == null
+                        ? "999 rejection could not be matched to a claim submission"
+                        : r.Description,
+                    Segment = r.Segment,
+                    Element = r.Element,
+                    Status = "New",
+                    CreatedAt = DateTime.UtcNow,
+                    TransactionControlNumber = r.TransactionControlNumber
+                };
+
+                await _claimRejectionRepository.AddAsync(rejection);
+            }
+        }
+
         return report;
     }
 

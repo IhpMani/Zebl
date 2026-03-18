@@ -16,6 +16,7 @@ public class EraPostingService : IEraPostingService
     private readonly IPaymentService _paymentService;
     private readonly IServiceLineRepository _serviceLineRepo;
     private readonly ISecondaryTriggerService _secondaryTriggerService;
+    private readonly EraExceptionService _eraExceptionService;
 
     private const string StatusForwarded = "Processed as Primary, Forwarded to Additional Payer(s)";
     private const string StatusProcessedPrimary = "Processed as Primary";
@@ -27,7 +28,8 @@ public class EraPostingService : IEraPostingService
         IImportLogRepository importLog,
         IPaymentService paymentService,
         IServiceLineRepository serviceLineRepo,
-        ISecondaryTriggerService secondaryTriggerService)
+        ISecondaryTriggerService secondaryTriggerService,
+        EraExceptionService eraExceptionService)
     {
         _payerRepo = payerRepo;
         _claimRepo = claimRepo;
@@ -35,6 +37,7 @@ public class EraPostingService : IEraPostingService
         _paymentService = paymentService;
         _serviceLineRepo = serviceLineRepo;
         _secondaryTriggerService = secondaryTriggerService;
+        _eraExceptionService = eraExceptionService;
     }
 
     public async Task<EraPostingResult> ProcessEraAsync(EraFile era)
@@ -107,6 +110,12 @@ public class EraPostingService : IEraPostingService
                 {
                     result.Errors.Add($"Claim {eraClaim.ClaimId}: duplicate payment (same amount and reference); skip.");
                     result.PartiallyProcessed = true;
+                    await CreateEraExceptionAsync(
+                        claimId: eraClaim.ClaimId,
+                        serviceLineId: null,
+                        exceptionType: "DuplicatePayment",
+                        message: $"Duplicate payment detected for claim {eraClaim.ClaimId}.",
+                        eraClaimIdentifier: eraClaim.ClaimId?.ToString() ?? "UNKNOWN");
                     continue;
                 }
 
@@ -129,6 +138,12 @@ public class EraPostingService : IEraPostingService
                         result.BalancesMatch = false;
                         result.BalanceVerificationErrors.Add(
                             $"Claim {eraClaim.ClaimId} Srv {line.ServiceLineId}: Ins paid delta {deltaPaid:F2} expected {expectedPaid:F2}.");
+                        await CreateEraExceptionAsync(
+                            claimId: eraClaim.ClaimId,
+                            serviceLineId: line.ServiceLineId,
+                            exceptionType: "BalanceMismatch",
+                            message: $"Insurance paid delta {deltaPaid:F2} expected {expectedPaid:F2}.",
+                            eraClaimIdentifier: eraClaim.ClaimId?.ToString() ?? "UNKNOWN");
                     }
 
                     foreach (var adj in line.Adjustments)
@@ -144,6 +159,12 @@ public class EraPostingService : IEraPostingService
                             result.BalancesMatch = false;
                             result.BalanceVerificationErrors.Add(
                                 $"Claim {eraClaim.ClaimId} Srv {line.ServiceLineId} {gc}: adj delta {deltaAdj:F2} expected {expectedAdj:F2}.");
+                            await CreateEraExceptionAsync(
+                                claimId: eraClaim.ClaimId,
+                                serviceLineId: line.ServiceLineId,
+                                exceptionType: "BalanceMismatch",
+                                message: $"{gc} adjustment delta {deltaAdj:F2} expected {expectedAdj:F2}.",
+                                eraClaimIdentifier: eraClaim.ClaimId?.ToString() ?? "UNKNOWN");
                         }
                     }
                 }
@@ -165,6 +186,12 @@ public class EraPostingService : IEraPostingService
             {
                 result.Errors.Add($"Claim {eraClaim.ClaimId}: {ex.Message}");
                 result.PartiallyProcessed = true;
+                await CreateEraExceptionAsync(
+                    claimId: eraClaim.ClaimId,
+                    serviceLineId: null,
+                    exceptionType: "ProcessingError",
+                    message: ex.Message,
+                    eraClaimIdentifier: eraClaim.ClaimId?.ToString() ?? "UNKNOWN");
             }
         }
 
@@ -246,5 +273,22 @@ public class EraPostingService : IEraPostingService
                 return equivalent[0];
         }
         return byExternalId[0];
+    }
+
+    private Task<int> CreateEraExceptionAsync(
+        int? claimId,
+        int? serviceLineId,
+        string exceptionType,
+        string message,
+        string eraClaimIdentifier)
+    {
+        // EdiReportId is not currently available in EraFile; use empty Guid as placeholder.
+        return _eraExceptionService.CreateExceptionAsync(
+            Guid.Empty,
+            claimId,
+            serviceLineId,
+            exceptionType,
+            message,
+            eraClaimIdentifier);
     }
 }

@@ -39,11 +39,13 @@ var requireAuth = jwtSettings.RequireAuthentication;
 
 #region Database
 builder.Services.AddDbContext<ZeblDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"))
-    // Prevent startup from aborting migrations due to PendingModelChangesWarning.
-    // We still want the app to run and apply the last known migrations.
-    .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+
+    options.EnableDetailedErrors();
+    options.EnableSensitiveDataLogging();
+    options.LogTo(Console.WriteLine, LogLevel.Information);
+});
 #endregion
 
 #region Health Checks
@@ -150,6 +152,13 @@ builder.Services.AddScoped<Zebl.Api.Services.Hl7ParserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ImportService>();
 builder.Services.AddScoped<Zebl.Application.Abstractions.IClaimAuditService, Zebl.Infrastructure.Services.ClaimAuditService>();
 builder.Services.AddScoped<Zebl.Api.Services.EntityMetadataService>();
+builder.Services.AddScoped<Zebl.Infrastructure.Services.ProgramSettingsService>();
+
+// Patient Eligibility (clearinghouse credentials only; password encrypted at rest)
+builder.Services.AddDataProtection();
+builder.Services.AddScoped<Zebl.Application.Abstractions.IEligibilitySettingsProvider, Zebl.Api.Services.PatientEligibilitySettingsService>();
+builder.Services.AddScoped<Zebl.Application.Services.Eligibility271Parser>();
+builder.Services.AddScoped<Zebl.Application.Services.IEligibilityService, Zebl.Infrastructure.Services.EligibilityService>();
 
 // Receiver Library
 builder.Services.AddScoped<Zebl.Application.Repositories.IReceiverLibraryRepository, Zebl.Infrastructure.Repositories.ReceiverLibraryRepository>();
@@ -159,6 +168,8 @@ builder.Services.AddScoped<Zebl.Application.Services.ReceiverLibraryService>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IClaimRepository, Zebl.Infrastructure.Repositories.ClaimRepository>();
 builder.Services.AddScoped<Zebl.Application.Services.IEdiExportService, Zebl.Application.Services.EdiExportService>();
 builder.Services.AddScoped<Zebl.Application.Services.IClaimExportDataProvider, Zebl.Infrastructure.Services.ClaimExportDataProvider>();
+builder.Services.AddScoped<Zebl.Application.Repositories.IScrubRuleRepository, Zebl.Infrastructure.Repositories.ScrubRuleRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.IClaimScrubService, Zebl.Infrastructure.Services.ClaimScrubService>();
 builder.Services.AddScoped<Zebl.Application.Services.IClaimExportService, Zebl.Application.Services.ClaimExportService>();
 
 // Connection Library
@@ -170,6 +181,9 @@ builder.Services.AddScoped<Zebl.Infrastructure.Services.SftpTransportService>();
 
 // EDI Reports
 builder.Services.AddScoped<Zebl.Application.Repositories.IEdiReportRepository, Zebl.Infrastructure.Repositories.EdiReportRepository>();
+builder.Services.AddScoped<Zebl.Application.Repositories.IClaimRejectionRepository, Zebl.Infrastructure.Repositories.ClaimRejectionRepository>();
+builder.Services.AddScoped<Zebl.Application.Repositories.IClaimSubmissionRepository, Zebl.Infrastructure.Repositories.ClaimSubmissionRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.Parser999Service>();
 builder.Services.AddScoped<Zebl.Application.Services.EdiReportService>();
 // IEdiReportFileStore removed - FileContent now stored in database
 
@@ -181,6 +195,8 @@ builder.Services.AddScoped<Zebl.Application.Services.PayerService>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IPaymentRepository, Zebl.Infrastructure.Repositories.PaymentRepository>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IAdjustmentRepository, Zebl.Infrastructure.Repositories.AdjustmentRepository>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IImportLogRepository, Zebl.Infrastructure.Repositories.ImportLogRepository>();
+builder.Services.AddScoped<Zebl.Application.Repositories.IEraExceptionRepository, Zebl.Infrastructure.Repositories.EraExceptionRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.EraExceptionService>();
 builder.Services.AddScoped<Zebl.Application.Services.IEraPostingService, Zebl.Application.Services.EraPostingService>();
 
 // Payment Engine (full payment entry, disbursement, claim totals)

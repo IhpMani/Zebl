@@ -12,15 +12,32 @@ public class ClaimExportService : IClaimExportService
 {
     private readonly IClaimExportDataProvider _dataProvider;
     private readonly IClaimRepository _claimRepo;
+    private readonly IClaimScrubService _scrubService;
+    private readonly IClaimSubmissionRepository _submissionRepo;
 
-    public ClaimExportService(IClaimExportDataProvider dataProvider, IClaimRepository claimRepo)
+    public ClaimExportService(
+        IClaimExportDataProvider dataProvider,
+        IClaimRepository claimRepo,
+        IClaimScrubService scrubService,
+        IClaimSubmissionRepository submissionRepo)
     {
         _dataProvider = dataProvider;
         _claimRepo = claimRepo;
+        _scrubService = scrubService;
+        _submissionRepo = submissionRepo;
     }
 
     public async Task<string> Generate837Async(int claimId)
     {
+        var scrubResults = await _scrubService.ScrubClaimAsync(claimId);
+        var blocking = scrubResults.Where(r => string.Equals(r.Severity, "Error", StringComparison.OrdinalIgnoreCase)).ToList();
+        if (blocking.Count > 0)
+        {
+            var message = "Claim failed scrubbing:\n" +
+                          string.Join("\n", blocking.Select(r => $"- {r.RuleName}: {r.Message} ({r.AffectedField})"));
+            throw new InvalidOperationException(message);
+        }
+
         var data = await _dataProvider.GetExportDataAsync(claimId)
             ?? throw new InvalidOperationException("Claim not found.");
 
@@ -47,8 +64,22 @@ public class ClaimExportService : IClaimExportService
             ? data.ClaInsuranceTypeCodeOverride
             : payer.PayInsTypeCode;
 
-        // Build 837 with conditional segments (RULE E)
-        var content = Build837(data, claimFilingIndicator, insuranceTypeCode, payer);
+        // Generate and reserve transaction set control number (837 ST02 / 999 AK2)
+        var transactionControlNumber = await _submissionRepo.GetNextTransactionControlNumberAsync();
+
+        // Build 837 with conditional segments (RULE E); ST and SE use transactionControlNumber
+        var content = Build837(data, claimFilingIndicator, insuranceTypeCode, payer, transactionControlNumber);
+
+        // Track submission so 999 can resolve AK2 → ClaimId
+        var patientControlNumber = data.ClaimId.ToString();
+        await _submissionRepo.AddAsync(new ClaimSubmission
+        {
+            ClaimId = claimId,
+            TransactionControlNumber = transactionControlNumber,
+            PatientControlNumber = patientControlNumber,
+            BatchId = null,
+            SubmissionDate = DateTime.UtcNow
+        });
 
         // Status transition after successful export
         await _claimRepo.UpdateSubmissionStatusAsync(claimId, "Electronic", "Submitted", DateTime.UtcNow);
@@ -60,7 +91,8 @@ public class ClaimExportService : IClaimExportService
         Claim837ExportData data,
         string? claimFilingIndicator,
         string? insuranceTypeCode,
-        Payer payer)
+        Payer payer,
+        string transactionControlNumber)
     {
         var sb = new StringBuilder();
         var now = DateTime.Now;
@@ -87,8 +119,8 @@ public class ClaimExportService : IClaimExportService
           .Append(now.ToString("HHmm"))
           .Append("*1*X*005010X222A1~");
 
-        // ST
-        sb.Append("ST*837*0001~");
+        // ST — transaction set control number (echoed in 999 AK2)
+        sb.Append("ST*837*").Append(transactionControlNumber).Append("~");
 
         // BHT
         sb.Append("BHT*0019*00*")
@@ -195,9 +227,9 @@ public class ClaimExportService : IClaimExportService
         if (payer.PayExportPatientAmtDueIn2430)
             sb.Append("AMT*EAF*0~");
 
-        // SE/GE/IEA
+        // SE/GE/IEA — SE02 must match ST02 (transaction set control number)
         var segmentCount = sb.ToString().Count(c => c == '~') + 1;
-        sb.Append("SE*").Append(segmentCount).Append("*0001~");
+        sb.Append("SE*").Append(segmentCount).Append("*").Append(transactionControlNumber).Append("~");
         sb.Append("GE*1*1~");
         sb.Append("IEA*1*000000001~");
 

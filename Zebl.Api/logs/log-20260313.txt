@@ -1,0 +1,766 @@
+2026-03-13 10:26:18.294 +05:30 [INF] Zebl API starting
+2026-03-13 10:26:18.430 +05:30 [INF] Initializing UI Database
+2026-03-13 10:26:22.859 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 176.5401 ms
+2026-03-13 10:26:23.774 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 60.5785 ms
+2026-03-13 10:27:54.484 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 52.4097 ms
+2026-03-13 10:27:54.484 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 52.2916 ms
+2026-03-13 10:27:55.507 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 979.5797 ms
+2026-03-13 10:27:55.833 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient responded 204 in 0.2306 ms
+2026-03-13 10:27:56.077 +05:30 [INF] HTTP GET /api/program-settings/patient responded 200 in 241.4172 ms
+2026-03-13 10:27:56.083 +05:30 [INF] HTTP OPTIONS /api/patient-templates responded 204 in 0.2243 ms
+2026-03-13 10:27:56.087 +05:30 [INF] HTTP GET /api/patient-templates responded 404 in 1.2198 ms
+2026-03-13 10:27:57.321 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 9.7706 ms
+2026-03-13 10:27:59.637 +05:30 [INF] HTTP GET /api/program-settings/patient responded 200 in 4.8585 ms
+2026-03-13 10:27:59.643 +05:30 [INF] HTTP GET /api/patient-templates responded 404 in 0.9985 ms
+2026-03-13 10:28:03.448 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient-custom-fields responded 204 in 0.3159 ms
+2026-03-13 10:28:03.461 +05:30 [INF] HTTP GET /api/program-settings/patient-custom-fields responded 200 in 8.4480 ms
+2026-03-13 10:28:04.849 +05:30 [INF] HTTP OPTIONS /api/program-settings/claim responded 204 in 0.3360 ms
+2026-03-13 10:28:04.861 +05:30 [INF] HTTP GET /api/program-settings/claim responded 200 in 9.6800 ms
+2026-03-13 10:28:04.868 +05:30 [INF] HTTP OPTIONS /api/code-library/pos responded 204 in 0.2123 ms
+2026-03-13 10:28:04.868 +05:30 [INF] HTTP OPTIONS /api/claim-status responded 204 in 0.2492 ms
+2026-03-13 10:28:04.886 +05:30 [INF] HTTP GET /api/claim-status responded 200 in 13.6295 ms
+2026-03-13 10:28:04.958 +05:30 [INF] HTTP GET /api/code-library/pos responded 200 in 84.3789 ms
+2026-03-13 10:28:06.312 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient-eligibility responded 204 in 1.6214 ms
+2026-03-13 10:28:06.331 +05:30 [INF] HTTP GET /api/program-settings/patient-eligibility responded 200 in 13.6864 ms
+2026-03-13 10:28:07.169 +05:30 [INF] HTTP OPTIONS /api/program-settings/company responded 204 in 0.2912 ms
+2026-03-13 10:28:07.177 +05:30 [INF] HTTP GET /api/program-settings/company responded 200 in 4.1958 ms
+2026-03-13 10:28:07.854 +05:30 [INF] HTTP OPTIONS /api/program-settings/payment responded 204 in 0.1750 ms
+2026-03-13 10:28:07.862 +05:30 [INF] HTTP GET /api/program-settings/payment responded 200 in 4.1241 ms
+2026-03-13 10:28:08.326 +05:30 [INF] HTTP OPTIONS /api/program-settings/sending-claims responded 204 in 0.1782 ms
+2026-03-13 10:28:08.335 +05:30 [INF] HTTP GET /api/program-settings/sending-claims responded 200 in 5.9513 ms
+2026-03-13 10:28:08.880 +05:30 [INF] HTTP OPTIONS /api/program-settings/claim-custom-fields responded 204 in 0.6736 ms
+2026-03-13 10:28:08.889 +05:30 [INF] HTTP GET /api/program-settings/claim-custom-fields responded 200 in 4.8028 ms
+2026-03-13 10:28:09.444 +05:30 [INF] HTTP GET /api/program-settings/claim responded 200 in 5.2113 ms
+2026-03-13 10:28:09.457 +05:30 [INF] HTTP GET /api/code-library/pos responded 200 in 7.9148 ms
+2026-03-13 10:28:10.103 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient-custom-fields responded 204 in 0.2688 ms
+2026-03-13 10:28:10.110 +05:30 [INF] HTTP GET /api/program-settings/patient-custom-fields responded 200 in 3.6595 ms
+2026-03-13 10:28:11.112 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient responded 204 in 0.2502 ms
+2026-03-13 10:28:11.121 +05:30 [INF] HTTP GET /api/program-settings/patient responded 200 in 4.0885 ms
+2026-03-13 10:28:11.124 +05:30 [INF] HTTP OPTIONS /api/patient-templates responded 204 in 0.1673 ms
+2026-03-13 10:28:11.127 +05:30 [INF] HTTP GET /api/patient-templates responded 404 in 0.3529 ms
+2026-03-13 10:28:11.719 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 0.2381 ms
+2026-03-13 10:28:11.725 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 2.8650 ms
+2026-03-13 10:28:13.043 +05:30 [INF] HTTP GET /api/program-settings/patient responded 200 in 3.0730 ms
+2026-03-13 10:28:13.050 +05:30 [INF] HTTP GET /api/patient-templates responded 404 in 0.7876 ms
+2026-03-13 10:28:14.041 +05:30 [INF] HTTP GET /api/program-settings/patient-custom-fields responded 200 in 2.2434 ms
+2026-03-13 10:28:19.844 +05:30 [INF] HTTP OPTIONS /api/program-settings/claim responded 204 in 0.1802 ms
+2026-03-13 10:28:19.852 +05:30 [INF] HTTP GET /api/program-settings/claim responded 200 in 4.6047 ms
+2026-03-13 10:28:19.857 +05:30 [INF] HTTP OPTIONS /api/code-library/pos responded 204 in 0.7675 ms
+2026-03-13 10:28:19.869 +05:30 [INF] HTTP GET /api/code-library/pos responded 200 in 9.3259 ms
+2026-03-13 10:28:20.807 +05:30 [INF] HTTP OPTIONS /api/program-settings/claim-custom-fields responded 204 in 0.2074 ms
+2026-03-13 10:28:20.816 +05:30 [INF] HTTP GET /api/program-settings/claim-custom-fields responded 200 in 4.8655 ms
+2026-03-13 10:28:21.856 +05:30 [INF] HTTP OPTIONS /api/program-settings/sending-claims responded 204 in 0.1929 ms
+2026-03-13 10:28:21.867 +05:30 [INF] HTTP GET /api/program-settings/sending-claims responded 200 in 7.1045 ms
+2026-03-13 10:28:22.353 +05:30 [INF] HTTP OPTIONS /api/program-settings/payment responded 204 in 0.2613 ms
+2026-03-13 10:28:22.363 +05:30 [INF] HTTP GET /api/program-settings/payment responded 200 in 5.9975 ms
+2026-03-13 10:28:22.855 +05:30 [INF] HTTP OPTIONS /api/program-settings/company responded 204 in 0.5716 ms
+2026-03-13 10:28:22.864 +05:30 [INF] HTTP GET /api/program-settings/company responded 200 in 5.2765 ms
+2026-03-13 10:28:23.343 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient-eligibility responded 204 in 0.1654 ms
+2026-03-13 10:28:23.352 +05:30 [INF] HTTP GET /api/program-settings/patient-eligibility responded 200 in 5.8310 ms
+2026-03-13 10:28:23.751 +05:30 [INF] HTTP OPTIONS /api/program-settings/interface responded 204 in 0.1622 ms
+2026-03-13 10:28:23.760 +05:30 [INF] HTTP GET /api/program-settings/interface responded 200 in 5.2751 ms
+2026-03-13 10:36:51.819 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 26.4807 ms
+2026-03-13 10:36:51.819 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 26.5156 ms
+2026-03-13 10:36:52.557 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 690.8051 ms
+2026-03-13 10:36:52.647 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 777.1968 ms
+2026-03-13 10:41:05.296 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient responded 204 in 23.4921 ms
+2026-03-13 10:41:05.481 +05:30 [INF] HTTP GET /api/program-settings/patient responded 200 in 166.0155 ms
+2026-03-13 10:41:05.492 +05:30 [INF] HTTP OPTIONS /api/patient-templates responded 204 in 0.3344 ms
+2026-03-13 10:41:05.496 +05:30 [INF] HTTP GET /api/patient-templates responded 404 in 0.9256 ms
+2026-03-13 10:41:05.737 +05:30 [INF] HTTP OPTIONS /api/custom-fields/Patient responded 204 in 0.2299 ms
+2026-03-13 10:41:06.040 +05:30 [ERR] Failed executing DbCommand (40ms) [Parameters=[@__normalized_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[Id], [c].[EntityType], [c].[FieldKey], [c].[Label], [c].[FieldType], [c].[SortOrder], [c].[IsActive], [c].[CreatedAt]
+FROM [CustomFieldDefinitions] AS [c]
+WHERE [c].[EntityType] = @__normalized_0 AND [c].[IsActive] = CAST(1 AS bit)
+ORDER BY [c].[SortOrder], [c].[Id]
+2026-03-13 10:41:06.130 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:41:06.140 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH78:0000000B
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.CustomFieldsController.GetByEntityType(String entityType, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\CustomFieldsController.cs:line 89
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:41:06.320 +05:30 [ERR] HTTP GET /api/custom-fields/Patient responded 500 in 574.1902 ms
+2026-03-13 10:41:07.509 +05:30 [INF] HTTP OPTIONS /api/program-settings/claim responded 204 in 0.7695 ms
+2026-03-13 10:41:07.554 +05:30 [INF] HTTP GET /api/program-settings/claim responded 200 in 38.3063 ms
+2026-03-13 10:41:07.560 +05:30 [INF] HTTP OPTIONS /api/claim-status responded 204 in 0.1348 ms
+2026-03-13 10:41:07.568 +05:30 [INF] HTTP OPTIONS /api/code-library/pos responded 204 in 0.1693 ms
+2026-03-13 10:41:07.574 +05:30 [INF] HTTP GET /api/claim-status responded 200 in 6.0474 ms
+2026-03-13 10:41:07.733 +05:30 [INF] HTTP GET /api/code-library/pos responded 200 in 158.5555 ms
+2026-03-13 10:41:08.306 +05:30 [INF] HTTP OPTIONS /api/custom-fields/Claim responded 204 in 0.8350 ms
+2026-03-13 10:41:08.315 +05:30 [ERR] Failed executing DbCommand (2ms) [Parameters=[@__normalized_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[Id], [c].[EntityType], [c].[FieldKey], [c].[Label], [c].[FieldType], [c].[SortOrder], [c].[IsActive], [c].[CreatedAt]
+FROM [CustomFieldDefinitions] AS [c]
+WHERE [c].[EntityType] = @__normalized_0 AND [c].[IsActive] = CAST(1 AS bit)
+ORDER BY [c].[SortOrder], [c].[Id]
+2026-03-13 10:41:08.319 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:41:08.324 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH78:0000001B
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.CustomFieldsController.GetByEntityType(String entityType, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\CustomFieldsController.cs:line 89
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:41:08.341 +05:30 [ERR] HTTP GET /api/custom-fields/Claim responded 500 in 31.8819 ms
+2026-03-13 10:41:09.363 +05:30 [INF] HTTP OPTIONS /api/program-settings/sending-claims responded 204 in 0.5178 ms
+2026-03-13 10:41:09.381 +05:30 [INF] HTTP GET /api/program-settings/sending-claims responded 200 in 12.6468 ms
+2026-03-13 10:41:09.387 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.0987 ms
+2026-03-13 10:41:09.482 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 91.1846 ms
+2026-03-13 10:41:10.330 +05:30 [INF] HTTP OPTIONS /api/program-settings/payment responded 204 in 0.5420 ms
+2026-03-13 10:41:10.349 +05:30 [INF] HTTP GET /api/program-settings/payment responded 200 in 15.6144 ms
+2026-03-13 10:41:11.000 +05:30 [INF] HTTP OPTIONS /api/program-settings/company responded 204 in 0.2121 ms
+2026-03-13 10:41:11.035 +05:30 [INF] HTTP GET /api/program-settings/company responded 200 in 28.8338 ms
+2026-03-13 10:41:12.138 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient-eligibility responded 204 in 0.1260 ms
+2026-03-13 10:41:12.158 +05:30 [INF] HTTP GET /api/program-settings/patient-eligibility responded 200 in 16.8427 ms
+2026-03-13 10:41:12.166 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.1031 ms
+2026-03-13 10:41:12.182 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 19.7050 ms
+2026-03-13 10:41:12.267 +05:30 [INF] HTTP GET /api/physicians responded 200 in 96.5807 ms
+2026-03-13 10:41:13.234 +05:30 [INF] HTTP OPTIONS /api/program-settings/interface responded 204 in 0.1530 ms
+2026-03-13 10:41:13.246 +05:30 [INF] HTTP GET /api/program-settings/interface responded 200 in 8.2751 ms
+2026-03-13 10:41:14.009 +05:30 [INF] HTTP GET /api/program-settings/patient-eligibility responded 200 in 15.2978 ms
+2026-03-13 10:41:14.027 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 14.0402 ms
+2026-03-13 10:42:24.691 +05:30 [INF] HTTP OPTIONS /api/program-settings/interface responded 204 in 0.6734 ms
+2026-03-13 10:42:24.705 +05:30 [INF] HTTP GET /api/program-settings/interface responded 200 in 10.3461 ms
+2026-03-13 10:42:35.650 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient-eligibility responded 204 in 1.2093 ms
+2026-03-13 10:42:35.666 +05:30 [INF] HTTP GET /api/program-settings/patient-eligibility responded 200 in 11.6552 ms
+2026-03-13 10:42:35.670 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.3195 ms
+2026-03-13 10:42:35.684 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 11.6612 ms
+2026-03-13 10:42:57.996 +05:30 [INF] HTTP OPTIONS /api/program-settings/company responded 204 in 0.1731 ms
+2026-03-13 10:42:58.012 +05:30 [INF] HTTP GET /api/program-settings/company responded 200 in 12.3608 ms
+2026-03-13 10:42:58.479 +05:30 [INF] HTTP OPTIONS /api/program-settings/payment responded 204 in 0.1157 ms
+2026-03-13 10:42:58.500 +05:30 [INF] HTTP GET /api/program-settings/payment responded 200 in 16.8145 ms
+2026-03-13 10:43:22.014 +05:30 [INF] HTTP OPTIONS /api/program-settings/sending-claims responded 204 in 0.2074 ms
+2026-03-13 10:43:22.030 +05:30 [INF] HTTP GET /api/program-settings/sending-claims responded 200 in 13.7714 ms
+2026-03-13 10:44:02.140 +05:30 [INF] HTTP OPTIONS /api/custom-fields/Claim responded 204 in 0.4787 ms
+2026-03-13 10:44:02.182 +05:30 [ERR] Failed executing DbCommand (15ms) [Parameters=[@__normalized_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[Id], [c].[EntityType], [c].[FieldKey], [c].[Label], [c].[FieldType], [c].[SortOrder], [c].[IsActive], [c].[CreatedAt]
+FROM [CustomFieldDefinitions] AS [c]
+WHERE [c].[EntityType] = @__normalized_0 AND [c].[IsActive] = CAST(1 AS bit)
+ORDER BY [c].[SortOrder], [c].[Id]
+2026-03-13 10:44:02.200 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:44:02.207 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH7E:00000003
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.CustomFieldsController.GetByEntityType(String entityType, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\CustomFieldsController.cs:line 89
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:44:02.237 +05:30 [ERR] HTTP GET /api/custom-fields/Claim responded 500 in 93.5001 ms
+2026-03-13 10:44:07.408 +05:30 [INF] HTTP OPTIONS /api/program-settings/claim responded 204 in 0.6575 ms
+2026-03-13 10:44:07.423 +05:30 [INF] HTTP GET /api/program-settings/claim responded 200 in 11.8430 ms
+2026-03-13 10:44:07.431 +05:30 [INF] HTTP OPTIONS /api/code-library/pos responded 204 in 0.1099 ms
+2026-03-13 10:44:07.458 +05:30 [INF] HTTP GET /api/code-library/pos responded 200 in 24.8110 ms
+2026-03-13 10:44:30.781 +05:30 [INF] HTTP OPTIONS /api/custom-fields/Patient responded 204 in 0.2982 ms
+2026-03-13 10:44:30.793 +05:30 [ERR] Failed executing DbCommand (2ms) [Parameters=[@__normalized_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[Id], [c].[EntityType], [c].[FieldKey], [c].[Label], [c].[FieldType], [c].[SortOrder], [c].[IsActive], [c].[CreatedAt]
+FROM [CustomFieldDefinitions] AS [c]
+WHERE [c].[EntityType] = @__normalized_0 AND [c].[IsActive] = CAST(1 AS bit)
+ORDER BY [c].[SortOrder], [c].[Id]
+2026-03-13 10:44:30.795 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:44:30.799 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH7G:00000003
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.CustomFieldsController.GetByEntityType(String entityType, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\CustomFieldsController.cs:line 89
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:44:30.809 +05:30 [ERR] HTTP GET /api/custom-fields/Patient responded 500 in 22.0537 ms
+2026-03-13 10:44:31.983 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient responded 204 in 0.1227 ms
+2026-03-13 10:44:32.001 +05:30 [INF] HTTP GET /api/program-settings/patient responded 200 in 14.0765 ms
+2026-03-13 10:44:32.004 +05:30 [INF] HTTP OPTIONS /api/patient-templates responded 204 in 0.0855 ms
+2026-03-13 10:44:32.011 +05:30 [INF] HTTP GET /api/patient-templates responded 404 in 2.9261 ms
+2026-03-13 10:45:29.886 +05:30 [INF] HTTP OPTIONS /api/custom-fields/Patient responded 204 in 0.2206 ms
+2026-03-13 10:45:29.894 +05:30 [ERR] Failed executing DbCommand (4ms) [Parameters=[@__normalized_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[Id], [c].[EntityType], [c].[FieldKey], [c].[Label], [c].[FieldType], [c].[SortOrder], [c].[IsActive], [c].[CreatedAt]
+FROM [CustomFieldDefinitions] AS [c]
+WHERE [c].[EntityType] = @__normalized_0 AND [c].[IsActive] = CAST(1 AS bit)
+ORDER BY [c].[SortOrder], [c].[Id]
+2026-03-13 10:45:29.902 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:45:29.907 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH7H:00000003
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.CustomFieldsController.GetByEntityType(String entityType, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\CustomFieldsController.cs:line 89
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+ClientConnectionId:998f7640-0c9d-4db1-9281-bc9fb6d445a9
+Error Number:208,State:1,Class:16
+2026-03-13 10:45:29.914 +05:30 [ERR] HTTP GET /api/custom-fields/Patient responded 500 in 25.8879 ms
+2026-03-13 10:45:30.753 +05:30 [INF] HTTP OPTIONS /api/program-settings/claim responded 204 in 0.5361 ms
+2026-03-13 10:45:30.768 +05:30 [INF] HTTP GET /api/program-settings/claim responded 200 in 11.9397 ms
+2026-03-13 10:45:30.771 +05:30 [INF] HTTP OPTIONS /api/code-library/pos responded 204 in 0.0793 ms
+2026-03-13 10:45:30.782 +05:30 [INF] HTTP GET /api/code-library/pos responded 200 in 9.3851 ms
+2026-03-13 10:52:51.201 +05:30 [INF] HTTP OPTIONS /api/custom-fields/Claim responded 204 in 41.5355 ms
+2026-03-13 10:52:51.340 +05:30 [INF] HTTP OPTIONS /api/program-settings/sending-claims responded 204 in 0.5283 ms
+2026-03-13 10:52:51.830 +05:30 [ERR] Failed executing DbCommand (91ms) [Parameters=[@__normalized_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[Id], [c].[EntityType], [c].[FieldKey], [c].[Label], [c].[FieldType], [c].[SortOrder], [c].[IsActive], [c].[CreatedAt]
+FROM [CustomFieldDefinitions] AS [c]
+WHERE [c].[EntityType] = @__normalized_0 AND [c].[IsActive] = CAST(1 AS bit)
+ORDER BY [c].[SortOrder], [c].[Id]
+2026-03-13 10:52:51.857 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d31d4671-5362-4e53-8be5-54ee1675d590
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:d31d4671-5362-4e53-8be5-54ee1675d590
+Error Number:208,State:1,Class:16
+2026-03-13 10:52:51.874 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH7I:00000003
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.CustomFieldsController.GetByEntityType(String entityType, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\CustomFieldsController.cs:line 89
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+ClientConnectionId:d31d4671-5362-4e53-8be5-54ee1675d590
+Error Number:208,State:1,Class:16
+2026-03-13 10:52:51.933 +05:30 [ERR] HTTP GET /api/custom-fields/Claim responded 500 in 665.9436 ms
+2026-03-13 10:52:52.039 +05:30 [INF] HTTP GET /api/program-settings/sending-claims responded 200 in 688.5059 ms
+2026-03-13 10:52:53.412 +05:30 [INF] HTTP OPTIONS /api/program-settings/payment responded 204 in 0.6148 ms
+2026-03-13 10:52:53.439 +05:30 [INF] HTTP GET /api/program-settings/payment responded 200 in 22.0952 ms
+2026-03-13 10:52:54.236 +05:30 [INF] HTTP OPTIONS /api/program-settings/company responded 204 in 0.2410 ms
+2026-03-13 10:52:54.250 +05:30 [INF] HTTP GET /api/program-settings/company responded 200 in 10.8460 ms
+2026-03-13 10:52:55.150 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient-eligibility responded 204 in 0.2262 ms
+2026-03-13 10:52:55.167 +05:30 [INF] HTTP GET /api/program-settings/patient-eligibility responded 200 in 12.6012 ms
+2026-03-13 10:52:55.175 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.2911 ms
+2026-03-13 10:52:55.223 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 44.2885 ms
+2026-03-13 11:23:58.589 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 75.1344 ms
+2026-03-13 11:23:58.589 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 75.1342 ms
+2026-03-13 11:25:26.945 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 71.3142 ms
+2026-03-13 11:25:30.141 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 3119.4088 ms
+2026-03-13 11:25:30.605 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 11.9040 ms
+2026-03-13 11:25:31.831 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 1193.8472 ms
+2026-03-13 11:25:48.223 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 28.2770 ms
+2026-03-13 11:25:48.562 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 1.7884 ms
+2026-03-13 11:25:49.027 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 456.1118 ms
+2026-03-13 11:25:49.072 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 795.3346 ms
+2026-03-13 11:26:06.087 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 40.0535 ms
+2026-03-13 11:26:06.087 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 40.0535 ms
+2026-03-13 11:26:06.555 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 411.3885 ms
+2026-03-13 11:26:06.596 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 451.7825 ms
+2026-03-13 11:26:59.650 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 120.7408 ms
+2026-03-13 11:26:59.666 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 7.9795 ms
+2026-03-13 11:27:01.539 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 1713.6615 ms
+2026-03-13 11:27:01.581 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH7N:00000005
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Zebl.Infrastructure.Services.ProgramSettingsService.GetSectionAsync(String section, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Infrastructure\Services\ProgramSettingsService.cs:line 26
+   at Zebl.Api.Controllers.ProgramSettingsController.GetSection(String section, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\ProgramSettingsController.cs:line 33
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+2026-03-13 11:27:04.396 +05:30 [ERR] HTTP GET /api/program-settings/general responded 500 in 4596.3335 ms
+2026-03-13 11:27:04.923 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 696.3965 ms
+2026-03-13 11:27:04.946 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 1545.4525 ms
+2026-03-13 11:29:36.920 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 36.8800 ms
+2026-03-13 11:29:36.920 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 38.2804 ms
+2026-03-13 11:29:37.453 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 483.0545 ms
+2026-03-13 11:29:37.471 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 501.1452 ms
+2026-03-13 11:33:49.871 +05:30 [INF] HTTP OPTIONS /api/program-settings/patientEligibility responded 204 in 38.3839 ms
+2026-03-13 11:33:51.193 +05:30 [INF] HTTP GET /api/program-settings/patientEligibility responded 200 in 1228.4800 ms
+2026-03-13 11:33:51.284 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 1.5635 ms
+2026-03-13 11:33:51.389 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 18.1856 ms
+2026-03-13 11:33:51.445 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 147.7784 ms
+2026-03-13 11:33:51.668 +05:30 [INF] HTTP GET /api/physicians responded 200 in 273.3914 ms
+2026-03-13 11:33:59.527 +05:30 [INF] HTTP OPTIONS /api/program-settings/interface responded 204 in 83.0048 ms
+2026-03-13 11:34:01.465 +05:30 [INF] HTTP GET /api/program-settings/interface responded 200 in 1546.9292 ms
+2026-03-13 11:34:13.607 +05:30 [INF] HTTP OPTIONS /api/program-settings/patientEligibility responded 204 in 758.7423 ms
+2026-03-13 11:35:11.813 +05:30 [INF] HTTP GET /api/program-settings/patientEligibility responded 200 in 30356.6848 ms
+2026-03-13 11:35:14.012 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 93.1263 ms
+2026-03-13 11:35:16.011 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 1950.4664 ms
+2026-03-13 12:18:20.337 +05:30 [INF] HTTP OPTIONS /api/edi-reports responded 204 in 434.6841 ms
+2026-03-13 12:18:21.508 +05:30 [INF] HTTP OPTIONS /api/program-settings/general responded 204 in 1.8338 ms
+2026-03-13 12:18:25.020 +05:30 [INF] HTTP GET /api/program-settings/general responded 200 in 3493.0159 ms
+2026-03-13 12:18:25.186 +05:30 [INF] HTTP GET /api/edi-reports responded 200 in 4264.5443 ms
+2026-03-13 12:20:40.799 +05:30 [INF] HTTP OPTIONS /api/program-settings/patient responded 204 in 12.3411 ms
+2026-03-13 12:20:40.957 +05:30 [INF] HTTP GET /api/program-settings/patient responded 200 in 146.0331 ms
+2026-03-13 12:20:40.971 +05:30 [INF] HTTP OPTIONS /api/patient-templates responded 204 in 0.0825 ms
+2026-03-13 12:20:40.990 +05:30 [INF] HTTP GET /api/patient-templates responded 404 in 14.7872 ms
+2026-03-13 12:20:41.309 +05:30 [INF] HTTP OPTIONS /api/custom-fields/Patient responded 204 in 0.5131 ms
+2026-03-13 12:20:41.458 +05:30 [ERR] Failed executing DbCommand (53ms) [Parameters=[@__normalized_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[Id], [c].[EntityType], [c].[FieldKey], [c].[Label], [c].[FieldType], [c].[SortOrder], [c].[IsActive], [c].[CreatedAt]
+FROM [CustomFieldDefinitions] AS [c]
+WHERE [c].[EntityType] = @__normalized_0 AND [c].[IsActive] = CAST(1 AS bit)
+ORDER BY [c].[SortOrder], [c].[Id]
+2026-03-13 12:20:41.535 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:3519f3c5-c174-4460-b962-a6cec00c2f21
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:3519f3c5-c174-4460-b962-a6cec00c2f21
+Error Number:208,State:1,Class:16
+2026-03-13 12:20:41.563 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH7U:0000000B
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.CustomFieldsController.GetByEntityType(String entityType, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\CustomFieldsController.cs:line 89
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+ClientConnectionId:3519f3c5-c174-4460-b962-a6cec00c2f21
+Error Number:208,State:1,Class:16
+2026-03-13 12:20:41.656 +05:30 [ERR] HTTP GET /api/custom-fields/Patient responded 500 in 340.7336 ms
+2026-03-13 12:20:42.523 +05:30 [INF] HTTP OPTIONS /api/program-settings/claim responded 204 in 0.6249 ms
+2026-03-13 12:20:42.540 +05:30 [INF] HTTP GET /api/program-settings/claim responded 200 in 12.4792 ms
+2026-03-13 12:20:42.591 +05:30 [INF] HTTP OPTIONS /api/claim-status responded 204 in 0.1067 ms
+2026-03-13 12:20:42.609 +05:30 [INF] HTTP OPTIONS /api/code-library/pos responded 204 in 0.5142 ms
+2026-03-13 12:20:42.615 +05:30 [INF] HTTP GET /api/claim-status responded 200 in 17.6084 ms
+2026-03-13 12:20:42.917 +05:30 [INF] HTTP GET /api/code-library/pos responded 200 in 302.5359 ms
+2026-03-13 12:20:43.351 +05:30 [INF] HTTP OPTIONS /api/custom-fields/Claim responded 204 in 0.1091 ms
+2026-03-13 12:20:43.367 +05:30 [ERR] Failed executing DbCommand (5ms) [Parameters=[@__normalized_0='?' (Size = 50) (DbType = AnsiString)], CommandType='"Text"', CommandTimeout='30']
+SELECT [c].[Id], [c].[EntityType], [c].[FieldKey], [c].[Label], [c].[FieldType], [c].[SortOrder], [c].[IsActive], [c].[CreatedAt]
+FROM [CustomFieldDefinitions] AS [c]
+WHERE [c].[EntityType] = @__normalized_0 AND [c].[IsActive] = CAST(1 AS bit)
+ORDER BY [c].[SortOrder], [c].[Id]
+2026-03-13 12:20:43.370 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'Zebl.Infrastructure.Persistence.Context.ZeblDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:3519f3c5-c174-4460-b962-a6cec00c2f21
+Error Number:208,State:1,Class:16
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:3519f3c5-c174-4460-b962-a6cec00c2f21
+Error Number:208,State:1,Class:16
+2026-03-13 12:20:43.377 +05:30 [ERR] Unhandled exception occurred. TraceId: 0HNK0NJENEH7U:0000001B
+Microsoft.Data.SqlClient.SqlException (0x80131904): Invalid object name 'CustomFieldDefinitions'.
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Zebl.Api.Controllers.CustomFieldsController.GetByEntityType(String entityType, CancellationToken cancellationToken) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Controllers\CustomFieldsController.cs:line 89
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AspNetCoreRateLimit.RateLimitMiddleware`1.Invoke(HttpContext context) in C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\Middleware\RateLimitMiddleware.cs:line 124
+   at Zebl.Api.Middleware.GlobalExceptionMiddleware.InvokeAsync(HttpContext context) in C:\Zebl India\Backend\Zebl.Api\Zebl.Api\Middleware\GlobalExceptionMiddleware.cs:line 29
+ClientConnectionId:3519f3c5-c174-4460-b962-a6cec00c2f21
+Error Number:208,State:1,Class:16
+2026-03-13 12:20:43.410 +05:30 [ERR] HTTP GET /api/custom-fields/Claim responded 500 in 54.4612 ms
+2026-03-13 12:20:43.963 +05:30 [INF] HTTP OPTIONS /api/program-settings/sending-claims responded 204 in 0.1048 ms
+2026-03-13 12:20:43.974 +05:30 [INF] HTTP GET /api/program-settings/sending-claims responded 200 in 7.0111 ms
+2026-03-13 12:20:43.979 +05:30 [INF] HTTP OPTIONS /api/receiver-library responded 204 in 0.1036 ms
+2026-03-13 12:20:44.062 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 75.0293 ms
+2026-03-13 12:20:44.511 +05:30 [INF] HTTP OPTIONS /api/program-settings/payment responded 204 in 0.6872 ms
+2026-03-13 12:20:44.526 +05:30 [INF] HTTP GET /api/program-settings/payment responded 200 in 9.4959 ms
+2026-03-13 12:20:44.984 +05:30 [INF] HTTP OPTIONS /api/program-settings/company responded 204 in 1.4035 ms
+2026-03-13 12:20:44.998 +05:30 [INF] HTTP GET /api/program-settings/company responded 200 in 10.9022 ms
+2026-03-13 12:20:45.598 +05:30 [INF] HTTP OPTIONS /api/program-settings/patientEligibility responded 204 in 0.1109 ms
+2026-03-13 12:20:45.620 +05:30 [INF] HTTP GET /api/program-settings/patientEligibility responded 200 in 18.2301 ms
+2026-03-13 12:20:45.715 +05:30 [INF] HTTP OPTIONS /api/physicians responded 204 in 0.0861 ms
+2026-03-13 12:20:45.718 +05:30 [INF] HTTP GET /api/receiver-library responded 200 in 9.4956 ms
+2026-03-13 12:20:45.881 +05:30 [INF] HTTP GET /api/physicians responded 200 in 159.5447 ms
+2026-03-13 12:20:46.697 +05:30 [INF] HTTP OPTIONS /api/program-settings/interface responded 204 in 0.1124 ms
+2026-03-13 12:20:46.709 +05:30 [INF] HTTP GET /api/program-settings/interface responded 200 in 7.7350 ms
+2026-03-13 15:56:48.641 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 614.2271 ms

@@ -208,14 +208,16 @@ public class Hl7ImportController : ControllerBase
                 if (string.IsNullOrWhiteSpace(normalizedMrn))
                     continue;
 
+                var safeMrn = normalizedMrn!;
+
                 // Check for duplicates within the file
-                if (seenMrns.Contains(normalizedMrn))
+                if (seenMrns.Contains(safeMrn))
                 {
                     duplicatePatientsCount++;
                     continue; // Skip duplicate patient entries
                 }
-                seenMrns.Add(normalizedMrn);
-                mrnsToCheck.Add(normalizedMrn);
+                seenMrns.Add(safeMrn);
+                mrnsToCheck.Add(safeMrn);
 
                 // Get first service date from FT1 segments
                 DateOnly? firstServiceDate = null;
@@ -245,11 +247,13 @@ public class Hl7ImportController : ControllerBase
 
             // Batch query: get all existing patients in one query
             var existingPatients = await _db.Patients
-                .Where(p => mrnsToCheck.Contains(p.PatAccountNo))
+                .Where(p => p.PatAccountNo != null && mrnsToCheck.Contains(p.PatAccountNo))
                 .Select(p => new { p.PatAccountNo, p.PatID })
                 .ToListAsync();
 
-            var patientLookup = existingPatients.ToDictionary(p => p.PatAccountNo, p => p.PatID);
+            var patientLookup = existingPatients
+                .Where(p => p.PatAccountNo != null)
+                .ToDictionary(p => p.PatAccountNo!, p => p.PatID);
 
             // Batch query: get all existing claims for existing patients (simplified)
             var existingPatientIds = patientLookup.Values.Where(id => id > 0).Distinct().ToList();

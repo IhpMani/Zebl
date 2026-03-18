@@ -32,6 +32,17 @@ public class EdiExportService : IEdiExportService
         };
     }
 
+    public async Task<string> Generate270Async(Guid receiverLibraryId)
+    {
+        var receiver = await _receiverRepo.GetByIdAsync(receiverLibraryId)
+            ?? throw new Exception("Receiver not found");
+
+        // ClaimData is currently a minimal abstraction and not used by Generate270.
+        // Pass a dummy instance for compatibility.
+        var dummyClaim = new ClaimData { ClaimId = 0 };
+        return Generate270(receiver, dummyClaim);
+    }
+
     private string Generate837(Domain.ReceiverLibrary receiver, ClaimData claim)
     {
         var sb = new System.Text.StringBuilder();
