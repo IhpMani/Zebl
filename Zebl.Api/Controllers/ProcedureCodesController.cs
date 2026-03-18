@@ -208,6 +208,42 @@ public class ProcedureCodesController : ControllerBase
                 return BadRequest(new { message = "ProcUnits must be greater than or equal to 1 for all items." });
         }
 
+        // Validate foreign keys (Physician / Payer) up-front to avoid SQL FK violations
+        var physicianIds = await _context.Physicians
+            .AsNoTracking()
+            .Select(p => p.PhyID)
+            .ToListAsync();
+        var validPhysicianIds = new HashSet<int>(physicianIds);
+
+        var payerIds = await _context.Payers
+            .AsNoTracking()
+            .Select(p => p.PayID)
+            .ToListAsync();
+        var validPayerIds = new HashSet<int>(payerIds);
+
+        foreach (var item in items)
+        {
+            // If a non-zero billing physician is supplied, ensure it exists
+            if (item.ProcBillingPhyFID != 0 && !validPhysicianIds.Contains(item.ProcBillingPhyFID))
+            {
+                return BadRequest(new
+                {
+                    message = $"Invalid physician reference ProcBillingPhyFID={item.ProcBillingPhyFID} for ProcCode '{item.ProcCode}'.",
+                    code = "InvalidBillingPhysician"
+                });
+            }
+
+            // If a non-zero payer is supplied, ensure it exists
+            if (item.ProcPayFID != 0 && !validPayerIds.Contains(item.ProcPayFID))
+            {
+                return BadRequest(new
+                {
+                    message = $"Invalid payer reference ProcPayFID={item.ProcPayFID} for ProcCode '{item.ProcCode}'.",
+                    code = "InvalidPayer"
+                });
+            }
+        }
+
         foreach (var item in items)
         {
             if (item.ProcID == 0)
@@ -216,7 +252,20 @@ public class ProcedureCodesController : ControllerBase
                 _context.Entry(item).State = EntityState.Modified;
         }
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            // Surface FK / constraint details as a 400 so the UI can show a friendly message
+            return BadRequest(new
+            {
+                message = "Bulk save failed due to database constraint violation.",
+                detail = ex.InnerException?.Message ?? ex.Message
+            });
+        }
+
         return Ok(new { success = true });
     }
 }

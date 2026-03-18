@@ -17,151 +17,148 @@ public class Hl7ParserService
 
     /// <summary>
     /// Parses an HL7 file stream and extracts DFT^P03 messages by message block.
-    /// A message starts at an MSH segment and continues until the next MSH or EOF.
-    /// Only messages with MSH-9 == DFT^P03 (or containing DFT^P03) are processed.
+    /// Supports both batching formats:
+    /// - Multiple MSH (each message preceded by MSH)
+    /// - Single MSH followed by repeated PID/PV1/FT1 blocks
+    /// Only messages with MSH-9 containing DFT^P03 are processed.
     /// </summary>
     public List<Hl7DftMessage> ParseHl7File(Stream fileStream, string fileName)
     {
-        var result = new List<Hl7DftMessage>();
+        // Read entire content using ASCII (HL7 standard) then parse using PID-block logic.
+        using var reader = new StreamReader(fileStream, Encoding.ASCII, leaveOpen: true);
+        var raw = reader.ReadToEnd();
+        var parsed = ParseHl7File(raw);
+        _logger.LogInformation("Parsed {Count} HL7 DFT^P03 messages from file {FileName}", parsed.Count, fileName);
+        return parsed;
+    }
 
-        // Read all lines using ASCII encoding (HL7 standard)
-        var lines = new List<string>();
-        using (var reader = new StreamReader(fileStream, Encoding.ASCII, leaveOpen: true))
+    /// <summary>
+    /// Parses raw HL7 content into PID-block messages.
+    /// Supports both:
+    /// - Format A (multiple MSH): MSH, PID, PV1, FT1, MSH, PID, ...
+    /// - Format B (single MSH batch): MSH, PID, PV1, FT1, PID, PV1, FT1, ...
+    /// A new message starts on each PID. The first MSH found is used as the header.
+    /// Only DFT^P03 files (based on MSH-9) are returned.
+    /// </summary>
+    public List<Hl7DftMessage> ParseHl7File(string rawHl7)
+    {
+        var messages = new List<Hl7DftMessage>();
+
+        if (string.IsNullOrWhiteSpace(rawHl7))
+            return messages;
+
+        // HL7 segments may be separated by \r, \n, or both.
+        var segments = rawHl7
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            // Skip template/header rows like "PID|SetID", "PV1|SetID", "FT1|SetID"
+            .Where(s => !s.Contains("|SetID|", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (segments.Count == 0)
+            return messages;
+
+        string? mshHeader = null;
+        string msh9 = string.Empty;
+        Hl7DftMessage? current = null;
+
+        bool IsTemplateMessage(Hl7DftMessage msg) =>
+            (!string.IsNullOrWhiteSpace(msg.PidSegment) &&
+             (msg.PidSegment.Contains("PatExternalFID", StringComparison.OrdinalIgnoreCase) ||
+              msg.PidSegment.Contains("PatAccountNo", StringComparison.OrdinalIgnoreCase))) ||
+            (!string.IsNullOrWhiteSpace(msg.Pv1Segment) &&
+             msg.Pv1Segment.Contains("ClaClassification", StringComparison.OrdinalIgnoreCase)) ||
+            msg.Ft1Segments.Any(ft1 => ft1.Contains("SrvFromDate", StringComparison.OrdinalIgnoreCase));
+
+        void FinalizeCurrentIfAny()
         {
-            string? line;
-            while ((line = reader.ReadLine()) != null)
+            if (current == null)
+                return;
+
+            _logger.LogInformation("FT1 segments detected: {Count}", current.Ft1Segments.Count);
+
+            if (IsTemplateMessage(current))
             {
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-
-                // Normalize line endings and trim
-                line = line.TrimEnd('\r', '\n').Trim();
-                if (line.Length == 0)
-                    continue;
-
-                lines.Add(line);
+                _logger.LogInformation("Skipping HL7 template/header message (PID-based).");
+                current = null;
+                return;
             }
-        }
 
-        if (lines.Count == 0)
-        {
-            _logger.LogWarning("HL7 file {FileName} is empty or contains no non-empty lines", fileName);
-            return result;
-        }
-
-        // Group lines into messages starting at MSH
-        var messageLinesList = new List<List<string>>();
-        List<string>? current = null;
-
-        foreach (var line in lines)
-        {
-            if (line.StartsWith("MSH|", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(current.PidSegment))
             {
-                if (current != null && current.Count > 0)
+                _logger.LogInformation(
+                    "HL7 message accepted. PID present: {HasPid}, FT1 count: {Ft1Count}",
+                    !string.IsNullOrWhiteSpace(current.PidSegment),
+                    current.Ft1Segments.Count
+                );
+                messages.Add(current);
+            }
+
+            current = null;
+        }
+
+        foreach (var segment in segments)
+        {
+            var cleanSegment = segment.Trim();
+
+            if (cleanSegment.StartsWith("MSH", StringComparison.OrdinalIgnoreCase))
+            {
+                // Keep the FIRST MSH as header for all messages.
+                if (mshHeader == null)
                 {
-                    messageLinesList.Add(current);
+                    mshHeader = cleanSegment;
+                    var fields = mshHeader.Split('|');
+                    msh9 = fields.Length > 8 ? fields[8] : string.Empty;
                 }
-                current = new List<string> { line };
-            }
-            else
-            {
-                current?.Add(line);
-            }
-        }
-
-        if (current != null && current.Count > 0)
-        {
-            messageLinesList.Add(current);
-        }
-
-        if (messageLinesList.Count == 0)
-        {
-            _logger.LogWarning("No MSH segments found in HL7 file {FileName}", fileName);
-            return result;
-        }
-
-        // Process each message block independently
-        foreach (var messageLines in messageLinesList)
-        {
-            // Find MSH line
-            var mshLine = messageLines.FirstOrDefault(l => l.StartsWith("MSH|", StringComparison.OrdinalIgnoreCase));
-            if (mshLine == null)
-            {
                 continue;
             }
 
-            // Detect message type from MSH-9 (index 8 in zero-based array)
-            var fields = mshLine.Split('|');
-            var messageTypeField = fields.Length > 8 ? fields[8] : string.Empty;
-
-            // Expect message type like "DFT^P03" or "DFT^P03^DFT_P03"
-            if (string.IsNullOrWhiteSpace(messageTypeField) ||
-                !messageTypeField.Contains("DFT^P03", StringComparison.OrdinalIgnoreCase))
+            if (cleanSegment.StartsWith("PID", StringComparison.OrdinalIgnoreCase))
             {
-                // Not a DFT^P03 message; skip this block
+                FinalizeCurrentIfAny();
+
+                current = new Hl7DftMessage
+                {
+                    MshSegment = mshHeader ?? string.Empty,
+                    PidSegment = cleanSegment
+                };
                 continue;
             }
 
-            var dftMessage = new Hl7DftMessage
+            if (current == null)
+                continue;
+
+            if (cleanSegment.StartsWith("PV1", StringComparison.OrdinalIgnoreCase))
             {
-                MshSegment = mshLine
-            };
-
-            // Per-message state: exactly one PID and PV1; multiple FT1/IN1/GT1 allowed
-            foreach (var segment in messageLines)
-            {
-                if (segment == mshLine)
-                    continue;
-
-                if (segment.StartsWith("PID", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Last PID wins if multiple, but typical DFT has one
-                    dftMessage.PidSegment = segment;
-                    continue;
-                }
-
-                if (segment.StartsWith("PV1", StringComparison.OrdinalIgnoreCase))
-                {
-                    dftMessage.Pv1Segment = segment;
-                    continue;
-                }
-
-                if (segment.StartsWith("FT1", StringComparison.OrdinalIgnoreCase))
-                {
-                    dftMessage.Ft1Segments.Add(segment);
-                    continue;
-                }
-
-                if (segment.StartsWith("IN1", StringComparison.OrdinalIgnoreCase))
-                {
-                    dftMessage.In1Segments.Add(segment);
-                    continue;
-                }
-
-                if (segment.StartsWith("GT1", StringComparison.OrdinalIgnoreCase))
-                {
-                    dftMessage.Gt1Segments.Add(segment);
-                    continue;
-                }
+                current.Pv1Segment = cleanSegment;
             }
-
-            // Only add messages that have at least a PID and one FT1 (minimal for claim + service lines)
-            if (!string.IsNullOrWhiteSpace(dftMessage.PidSegment) && dftMessage.Ft1Segments.Count > 0)
+            else if (cleanSegment.StartsWith("FT1", StringComparison.OrdinalIgnoreCase))
             {
-                result.Add(dftMessage);
+                current.Ft1Segments.Add(cleanSegment);
             }
-            else
+            else if (cleanSegment.StartsWith("IN1", StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogWarning(
-                    "Skipping DFT^P03 message in file {FileName} due to missing PID or FT1 segments (PID present: {HasPid}, FT1 count: {Ft1Count})",
-                    fileName,
-                    !string.IsNullOrWhiteSpace(dftMessage.PidSegment),
-                    dftMessage.Ft1Segments.Count);
+                current.In1Segments.Add(cleanSegment);
+            }
+            else if (cleanSegment.StartsWith("GT1", StringComparison.OrdinalIgnoreCase))
+            {
+                current.Gt1Segments.Add(cleanSegment);
             }
         }
 
-        _logger.LogInformation("Parsed {Count} HL7 DFT^P03 messages from file {FileName}", result.Count, fileName);
-        return result;
+        FinalizeCurrentIfAny();
+
+        // Only DFT^P03 files are processed.
+        if (string.IsNullOrWhiteSpace(mshHeader) ||
+            string.IsNullOrWhiteSpace(msh9) ||
+            !msh9.Contains("DFT^P03", StringComparison.OrdinalIgnoreCase))
+        {
+            return new List<Hl7DftMessage>();
+        }
+
+        _logger.LogInformation("HL7 messages parsed: {Count}", messages.Count);
+        return messages;
     }
 
     /// <summary>

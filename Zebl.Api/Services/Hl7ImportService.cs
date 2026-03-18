@@ -44,17 +44,21 @@ public class Hl7ImportService
         public int DuplicateClaimsCount { get; set; }
         public int NewServiceLinesCount { get; set; }
         public decimal TotalAmount { get; set; }
+
+        // Additional aggregate stats for debugging/monitoring
+        public int ClaimsCreated { get; set; }
+        public int Errors { get; set; }
     }
 
     /// <summary>
-    /// Processes a list of HL7 DFT messages and creates Patients, Claims, and Service_Lines
-    /// Each message is processed in its own transaction - if one fails, others continue
+    /// Processes a list of HL7 DFT messages and creates Patients, Claims, and Service_Lines.
+    /// This is the ONLY place where a transaction is managed for HL7 imports.
     /// </summary>
-    /// <param name="messages">Parsed HL7 DFT messages</param>
-    /// <param name="fileName">Original file name for Claim_Audit note</param>
     public async Task<Hl7ImportResult> ProcessHl7Messages(List<Hl7DftMessage> messages, string fileName = "unknown.hl7")
     {
         var result = new Hl7ImportResult();
+
+        _logger.LogInformation("HL7 file import started for {FileName} with {MessageCount} parsed messages", fileName, messages?.Count ?? 0);
 
         foreach (var message in messages)
         {
@@ -64,34 +68,25 @@ public class Hl7ImportService
                 continue;
             }
 
-            // Process each message in its own transaction
-            using var transaction = await _db.Database.BeginTransactionAsync();
+            await using var tx = await _db.Database.BeginTransactionAsync();
+
             try
             {
                 var messageStats = await ProcessDftMessage(message, fileName);
-                await transaction.CommitAsync();
-                
+
                 result.SuccessCount++;
                 result.NewPatientsCount += messageStats.NewPatient ? 1 : 0;
-                result.UpdatedPatientsCount += messageStats.NewPatient ? 0 : 1;
                 result.NewClaimsCount += messageStats.NewClaim ? 1 : 0;
-                result.DuplicateClaimsCount += messageStats.NewClaim ? 0 : 1;
                 result.NewServiceLinesCount += messageStats.ServiceLinesCreated;
                 result.TotalAmount += messageStats.Amount;
+
+                await tx.CommitAsync();
             }
             catch (Exception ex)
             {
-                try
-                {
-                    await transaction.RollbackAsync();
-                }
-                catch (Exception rollbackEx)
-                {
-                    _logger.LogError(rollbackEx, "Error rolling back transaction for HL7 message");
-                }
-
-                _logger.LogError(ex, "Error processing HL7 DFT message. Continuing with next message.");
-                // Continue with next message
+                _logger.LogError(ex, "HL7 message failed but import continues");
+                await tx.RollbackAsync();
+                _db.ChangeTracker.Clear();
             }
         }
 
@@ -125,30 +120,66 @@ public class Hl7ImportService
         }
 
         // Step 2: Match or create Patient
-        var (patient, isNewPatient) = await MatchOrCreatePatient(message.PidSegment, mrn);
+        var (patient, isNewPatient) = await MatchOrCreatePatient(message.PidSegment!, mrn);
         if (patient == null || patient.PatID <= 0)
         {
             throw new InvalidOperationException($"Failed to create or retrieve patient with MRN: {mrn}");
         }
         stats.NewPatient = isNewPatient;
 
-        // Step 3: ALWAYS create a NEW Claim per DFT message
+        // -------------------------------------------------------------------------
+        // IMPORT ORDER: Claim MUST be persisted before any Service_Line.
+        // We do NOT rely on EF ordering. We explicitly save the claim first.
+        // -------------------------------------------------------------------------
+
+        // Step 3: Create Claim, add to context, and call SaveChangesAsync so ClaID is generated.
         var (claim, isNewClaim) = await CreateNewClaim(patient.PatID, message);
         if (claim == null || claim.ClaID <= 0)
         {
+            if (message.Ft1Segments != null && message.Ft1Segments.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "HL7 import aborted: Claim creation failed but message has FT1 segments. " +
+                    "Cannot insert Service_Line without a valid Claim. Fix claim/patient/physician data and retry.");
+            }
             throw new InvalidOperationException($"Failed to create claim for patient {patient.PatID}");
         }
         stats.NewClaim = isNewClaim;
 
-        // Step 4: Create Service_Lines from FT1 segments and sum amount
+        // Claim is now in the database; claim.ClaID is set. Only after this point do we create Service_Line records.
+        _logger.LogInformation("HL7 Claim persisted with ClaID {ClaimId}; creating service lines.", claim.ClaID);
+
+        var claimFirstDate = claim.ClaFirstDateTRIG ?? DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Step 4: After claim is saved, iterate FT1 segments and add Service_Line entities (no SaveChanges in loop).
         int serviceLinesCreated = 0;
         decimal amount = 0m;
         foreach (var ft1Segment in message.Ft1Segments)
         {
-            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, ft1Segment);
+            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, ft1Segment, claimFirstDate);
             if (created) serviceLinesCreated++;
+            else _logger.LogDebug("Skipped FT1 segment for claim {ClaimId}: duplicate or invalid. Segment: {FT1}", claim.ClaID, ft1Segment);
             amount += charges;
         }
+
+        if (serviceLinesCreated == 0)
+        {
+            _logger.LogWarning("No FT1 service lines detected for claim {ClaID}. Creating default HL7 service line.", claim.ClaID);
+            var defaultFt1 = $"FT1|1|||{claimFirstDate:yyyyMMdd}||||||DEFAULT|1";
+            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, defaultFt1, claimFirstDate);
+            if (created)
+            {
+                serviceLinesCreated++;
+                amount += charges;
+            }
+        }
+
+        // Step 5: Persist all Service_Lines in one call (Claim was already saved in Step 3).
+        if (serviceLinesCreated > 0)
+        {
+            await _db.SaveChangesAsync();
+        }
+
         stats.ServiceLinesCreated = serviceLinesCreated;
         stats.Amount = amount;
 
@@ -239,6 +270,22 @@ public class Hl7ImportService
         var phoneField = _parser.GetFieldValue(pidSegment, 13);
         var phone = _parser.SanitizePhoneNumber(phoneField, maxLength: 25);
 
+        // Choose a default physician to satisfy FK constraints for required physician FKs
+        var defaultPhysician = await _db.Physicians
+            .OrderBy(p => p.PhyID)
+            .FirstOrDefaultAsync();
+
+        if (defaultPhysician == null)
+        {
+            throw new InvalidOperationException(
+                "HL7 import requires at least one Physician record. Insert a Physician before importing HL7 messages.");
+        }
+
+        var defaultPhysicianId = defaultPhysician.PhyID;
+        _logger.LogInformation(
+            "Using physician {PhyID} as default for HL7 patient import",
+            defaultPhysicianId);
+
         // Create new patient with all NOT NULL columns populated (EZClaim defaults)
         var newPatient = new Patient
         {
@@ -272,13 +319,13 @@ public class Hl7ImportService
             PatTotalInsBalanceTRIG = 0m,
             PatTotalPatBalanceTRIG = 0m,
             PatTotalUndisbursedPaymentsTRIG = 0m,
-            // Required foreign keys (NOT NULL) - default to 0
-            PatBillingPhyFID = 0,
-            PatFacilityPhyFID = 0,
-            PatOrderingPhyFID = 0,
-            PatReferringPhyFID = 0,
-            PatRenderingPhyFID = 0,
-            PatSupervisingPhyFID = 0,
+            // Required foreign keys (NOT NULL) - use default physician to satisfy FK constraints
+            PatBillingPhyFID = defaultPhysicianId,
+            PatFacilityPhyFID = defaultPhysicianId,
+            PatOrderingPhyFID = defaultPhysicianId,
+            PatReferringPhyFID = defaultPhysicianId,
+            PatRenderingPhyFID = defaultPhysicianId,
+            PatSupervisingPhyFID = defaultPhysicianId,
             PatClaLibFID = 0
         };
 
@@ -295,10 +342,9 @@ public class Hl7ImportService
     }
 
     /// <summary>
-    /// Creates a NEW Claim for the DFT message or returns existing if duplicate
-    /// EZClaim deduplication: Patient + DOS + Visit/Account
-    /// Maps PV1 segment data to claim fields
-    /// Returns claim and whether it was newly created
+    /// Creates a NEW Claim for the DFT message or returns existing if duplicate.
+    /// For new claims: adds to DbSet and calls SaveChangesAsync so ClaID is generated before any Service_Line is created.
+    /// Do not rely on EF ordering; claim is explicitly persisted here.
     /// </summary>
     private async Task<(Claim claim, bool isNew)> CreateNewClaim(int patientId, Hl7DftMessage message)
     {
@@ -311,16 +357,28 @@ public class Hl7ImportService
         DateOnly? admittedDate = null;
         DateOnly? dischargedDate = null;
         string? visitNumber = null;
+        string? hl7BillingNpi = null;
+        string? hl7AttendingNpi = null;
+
         if (!string.IsNullOrWhiteSpace(message.Pv1Segment))
         {
             // PV1-19: Visit Number (Account/Visit identifier)
             visitNumber = _parser.NormalizeString(_parser.GetFieldValue(message.Pv1Segment, 19), maxLength: 50);
+
             // PV1-44: Admit Date
             var admitDateStr = _parser.GetFieldValue(message.Pv1Segment, 44);
             admittedDate = _parser.ParseHl7Date(admitDateStr);
+
             // PV1-45: Discharge Date
             var dischargeDateStr = _parser.GetFieldValue(message.Pv1Segment, 45);
             dischargedDate = _parser.ParseHl7Date(dischargeDateStr);
+
+            // Physician NPIs (if present)
+            // PV1-7: Attending doctor, PV1-8: Referring doctor (used as billing when available)
+            var attendingField = _parser.GetFieldValue(message.Pv1Segment, 7);
+            var referringField = _parser.GetFieldValue(message.Pv1Segment, 8);
+            hl7AttendingNpi = _parser.GetComponentValue(attendingField, 0);
+            hl7BillingNpi = _parser.GetComponentValue(referringField, 0) ?? hl7AttendingNpi;
         }
 
         // Get first service date from FT1 segments for claim date range (DOS)
@@ -333,22 +391,60 @@ public class Hl7ImportService
             firstServiceDate = _parser.ParseHl7Date(transactionDateStr);
         }
 
-        // EZClaim deduplication: Match by Patient + DOS + Visit/Account
+        // EZClaim deduplication: Match by Patient + DOS + Visit/Account (AsNoTracking for lookup only)
         if (firstServiceDate.HasValue)
         {
             var existingClaim = await _db.Claims
-                .FirstOrDefaultAsync(c => 
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c =>
                     c.ClaPatFID == patientId &&
                     c.ClaFirstDateTRIG == firstServiceDate.Value &&
-                    (visitNumber == null || c.ClaMedicalRecordNumber == visitNumber || 
+                    (visitNumber == null || c.ClaMedicalRecordNumber == visitNumber ||
                      (admittedDate.HasValue && c.ClaAdmittedDate == admittedDate.Value)));
 
             if (existingClaim != null)
             {
-                _logger.LogInformation("Found existing claim ClaID: {ClaID} for patient PatID: {PatID}, DOS: {DOS}, Visit: {Visit}", 
+                _logger.LogInformation("Found existing claim ClaID: {ClaID} for patient PatID: {PatID}, DOS: {DOS}, Visit: {Visit}",
                     existingClaim.ClaID, patientId, firstServiceDate.Value, visitNumber ?? "N/A");
                 return (existingClaim, false);
             }
+        }
+
+        // Resolve Billing Physician by NPI, then fall back to first active physician
+        Physician? billingPhy = null;
+        if (!string.IsNullOrWhiteSpace(hl7BillingNpi))
+        {
+            billingPhy = await _db.Physicians.FirstOrDefaultAsync(p => p.PhyNPI == hl7BillingNpi);
+        }
+
+        if (billingPhy == null)
+        {
+            billingPhy = await _db.Physicians
+                .Where(p => !p.PhyInactive)
+                .OrderBy(p => p.PhyID)
+                .FirstOrDefaultAsync();
+        }
+
+        if (billingPhy == null)
+        {
+            throw new InvalidOperationException("HL7 Import Error: No physician available to assign to claim.");
+        }
+
+        // Resolve Attending Physician by NPI, then fall back to billing physician
+        Physician? attendingPhy = null;
+        if (!string.IsNullOrWhiteSpace(hl7AttendingNpi))
+        {
+            attendingPhy = await _db.Physicians.FirstOrDefaultAsync(p => p.PhyNPI == hl7AttendingNpi);
+        }
+
+        if (attendingPhy == null)
+        {
+            attendingPhy = billingPhy;
+        }
+
+        if (attendingPhy == null)
+        {
+            throw new InvalidOperationException("HL7 Import Error: No attending physician available to assign to claim.");
         }
 
         var newClaim = new Claim
@@ -368,19 +464,26 @@ public class Hl7ImportService
             // Required fields with defaults
             ClaICDIndicator = "10", // Default to ICD-10
             ClaDiagnosisCodesCC = string.Empty,
-            // Required foreign keys (default to 0)
-            ClaAttendingPhyFID = 0,
-            ClaBillingPhyFID = 0,
-            ClaFacilityPhyFID = 0,
-            ClaOperatingPhyFID = 0,
-            ClaOrderingPhyFID = 0,
-            ClaReferringPhyFID = 0,
-            ClaRenderingPhyFID = 0,
-            ClaSupervisingPhyFID = 0
+            // Required foreign keys – resolved safely to satisfy FK constraints
+            ClaBillingPhyFID = billingPhy.PhyID,
+            ClaAttendingPhyFID = attendingPhy.PhyID,
+            ClaFacilityPhyFID = billingPhy.PhyID,
+            ClaOperatingPhyFID = attendingPhy.PhyID,
+            ClaOrderingPhyFID = billingPhy.PhyID,
+            ClaReferringPhyFID = billingPhy.PhyID,
+            ClaRenderingPhyFID = billingPhy.PhyID,
+            ClaSupervisingPhyFID = attendingPhy.PhyID
         };
 
-        await _db.Claims.AddAsync(newClaim);
-        await _db.SaveChangesAsync(); // Save to get ClaID
+        // Safety validation before inserting claim
+        if (newClaim.ClaBillingPhyFID <= 0 || newClaim.ClaAttendingPhyFID <= 0)
+        {
+            throw new InvalidOperationException("HL7 Import Error: Invalid physician reference.");
+        }
+
+        _db.Claims.Add(newClaim);
+        // Explicitly save the claim so ClaID is generated before any Service_Line uses SrvClaFID. Do not rely on EF ordering.
+        await _db.SaveChangesAsync();
 
         if (newClaim.ClaID <= 0)
         {
@@ -392,82 +495,120 @@ public class Hl7ImportService
     }
 
     /// <summary>
-    /// Creates a Service_Line from an FT1 segment or returns existing if duplicate
-    /// EZClaim deduplication: Claim + CPT + DOS
-    /// Maps FT1 fields to Service_Line fields
-    /// Returns (created, charges) - created is true if service line was created
+    /// Creates a Service_Line from an FT1 segment or returns existing if duplicate.
+    /// Call only after Claim is persisted (SaveChangesAsync) so SrvClaFID exists in DB.
+    /// EZClaim deduplication: Claim + CPT + DOS.
     /// </summary>
-    private async Task<(bool created, decimal charges)> CreateServiceLineFromFt1WithCharges(int claimId, string ft1Segment)
+    /// <param name="claimId">ClaID of the already-persisted Claim</param>
+    /// <param name="ft1Segment">Raw FT1 segment string</param>
+    /// <param name="claimFirstDate">Claim first service date; used as fallback when FT1 date is missing</param>
+    private async Task<(bool created, decimal charges)> CreateServiceLineFromFt1WithCharges(int claimId, string ft1Segment, DateOnly? claimFirstDate = null)
     {
+        _logger.LogInformation("Creating ServiceLine with SrvClaFID {ClaimId}", claimId);
+
         if (claimId <= 0)
         {
             _logger.LogWarning("Cannot create service line: Invalid claim ID {ClaID}", claimId);
             return (false, 0m);
         }
 
-        if (string.IsNullOrWhiteSpace(ft1Segment))
+        // Ensure Claim exists in DB before inserting Service_Line (avoid FK violation)
+        var claimExists = await _db.Claims.AsNoTracking().AnyAsync(c => c.ClaID == claimId);
+        if (!claimExists)
         {
-            _logger.LogWarning("Cannot create service line: FT1 segment is null or empty");
+            _logger.LogError("Claim missing before ServiceLine insert for ClaimId {ClaimId}", claimId);
             return (false, 0m);
         }
 
-        // FT1-4: Transaction Date → SrvFromDate (DOS)
+        if (string.IsNullOrWhiteSpace(ft1Segment))
+        {
+            _logger.LogWarning("Skipping FT1: segment is null or empty");
+            return (false, 0m);
+        }
+
+        // FT1-4: Service date → SrvFromDate (fallback to claim date then today)
         var transactionDateStr = _parser.GetFieldValue(ft1Segment, 4);
-        var serviceDate = _parser.ParseHl7Date(transactionDateStr) ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var serviceDate = _parser.ParseHl7Date(transactionDateStr)
+            ?? claimFirstDate
+            ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
-        // FT1-7: Transaction Code → SrvProcedureCode (CPT)
-        var procedureCodeRaw = _parser.GetFieldValue(ft1Segment, 7);
-        var procedureCode = _parser.NormalizeString(procedureCodeRaw, maxLength: 30); // Normalize CPT code
+        // FT1-7 or FT1-19: Procedure code (CPT) → SrvProcedureCode; missing CPT defaults to 99999
+        var procedureCodePrimaryRaw = _parser.GetFieldValue(ft1Segment, 7);
+        var procedureCodeAltRaw = _parser.GetFieldValue(ft1Segment, 19);
+        var procedureCode = _parser.NormalizeString(
+            !string.IsNullOrWhiteSpace(procedureCodePrimaryRaw) ? procedureCodePrimaryRaw : procedureCodeAltRaw,
+            maxLength: 30);
 
-        // FT1-10: Transaction Amount → SrvCharges (extract early for duplicate case)
-        var chargesStr = _parser.GetFieldValue(ft1Segment, 10);
-        var charges = _parser.ParseDecimal(chargesStr);
+        if (string.IsNullOrWhiteSpace(procedureCode))
+        {
+            _logger.LogWarning("FT1 missing procedure code. Using default CPT '99999'. Segment: {FT1}", ft1Segment);
+            procedureCode = "99999";
+        }
 
-        // EZClaim deduplication: Match by Claim + CPT + DOS
+        // FT1-10: Units → SrvUnits
+        var unitsStr = _parser.GetFieldValue(ft1Segment, 10);
+        var units = float.TryParse(unitsStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var u) ? u : 0f;
+        if (units <= 0)
+        {
+            units = 1f;
+        }
+
+        // FT1-11: Charges → SrvCharges (never null; ensure >= 0)
+        var chargesStr = _parser.GetFieldValue(ft1Segment, 11);
+        var charges = Math.Max(0m, _parser.ParseDecimal(chargesStr));
+
+        _logger.LogInformation(
+            "Parsed FT1 for claim {ClaimId}: ServiceDate={ServiceDate}, ProcedureCode={ProcedureCode}, Units={Units}, Charges={Charges}. Segment: {FT1}",
+            claimId,
+            serviceDate,
+            procedureCode,
+            units,
+            charges,
+            ft1Segment);
+
+        // EZClaim deduplication: Match by Claim + CPT + DOS (AsNoTracking for lookup)
         if (!string.IsNullOrWhiteSpace(procedureCode))
         {
             var existingServiceLine = await _db.Service_Lines
-                .FirstOrDefaultAsync(s => 
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s =>
                     s.SrvClaFID == claimId &&
                     s.SrvProcedureCode == procedureCode &&
                     s.SrvFromDate == serviceDate);
 
             if (existingServiceLine != null)
             {
-                _logger.LogInformation("Found existing service line SrvID: {SrvID} for claim ClaID: {ClaID}, CPT: {CPT}, DOS: {DOS}", 
+                _logger.LogInformation("Found existing service line SrvID: {SrvID} for claim ClaID: {ClaID}, CPT: {CPT}, DOS: {DOS}",
                     existingServiceLine.SrvID, claimId, procedureCode, serviceDate);
                 return (false, charges); // Skip duplicate but still count amount
             }
         }
 
-        // FT1-11: Transaction Quantity → SrvUnits
-        var unitsStr = _parser.GetFieldValue(ft1Segment, 11);
-        var units = float.TryParse(unitsStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var u) ? u : (float?)null;
-
         // FT1-13: Transaction Description → SrvDesc
         var description = _parser.GetFieldValue(ft1Segment, 13);
 
+        // SrvFromDate/SrvToDate are DateOnly (value type, never null). SrvCharges >= 0. CPT default "99999".
         var serviceLine = new Service_Line
         {
             SrvClaFID = claimId,
             SrvFromDate = serviceDate,
-            SrvToDate = serviceDate, // Default to same date if no end date
-            SrvProcedureCode = procedureCode, // Already normalized
+            SrvToDate = serviceDate,
+            SrvProcedureCode = procedureCode ?? "99999",
             SrvDesc = description,
             SrvCharges = charges,
             SrvUnits = units,
             SrvGUID = Guid.NewGuid(),
             // Required fields with defaults
             SrvModifiersCC = string.Empty,
-            SrvResponsibleParty = 0, // Default to Patient (0)
+            SrvResponsibleParty = 1,
             SrvSortTiebreaker = 0,
             SrvRespChangeDate = DateTime.UtcNow
         };
 
         await _db.Service_Lines.AddAsync(serviceLine);
-        await _db.SaveChangesAsync();
 
-        _logger.LogDebug("Created service line SrvID: {SrvID} for claim ClaID: {ClaID}", serviceLine.SrvID, claimId);
+        // Service line will be persisted when the caller saves the DbContext
+        _logger.LogInformation("Service line created for claim {ClaimId}", claimId);
         return (true, charges);
     }
 

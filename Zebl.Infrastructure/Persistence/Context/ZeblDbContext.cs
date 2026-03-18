@@ -63,6 +63,18 @@ public partial class ZeblDbContext : DbContext
 
     public virtual DbSet<EdiReport> EdiReports { get; set; }
 
+    public virtual DbSet<EraException> EraExceptions { get; set; }
+
+    public virtual DbSet<EligibilityRequest> EligibilityRequests { get; set; }
+
+    public virtual DbSet<EligibilityResponse> EligibilityResponses { get; set; }
+
+    public virtual DbSet<ClaimRejection> ClaimRejections { get; set; }
+
+    public virtual DbSet<ClaimSubmission> ClaimSubmissions { get; set; }
+
+    public virtual DbSet<ScrubRule> ScrubRules { get; set; }
+
     public virtual DbSet<SecondaryForwardableAdjustmentRule> SecondaryForwardableAdjustmentRules { get; set; }
 
     public virtual DbSet<ClaimTemplate> ClaimTemplates { get; set; }
@@ -74,6 +86,11 @@ public partial class ZeblDbContext : DbContext
     public virtual DbSet<Place_of_Service> Place_of_Services { get; set; }
     public virtual DbSet<Reason_Code> Reason_Codes { get; set; }
     public virtual DbSet<Remark_Code> Remark_Codes { get; set; }
+    public virtual DbSet<ProgramSettings> ProgramSettings { get; set; }
+
+    public virtual DbSet<CustomFieldDefinition> CustomFieldDefinitions { get; set; }
+
+    public virtual DbSet<CustomFieldValue> CustomFieldValues { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1560,9 +1577,17 @@ public partial class ZeblDbContext : DbContext
         ConfigureReceiverLibrary(modelBuilder);
         ConfigureConnectionLibrary(modelBuilder);
         ConfigureEdiReport(modelBuilder);
+        ConfigureEraException(modelBuilder);
+        ConfigureEligibility(modelBuilder);
+        ConfigureClaimRejection(modelBuilder);
+        ConfigureClaimSubmission(modelBuilder);
+        ConfigureScrubRule(modelBuilder);
         ConfigureSecondaryForwardableAdjustmentRules(modelBuilder);
         ConfigureClaimTemplates(modelBuilder);
         ConfigureCityStateZipLibrary(modelBuilder);
+        ConfigureProgramSettings(modelBuilder);
+        ConfigureCustomFieldDefinition(modelBuilder);
+        ConfigureCustomFieldValue(modelBuilder);
 
         OnModelCreatingPartial(modelBuilder);
     }
@@ -1843,6 +1868,119 @@ public partial class ZeblDbContext : DbContext
         });
     }
 
+    private void ConfigureEraException(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EraException>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_EraException_Id");
+            entity.ToTable("EraException");
+
+            entity.Property(e => e.ExceptionType).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Message).HasMaxLength(1000).IsRequired();
+            entity.Property(e => e.EraClaimIdentifier).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ResolvedAt);
+
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_EraException_Status");
+            entity.HasIndex(e => e.EdiReportId).HasDatabaseName("IX_EraException_EdiReportId");
+            entity.HasIndex(e => e.ClaimId).HasDatabaseName("IX_EraException_ClaimId");
+        });
+    }
+
+    private void ConfigureEligibility(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EligibilityRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_EligibilityRequest_Id");
+            entity.ToTable("EligibilityRequest");
+
+            entity.Property(e => e.PatientId).IsRequired();
+            entity.Property(e => e.PayerId).IsRequired();
+            entity.Property(e => e.PolicyNumber).HasMaxLength(100);
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            entity.HasIndex(e => e.PatientId).HasDatabaseName("IX_EligibilityRequest_PatientId");
+            entity.HasIndex(e => e.PayerId).HasDatabaseName("IX_EligibilityRequest_PayerId");
+        });
+
+        modelBuilder.Entity<EligibilityResponse>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_EligibilityResponse_Id");
+            entity.ToTable("EligibilityResponse");
+
+            entity.Property(e => e.CoverageStatus).HasMaxLength(100);
+            entity.Property(e => e.PlanName).HasMaxLength(255);
+            entity.Property(e => e.DeductibleAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CopayAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CoinsurancePercent).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Raw271).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            entity.HasIndex(e => e.EligibilityRequestId).HasDatabaseName("IX_EligibilityResponse_RequestId");
+        });
+    }
+
+    private void ConfigureClaimRejection(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClaimRejection>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ClaimRejection_Id");
+            entity.ToTable("ClaimRejection");
+
+            entity.Property(e => e.ErrorCode).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(1000).IsRequired();
+            entity.Property(e => e.Segment).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Element).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.TransactionControlNumber).HasMaxLength(20);
+
+            entity.HasIndex(e => e.ClaimId).HasDatabaseName("IX_ClaimRejection_ClaimId");
+            entity.HasIndex(e => e.EdiReportId).HasDatabaseName("IX_ClaimRejection_EdiReportId");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_ClaimRejection_Status");
+            entity.HasIndex(e => e.TransactionControlNumber).HasDatabaseName("IX_ClaimRejection_TransactionControlNumber");
+        });
+    }
+
+    private void ConfigureClaimSubmission(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClaimSubmission>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ClaimSubmission_Id");
+            entity.ToTable("ClaimSubmission");
+
+            entity.Property(e => e.TransactionControlNumber).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.PatientControlNumber).HasMaxLength(50);
+            entity.Property(e => e.BatchId).HasMaxLength(50);
+            entity.Property(e => e.FileControlNumber).HasMaxLength(50);
+            entity.Property(e => e.SubmissionDate).IsRequired();
+
+            entity.HasIndex(e => new { e.BatchId, e.TransactionControlNumber }).IsUnique().HasDatabaseName("IX_ClaimSubmission_BatchId_TransactionControlNumber");
+            entity.HasIndex(e => e.ClaimId).HasDatabaseName("IX_ClaimSubmission_ClaimId");
+            entity.HasIndex(e => e.BatchId).HasDatabaseName("IX_ClaimSubmission_BatchId");
+        });
+    }
+
+    private void ConfigureScrubRule(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ScrubRule>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ScrubRule_Id");
+            entity.ToTable("ScrubRule");
+
+            entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Scope).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Severity).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Condition).IsRequired();
+
+            entity.HasIndex(e => e.IsActive).HasDatabaseName("IX_ScrubRule_IsActive");
+            entity.HasIndex(e => e.PayerId).HasDatabaseName("IX_ScrubRule_PayerId");
+        });
+    }
+
     private void ConfigureSecondaryForwardableAdjustmentRules(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SecondaryForwardableAdjustmentRule>(entity =>
@@ -1898,6 +2036,90 @@ public partial class ZeblDbContext : DbContext
 
             entity.HasIndex(e => e.State)
                 .HasDatabaseName("IX_CityStateZip_State");
+        });
+    }
+
+    private void ConfigureProgramSettings(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProgramSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ProgramSettings_Id");
+            entity.ToTable("ProgramSettings");
+
+            entity.Property(e => e.Section)
+                .HasMaxLength(200)
+                .IsUnicode(false)
+                .IsRequired();
+
+            entity.Property(e => e.SettingsJson)
+                .IsUnicode(false);
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime2");
+
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+
+            entity.HasIndex(e => e.Section)
+                .HasDatabaseName("IX_ProgramSettings_Section");
+        });
+    }
+
+    private void ConfigureCustomFieldDefinition(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CustomFieldDefinition>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_CustomFieldDefinitions_Id");
+            entity.ToTable("CustomFieldDefinitions");
+
+            entity.Property(e => e.EntityType)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.FieldKey)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.Label)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.FieldType)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.SortOrder).IsRequired();
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime2")
+                .IsRequired();
+
+            entity.HasIndex(e => new { e.EntityType, e.FieldKey })
+                .HasDatabaseName("IX_CustomFieldDefinitions_EntityType_FieldKey");
+        });
+    }
+
+    private void ConfigureCustomFieldValue(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CustomFieldValue>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_CustomFieldValues_Id");
+            entity.ToTable("CustomFieldValues");
+
+            entity.Property(e => e.EntityType)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.EntityId).IsRequired();
+            entity.Property(e => e.FieldKey)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.Value).IsUnicode(false);
+
+            entity.HasIndex(e => new { e.EntityType, e.EntityId, e.FieldKey })
+                .HasDatabaseName("IX_CustomFieldValues_EntityType_EntityId_FieldKey");
         });
     }
 }

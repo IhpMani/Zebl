@@ -28,14 +28,78 @@ namespace Zebl.Api.Controllers
         private readonly IClaimExportService _claimExportService;
         private readonly ISecondaryTriggerService _secondaryTriggerService;
         private readonly ILogger<ClaimsController> _logger;
+        private readonly Zebl.Infrastructure.Services.ProgramSettingsService _programSettingsService;
+        private readonly Zebl.Application.Repositories.IClaimRejectionRepository _claimRejectionRepository;
+        private readonly IClaimScrubService _claimScrubService;
 
-        public ClaimsController(ZeblDbContext db, ICurrentUserContext userContext, IClaimExportService claimExportService, ISecondaryTriggerService secondaryTriggerService, ILogger<ClaimsController> logger)
+        public ClaimsController(
+            ZeblDbContext db,
+            ICurrentUserContext userContext,
+            IClaimExportService claimExportService,
+            ISecondaryTriggerService secondaryTriggerService,
+            ILogger<ClaimsController> logger,
+            Zebl.Infrastructure.Services.ProgramSettingsService programSettingsService,
+            Zebl.Application.Repositories.IClaimRejectionRepository claimRejectionRepository,
+            IClaimScrubService claimScrubService)
         {
             _db = db;
             _userContext = userContext;
             _claimExportService = claimExportService;
             _secondaryTriggerService = secondaryTriggerService;
             _logger = logger;
+            _programSettingsService = programSettingsService;
+            _claimRejectionRepository = claimRejectionRepository;
+            _claimScrubService = claimScrubService;
+        }
+
+        [HttpGet("rejections")]
+        public async Task<IActionResult> GetRejections()
+        {
+            var items = await _claimRejectionRepository.GetAllAsync();
+            return Ok(items);
+        }
+
+        [HttpGet("rejections/{id:int}")]
+        public async Task<IActionResult> GetRejectionById(int id)
+        {
+            var item = await _claimRejectionRepository.GetByIdAsync(id);
+            if (item == null)
+                return NotFound();
+            return Ok(item);
+        }
+
+        [HttpPost("rejections/{id:int}/resolve")]
+        public async Task<IActionResult> ResolveRejection(int id)
+        {
+            var existing = await _claimRejectionRepository.GetByIdAsync(id);
+            if (existing == null)
+                return NotFound();
+
+            existing.Status = "Resolved";
+            existing.ResolvedAt = DateTime.UtcNow;
+            await _claimRejectionRepository.UpdateAsync(existing);
+            return NoContent();
+        }
+
+        [HttpPost("scrub")]
+        public async Task<IActionResult> ScrubClaim([FromBody] ScrubRequest request)
+        {
+            if (request == null || request.ClaimId <= 0)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "ClaimId is required."
+                });
+            }
+
+            var results = await _claimScrubService.ScrubClaimAsync(request.ClaimId);
+            return Ok(results);
+        }
+
+        public sealed class ScrubRequest
+        {
+            public int ClaimId { get; set; }
         }
 
         /// <summary>
@@ -667,7 +731,174 @@ namespace Zebl.Api.Controllers
             if (claId <= 0) return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Claim ID must be greater than 0" });
             try
             {
+                // Load claim settings
+                var settingsElement = await _programSettingsService.GetSectionAsync("claim", HttpContext.RequestAborted);
+                var claimSettings = settingsElement.ValueKind == System.Text.Json.JsonValueKind.Object
+                    ? settingsElement
+                    : System.Text.Json.JsonDocument.Parse("{}").RootElement;
+
+                bool lockClaimsAfterPrint = false;
+                if (claimSettings.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                    claimSettings.TryGetProperty("lockClaimsAfterPrint", out var lockProp) &&
+                    lockProp.ValueKind == System.Text.Json.JsonValueKind.True)
+                {
+                    lockClaimsAfterPrint = true;
+                }
+
+                bool checkDuplicateServiceLines = false;
+                if (claimSettings.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                    claimSettings.TryGetProperty("checkDuplicateServiceLines", out var dupProp) &&
+                    dupProp.ValueKind == System.Text.Json.JsonValueKind.True)
+                {
+                    checkDuplicateServiceLines = true;
+                }
+
+                bool validateIcdLogic = false;
+                if (claimSettings.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                    claimSettings.TryGetProperty("validateICDLogic", out var icdProp) &&
+                    icdProp.ValueKind == System.Text.Json.JsonValueKind.True)
+                {
+                    validateIcdLogic = true;
+                }
+
+                // Load claim and service lines for validation
+                var claim = await _db.Claims
+                    .Include(c => c.Service_Lines)
+                    .FirstOrDefaultAsync(c => c.ClaID == claId);
+
+                if (claim == null)
+                    return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Claim not found." });
+
+                if (checkDuplicateServiceLines)
+                {
+                    var duplicates = claim.Service_Lines
+                        .GroupBy(s => new
+                        {
+                            s.SrvFromDate,
+                            s.SrvProcedureCode,
+                            s.SrvProductCode,
+                            s.SrvModifier1,
+                            s.SrvModifier2,
+                            s.SrvModifier3,
+                            s.SrvModifier4,
+                            s.SrvDiagnosisPointer
+                        })
+                        .Where(g => g.Count() > 1)
+                        .FirstOrDefault();
+
+                    if (duplicates != null)
+                    {
+                        return BadRequest(new ErrorResponseDto
+                        {
+                            ErrorCode = "CLAIM_VALIDATION",
+                            Message = "Duplicate service lines detected. Please remove duplicates before exporting."
+                        });
+                    }
+                }
+
+                if (validateIcdLogic)
+                {
+                    var serviceDates = claim.Service_Lines
+                        .Select(s => s.SrvFromDate)
+                        .OrderBy(d => d)
+                        .ToList();
+
+                    if (serviceDates.Count > 0)
+                    {
+                        var cutoff = new DateOnly(2015, 10, 1);
+                        bool hasBefore = serviceDates.Any(d => d < cutoff);
+                        bool hasAfterOrOn = serviceDates.Any(d => d >= cutoff);
+
+                        if (hasBefore && hasAfterOrOn)
+                        {
+                            return BadRequest(new ErrorResponseDto
+                            {
+                                ErrorCode = "CLAIM_VALIDATION",
+                                Message = "Cannot combine service dates before and after Oct 1 2015 on the same claim."
+                            });
+                        }
+
+                        var icdIndicator = claim.ClaICDIndicator?.Trim();
+                        if (string.IsNullOrEmpty(icdIndicator))
+                        {
+                            return BadRequest(new ErrorResponseDto
+                            {
+                                ErrorCode = "CLAIM_VALIDATION",
+                                Message = "ICD Indicator is required."
+                            });
+                        }
+
+                        if (hasBefore && icdIndicator == "0")
+                        {
+                            return BadRequest(new ErrorResponseDto
+                            {
+                                ErrorCode = "CLAIM_VALIDATION",
+                                Message = "For service dates before Oct 1 2015, ICD Indicator cannot be 0 (ICD-10)."
+                            });
+                        }
+
+                        if (hasAfterOrOn && icdIndicator == "9")
+                        {
+                            return BadRequest(new ErrorResponseDto
+                            {
+                                ErrorCode = "CLAIM_VALIDATION",
+                                Message = "For service dates on or after Oct 1 2015, ICD Indicator cannot be 9 (ICD-9)."
+                            });
+                        }
+
+                        var diagnoses = new[]
+                        {
+                            claim.ClaDiagnosis1,
+                            claim.ClaDiagnosis2,
+                            claim.ClaDiagnosis3,
+                            claim.ClaDiagnosis4,
+                            claim.ClaDiagnosis5
+                        }.Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
+
+                        if (diagnoses.Count > 0)
+                        {
+                            foreach (var dx in diagnoses)
+                            {
+                                var trimmed = dx!.Trim();
+                                if (string.IsNullOrEmpty(trimmed))
+                                    continue;
+
+                                var first = trimmed[0];
+                                if (icdIndicator == "0")
+                                {
+                                    if (!char.IsLetter(first))
+                                    {
+                                        return BadRequest(new ErrorResponseDto
+                                        {
+                                            ErrorCode = "CLAIM_VALIDATION",
+                                            Message = $"ICD-10 diagnosis '{trimmed}' must start with a letter."
+                                        });
+                                    }
+                                }
+                                else if (icdIndicator == "9")
+                                {
+                                    if (char.IsLetter(first) && char.ToUpperInvariant(first) != 'E' && char.ToUpperInvariant(first) != 'V')
+                                    {
+                                        return BadRequest(new ErrorResponseDto
+                                        {
+                                            ErrorCode = "CLAIM_VALIDATION",
+                                            Message = $"ICD-9 diagnosis '{trimmed}' must start with a number, or E/V."
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 var content = await _claimExportService.Generate837Async(claId);
+
+                if (lockClaimsAfterPrint)
+                {
+                    claim.ClaLocked = true;
+                    await _db.SaveChangesAsync();
+                }
+
                 return Ok(new { content });
             }
             catch (InvalidOperationException ex)
@@ -1055,7 +1286,10 @@ namespace Zebl.Api.Controllers
                 claim.ClaClassification = request.ClaClassification != null
                     ? (request.ClaClassification.Length > 30 ? request.ClaClassification[..30] : request.ClaClassification)
                     : null;
-                claim.ClaStatus = request.ClaStatus;
+                if (!string.IsNullOrWhiteSpace(request.ClaStatus))
+                {
+                    claim.ClaStatus = request.ClaStatus;
+                }
                 claim.ClaSubmissionMethod = request.ClaSubmissionMethod;
                 if (request.ClaRenderingPhyFID.HasValue)
                     claim.ClaRenderingPhyFID = request.ClaRenderingPhyFID.Value;
