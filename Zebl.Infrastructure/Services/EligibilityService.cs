@@ -1,7 +1,10 @@
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Zebl.Application.Abstractions;
 using Zebl.Application.Domain;
@@ -22,19 +25,25 @@ public class EligibilityService : IEligibilityService
     private readonly IEdiExportService _ediExportService;
     private readonly EdiReportService _ediReportService;
     private readonly Eligibility271Parser _parser;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<EligibilityService> _logger;
 
     public EligibilityService(
         IEligibilitySettingsProvider settingsProvider,
         ZeblDbContext db,
         IEdiExportService ediExportService,
         EdiReportService ediReportService,
-        Eligibility271Parser parser)
+        Eligibility271Parser parser,
+        IHttpClientFactory httpClientFactory,
+        ILogger<EligibilityService> logger)
     {
         _settingsProvider = settingsProvider;
         _db = db;
         _ediExportService = ediExportService;
         _ediReportService = ediReportService;
         _parser = parser;
+        _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
     public async Task<EligibilityCheckResultDto> CheckEligibilityAsync(int patientId, CancellationToken cancellationToken = default)
@@ -50,14 +59,17 @@ public class EligibilityService : IEligibilityService
             };
         }
 
+        // DEV MODE: mock eligibility
+        if (string.Equals(settings.Source.Trim(), "EDIConnection", StringComparison.OrdinalIgnoreCase))
+            return await RunMockEligibility(patientId, cancellationToken);
+
+        // Only validate receiver for real clearinghouse sources
         if (!Guid.TryParse(settings.ReceiverId, out var receiverId))
-        {
             return new EligibilityCheckResultDto
             {
                 Success = false,
                 Message = "Eligibility receiver is not configured correctly. Check Program Setup → Patient Eligibility."
             };
-        }
 
         // Load primary insurance for patient with linked payer
         var primaryIns = await _db.Patient_Insureds
@@ -79,6 +91,27 @@ public class EligibilityService : IEligibilityService
 
         var payer = primaryIns.PatInsIns.InsPay;
         var policyNumber = primaryIns.PatInsIns.InsIDNumber ?? string.Empty;
+        var identification = primaryIns.PatInsIns.InsIDNumber ?? string.Empty;
+
+        // Insured/Patient fields for the Eligibility Response popup.
+        var patient = await _db.Patients
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.PatID == patientId, cancellationToken);
+
+        if (patient == null)
+        {
+            _logger.LogWarning("Eligibility check failed: patient {PatientId} not found", patientId);
+            return new EligibilityCheckResultDto
+            {
+                Success = false,
+                Message = "Patient record not found."
+            };
+        }
+
+        var patientLine = BuildPatientLine(patient);
+        var patientAddressLine = BuildPatientAddressLine(patient);
+        var genderText = MapGender(patient?.PatSex);
+        var dob = patient?.PatBirthDate;
 
         // Generate 270 using existing EDI export infrastructure
         var ansi270 = await _ediExportService.Generate270Async(receiverId);
@@ -141,6 +174,7 @@ public class EligibilityService : IEligibilityService
         {
             primaryTracked.PatInsEligANSI = simulated271;
             primaryTracked.PatInsEligStatus = parsed.CoverageStatus;
+            primaryTracked.PatInsEligDate = DateOnly.FromDateTime(DateTime.UtcNow);
         }
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -156,8 +190,167 @@ public class EligibilityService : IEligibilityService
             CopayAmount = parsed.CopayAmount,
             CoinsurancePercent = parsed.CoinsurancePercent,
             CoverageStartDate = parsed.CoverageStartDate,
-            CoverageEndDate = parsed.CoverageEndDate
+            CoverageEndDate = parsed.CoverageEndDate,
+
+            PatientName = patientLine,
+            PatientAddress = patientAddressLine,
+            Identification = identification,
+            DateOfBirth = dob,
+            Gender = genderText,
+            EligibilityDate = primaryTracked?.PatInsEligDate,
+            InquiryDate = DateOnly.FromDateTime(request.CreatedAt)
         };
+    }
+
+    private async Task<EligibilityCheckResultDto> RunMockEligibility(int patientId, CancellationToken cancellationToken)
+    {
+        var primaryIns = await _db.Patient_Insureds
+            .Include(pi => pi.PatInsIns)
+                .ThenInclude(i => i.InsPay)
+            .Where(pi => pi.PatInsPatFID == patientId)
+            .OrderBy(pi => pi.PatInsSequence)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (primaryIns == null)
+        {
+            _logger.LogWarning("Mock eligibility failed: patient {PatientId} has no insurance", patientId);
+            return new EligibilityCheckResultDto
+            {
+                Success = false,
+                Message = "Patient has no insurance configured."
+            };
+        }
+
+        var payer = primaryIns.PatInsIns?.InsPay;
+        var identification = primaryIns.PatInsIns?.InsIDNumber;
+
+        // Insured/Patient fields for the Eligibility Response popup.
+        var patient = await _db.Patients
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.PatID == patientId, cancellationToken);
+
+        if (patient == null)
+        {
+            _logger.LogWarning("Mock eligibility failed: patient {PatientId} not found", patientId);
+            return new EligibilityCheckResultDto
+            {
+                Success = false,
+                Message = "Patient record not found."
+            };
+        }
+
+        var patientLine = BuildPatientLine(patient);
+        var patientAddressLine = BuildPatientAddressLine(patient);
+        var genderText = MapGender(patient?.PatSex);
+        var dob = patient?.PatBirthDate;
+
+        _logger.LogInformation("Running mock eligibility for patient {PatientId} payer {Payer}", patientId, payer?.PayName);
+
+        // Stable simulated 271 (development/test) with Active coverage.
+        // NOTE: Eligibility271Parser is intentionally not modified.
+        var simulated271 =
+            "EB*1*IND*30***23~" +
+            "DTP*291*D8*20260101~";
+
+        var coverageStatus = "Active";
+
+        var parsed = _parser.Parse(simulated271);
+
+        var request = new EligibilityRequest
+        {
+            PatientId = patientId,
+            // EligibilityRequest.PayerId is non-nullable in the domain/DB model.
+            // For mock/dev mode we allow missing payer linkage by persisting 0.
+            PayerId = payer?.PayID ?? 0,
+            PolicyNumber = primaryIns.PatInsIns?.InsIDNumber,
+            Status = "ResponseReceived",
+            CreatedAt = DateTime.UtcNow,
+            ResponseReceivedAt = DateTime.UtcNow
+        };
+
+        _db.EligibilityRequests.Add(request);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        var response = new EligibilityResponse
+        {
+            EligibilityRequestId = request.Id,
+            CoverageStatus = coverageStatus,
+            PlanName = parsed.PlanName,
+            DeductibleAmount = parsed.DeductibleAmount,
+            CopayAmount = parsed.CopayAmount,
+            CoinsurancePercent = parsed.CoinsurancePercent,
+            CoverageStartDate = parsed.CoverageStartDate,
+            CoverageEndDate = parsed.CoverageEndDate,
+            Raw271 = simulated271,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.EligibilityResponses.Add(response);
+
+        primaryIns.PatInsEligANSI = simulated271;
+        primaryIns.PatInsEligStatus = coverageStatus;
+        primaryIns.PatInsEligDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return new EligibilityCheckResultDto
+        {
+            Success = true,
+            Raw271 = simulated271,
+            Message = "Mock eligibility check completed.",
+            PayerName = payer?.PayName,
+            Status = coverageStatus,
+            DeductibleAmount = parsed.DeductibleAmount,
+            CopayAmount = parsed.CopayAmount,
+            CoinsurancePercent = parsed.CoinsurancePercent,
+            CoverageStartDate = parsed.CoverageStartDate,
+            CoverageEndDate = parsed.CoverageEndDate,
+
+            PatientName = patientLine,
+            PatientAddress = patientAddressLine,
+            Identification = identification,
+            DateOfBirth = dob,
+            Gender = genderText,
+            EligibilityDate = primaryIns.PatInsEligDate,
+            InquiryDate = DateOnly.FromDateTime(request.CreatedAt)
+        };
+    }
+
+    private static string? MapGender(string? patSex)
+    {
+        if (string.IsNullOrWhiteSpace(patSex))
+            return null;
+
+        return patSex.Trim().ToUpperInvariant() switch
+        {
+            "M" => "Male",
+            "F" => "Female",
+            _ => null
+        };
+    }
+
+    private static string BuildPatientLine(Patient? patient)
+    {
+        if (patient == null)
+            return string.Empty;
+
+        var lastName = patient.PatLastName?.ToUpperInvariant() ?? string.Empty;
+        var address = patient.PatAddress?.ToUpperInvariant() ?? string.Empty;
+        var city = patient.PatCity?.ToUpperInvariant() ?? string.Empty;
+        var state = patient.PatState?.ToUpperInvariant() ?? string.Empty;
+        var zip = patient.PatZip ?? string.Empty;
+
+        // EZClaim-like header line:
+        // PATIENT BROOKS, 121212 S MAIN AVE, ANYWHERE, NY 33333
+        return $"PATIENT {lastName}, {address}, {city}, {state} {zip}".Trim();
+    }
+
+    private static string BuildPatientAddressLine(Patient? patient)
+    {
+        if (patient == null)
+            return string.Empty;
+
+        return $"{patient.PatAddress?.ToUpperInvariant() ?? string.Empty}, {patient.PatCity?.ToUpperInvariant() ?? string.Empty}, {patient.PatState?.ToUpperInvariant() ?? string.Empty} {patient.PatZip}".Trim();
     }
 
     public async Task<EligibilityHistoryItemDto[]> GetHistoryAsync(int patientId, CancellationToken cancellationToken = default)

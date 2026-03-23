@@ -34,6 +34,10 @@ public class EdiReportService
     public Task<int> DeleteByReceiverAndConnectionAsync(Guid receiverLibraryId, Guid? connectionLibraryId) =>
         _repository.DeleteByReceiverAndConnectionAsync(receiverLibraryId, connectionLibraryId);
 
+    /// <summary>Deletes only non-archived reports for the given receiver + connection. Returns number deleted.</summary>
+    public Task<int> DeleteNonArchivedByReceiverAndConnectionAsync(Guid receiverLibraryId, Guid? connectionLibraryId) =>
+        _repository.DeleteNonArchivedByReceiverAndConnectionAsync(receiverLibraryId, connectionLibraryId);
+
     /// <summary>
     /// Creates a new EdiReport with Status = "Generated". FileContent and FileSize must be set by caller.
     /// </summary>

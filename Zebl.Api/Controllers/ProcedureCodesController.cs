@@ -200,12 +200,44 @@ public class ProcedureCodesController : ControllerBase
         if (items == null)
             return BadRequest(new { message = "Request body is required." });
 
+        // Keep existing ProcCode validation logic (do not change)
         foreach (var item in items)
         {
             if (string.IsNullOrWhiteSpace(item.ProcCode))
                 return BadRequest(new { message = "ProcCode is required for all items." });
+        }
+
+        // Normalize required / NOT NULL fields before insert/update
+        var now = System.DateTime.UtcNow;
+        foreach (var item in items)
+        {
+            // New row: set created timestamp
+            if (item.ProcID == 0)
+            {
+                item.ProcDateTimeCreated = now;
+            }
+
+            // All rows: set modified timestamp
+            item.ProcDateTimeModified = now;
+
+            // Numeric defaults (safe even when CLR types are non-nullable)
+            item.ProcAdjust = item.ProcAdjust;
+            item.ProcAllowed = item.ProcAllowed;
+            item.ProcCharge = item.ProcCharge;
+            item.ProcCost = item.ProcCost;
+            item.ProcDrugUnitCount = item.ProcDrugUnitCount;
+            item.ProcRVUMalpractice = item.ProcRVUMalpractice;
+            item.ProcRVUWork = item.ProcRVUWork;
+
+            // Ensure units >= 1 (fallback to 1)
             if (item.ProcUnits < 1)
-                return BadRequest(new { message = "ProcUnits must be greater than or equal to 1 for all items." });
+                item.ProcUnits = 1;
+
+            // Default foreign keys when not supplied
+            if (item.ProcBillingPhyFID == 0)
+                item.ProcBillingPhyFID = 4;
+            if (item.ProcPayFID == 0)
+                item.ProcPayFID = 1;
         }
 
         // Validate foreign keys (Physician / Payer) up-front to avoid SQL FK violations

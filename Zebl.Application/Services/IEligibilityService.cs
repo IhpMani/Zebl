@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,6 +35,15 @@ public sealed class EligibilityCheckResultDto
     public decimal? CoinsurancePercent { get; set; }
     public DateTime? CoverageStartDate { get; set; }
     public DateTime? CoverageEndDate { get; set; }
+
+    // Insured/Patient fields shown in the Eligibility Response popup.
+    public string? PatientName { get; set; }
+    public string? PatientAddress { get; set; }
+    public string? Identification { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
+    public string? Gender { get; set; }
+    public DateOnly? EligibilityDate { get; set; }
+    public DateOnly? InquiryDate { get; set; }
 }
 
 public sealed class EligibilityHistoryItemDto

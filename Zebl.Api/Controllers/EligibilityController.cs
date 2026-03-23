@@ -1,10 +1,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Zebl.Application.Domain;
 using Zebl.Application.Services;
+using Zebl.Infrastructure.Persistence.Context;
 
 namespace Zebl.Api.Controllers;
 
@@ -14,11 +17,16 @@ namespace Zebl.Api.Controllers;
 public class EligibilityController : ControllerBase
 {
     private readonly IEligibilityService _eligibilityService;
+    private readonly ZeblDbContext _dbContext;
     private readonly ILogger<EligibilityController> _logger;
 
-    public EligibilityController(IEligibilityService eligibilityService, ILogger<EligibilityController> logger)
+    public EligibilityController(
+        IEligibilityService eligibilityService,
+        ZeblDbContext dbContext,
+        ILogger<EligibilityController> logger)
     {
         _eligibilityService = eligibilityService;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
@@ -37,7 +45,13 @@ public class EligibilityController : ControllerBase
         {
             var result = await _eligibilityService.CheckEligibilityAsync(request.PatientId, cancellationToken);
             if (!result.Success)
+            {
+                _logger.LogWarning(
+                    "Eligibility check failed for patient {PatientId}: {Message}",
+                    request.PatientId,
+                    result.Message);
                 return BadRequest(result);
+            }
 
             return Ok(result);
         }
@@ -64,6 +78,24 @@ public class EligibilityController : ControllerBase
             _logger.LogError(ex, "Error loading eligibility history for patient {PatientId}", patientId);
             return StatusCode(500, new { error = "Failed to load eligibility history." });
         }
+    }
+
+    [HttpGet("{requestId:int}/raw")]
+    public async Task<IActionResult> GetRawResponse([FromRoute] int requestId, CancellationToken cancellationToken)
+    {
+        var response = await _dbContext.EligibilityResponses
+            .Where(r => r.EligibilityRequestId == requestId)
+            .OrderByDescending(r => r.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (response == null)
+            return NotFound();
+
+        return Ok(new
+        {
+            requestId,
+            raw271 = response.Raw271
+        });
     }
 }
 

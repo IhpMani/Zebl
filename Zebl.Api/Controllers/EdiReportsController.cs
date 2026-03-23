@@ -228,6 +228,11 @@ public class EdiReportsController : ControllerBase
             }
 
             var files = await _sftpTransport.DownloadFilesAsync(connection);
+            // "Get Reports" should behave like a refresh: re-fetch the latest inbound batch,
+            // without duplicating existing non-archived rows for the same receiver+connection.
+            await _ediReportService.DeleteNonArchivedByReceiverAndConnectionAsync(
+                request.ReceiverLibraryId.Value,
+                request.ConnectionLibraryId);
             var createdReports = new List<object>();
 
             foreach (var (fileName, content) in files)
@@ -343,6 +348,12 @@ public class EdiReportsController : ControllerBase
             var root = doc.RootElement;
             if (root.ValueKind != JsonValueKind.Array)
                 return new List<object>();
+
+            // Idempotency: treat "Get Reports" as a refresh for this receiver+connection.
+            // Delete only non-archived reports so archived history is preserved.
+            await _ediReportService.DeleteNonArchivedByReceiverAndConnectionAsync(
+                receiverLibraryId,
+                connectionLibraryId);
 
             var created = new List<object>();
             foreach (var item in root.EnumerateArray())

@@ -37,6 +37,18 @@ public class EdiReportRepository : IEdiReportRepository
         return toRemove.Count;
     }
 
+    public async Task<int> DeleteNonArchivedByReceiverAndConnectionAsync(Guid receiverLibraryId, Guid? connectionLibraryId)
+    {
+        var toRemove = await _context.EdiReports
+            .Where(r => r.ReceiverLibraryId == receiverLibraryId
+                        && r.ConnectionLibraryId == connectionLibraryId
+                        && !r.IsArchived)
+            .ToListAsync();
+        _context.EdiReports.RemoveRange(toRemove);
+        await _context.SaveChangesAsync();
+        return toRemove.Count;
+    }
+
     public async Task AddAsync(EdiReport report)
     {
         await _context.EdiReports.AddAsync(report);

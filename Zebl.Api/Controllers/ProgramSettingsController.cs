@@ -13,6 +13,19 @@ namespace Zebl.Api.Controllers;
 [Authorize(Policy = "RequireAuth")]
 public class ProgramSettingsController : ControllerBase
 {
+    private static readonly HashSet<string> AllowedEligibilitySources = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Waystar",
+        "OfficeAlly",
+        "TriZetto",
+        "Navicure",
+        "Capario",
+        "PracticeInsight",
+        "ZirMed",
+        // Development/testing: route eligibility to local mock EDI server
+        "EDIConnection"
+    };
+
     private static readonly HashSet<string> EligibilitySourcesRequiringCredentials = new(StringComparer.OrdinalIgnoreCase)
     {
         "Capario", "TriZetto", "Navicure", "PracticeInsight", "ZirMed", "OfficeAlly", "Waystar"
@@ -79,6 +92,11 @@ public class ProgramSettingsController : ControllerBase
         if (string.Equals(section, "patientEligibility", StringComparison.OrdinalIgnoreCase) && _eligibilitySettingsProvider != null)
         {
             var source = settings.TryGetProperty("source", out var src) ? src.GetString()?.Trim() : null;
+            if (!string.IsNullOrWhiteSpace(source) && !AllowedEligibilitySources.Contains(source))
+            {
+                return BadRequest(new { error = $"Unsupported eligibility source '{source}'." });
+            }
+
             if (!string.IsNullOrEmpty(source) && EligibilitySourcesRequiringCredentials.Contains(source))
             {
                 var username = settings.TryGetProperty("username", out var u) ? u.GetString()?.Trim() : null;
