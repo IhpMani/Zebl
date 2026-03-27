@@ -3,6 +3,8 @@ using Zebl.Application.Domain;
 using Zebl.Application.Dtos.Payments;
 using Zebl.Application.Exceptions;
 using Zebl.Application.Repositories;
+using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 
 namespace Zebl.Application.Services;
 
@@ -22,6 +24,7 @@ public class PaymentService : IPaymentService
     private readonly IClaimAuditService _claimAuditService;
     private readonly ITransactionScope _transactionScope;
     private readonly IReconciliationService _reconciliationService;
+    private readonly ILogger<PaymentService> _logger;
 
     private static readonly HashSet<string> ValidGroupCodes = new(StringComparer.OrdinalIgnoreCase) { "CO", "PR", "OA", "PI", "CR" };
     private const decimal Tolerance = 0.01m;
@@ -36,7 +39,8 @@ public class PaymentService : IPaymentService
         IClaimTotalsService claimTotalsService,
         IClaimAuditService claimAuditService,
         ITransactionScope transactionScope,
-        IReconciliationService reconciliationService)
+        IReconciliationService reconciliationService,
+        ILogger<PaymentService> logger)
     {
         _paymentRepo = paymentRepo;
         _adjustmentRepo = adjustmentRepo;
@@ -48,6 +52,7 @@ public class PaymentService : IPaymentService
         _claimAuditService = claimAuditService;
         _transactionScope = transactionScope;
         _reconciliationService = reconciliationService;
+        _logger = logger;
     }
 
     public async Task<int> CreatePaymentAsync(CreatePaymentCommand command)
@@ -82,7 +87,21 @@ public class PaymentService : IPaymentService
         await using var transaction = await _transactionScope.BeginTransactionAsync(CancellationToken.None);
         try
         {
-            int billingPhysicianId = await ResolveBillingPhysicianAsync(command);
+            var billingPhysicianId = command.BillingPhysicianId;
+
+            // fallback to claim physician
+            if (!billingPhysicianId.HasValue || billingPhysicianId == 0)
+            {
+                billingPhysicianId = await ResolveBillingPhysicianAsync(command, null);
+            }
+
+            // still null -> stop
+            if (!billingPhysicianId.HasValue)
+            {
+                throw new ValidationException("Billing physician not found for claim.");
+            }
+            _logger.LogInformation("Saving payment with physicianId {physicianId}", billingPhysicianId);
+
             int paymentId = await _paymentRepo.CreatePaymentAsync(
                 command.PaymentSource == PaymentSourceKind.Payer ? command.PayerId : null,
                 command.PatientId,
@@ -97,22 +116,28 @@ public class PaymentService : IPaymentService
 
             decimal totalApplied = 0;
             var affectedClaimIds = new HashSet<int>();
+            var affectedServiceLineIds = new HashSet<int>();
 
             foreach (var app in command.ServiceLineApplications)
             {
                 var srv = await _serviceLineRepo.GetTotalsByIdAsync(app.ServiceLineId);
                 if (srv == null) continue;
+                var currentResponsiblePayerId = await _serviceLineRepo.GetPayerIdForLineAsync(app.ServiceLineId);
 
                 decimal balance = GetServiceLineBalance(srv, isPayer);
                 decimal toApply = command.AllowOverApply ? app.PaymentAmount : Math.Min(app.PaymentAmount, balance);
+                _logger.LogInformation(
+                    "Applying payment line ServiceLineId={ServiceLineId}, PaymentAmount={PaymentAmount}, ToApply={ToApply}, Adjustments={AdjustmentCount}, Source={Source}",
+                    app.ServiceLineId,
+                    app.PaymentAmount,
+                    toApply,
+                    app.Adjustments.Count,
+                    command.PaymentSource);
                 if (toApply <= 0 && !command.AllowOverApply) continue;
                 if (toApply <= 0 && command.AllowOverApply && app.PaymentAmount <= 0) continue;
 
-                if (isPayer)
-                    await _serviceLineRepo.AddInsPaidAsync(app.ServiceLineId, toApply);
-                else
-                    await _serviceLineRepo.AddPatPaidAsync(app.ServiceLineId, toApply);
                 totalApplied += toApply;
+                affectedServiceLineIds.Add(app.ServiceLineId);
                 if (srv.ClaID.HasValue) affectedClaimIds.Add(srv.ClaID.Value);
                 Guid srvGuid = await GetServiceLineGuidAsync(app.ServiceLineId);
                 await _disbursementRepo.AddAsync(paymentId, app.ServiceLineId, srvGuid, toApply);
@@ -137,11 +162,17 @@ public class PaymentService : IPaymentService
                     }
 
                     await _adjustmentRepo.AddAsync(paymentId, payerId > 0 ? payerId : await GetPayerIdFromServiceLineAsync(app.ServiceLineId), app.ServiceLineId, srvGuid, gc, adj.ReasonCode, adj.RemarkCode, adjAmount, reasonAmount);
-                    await _serviceLineRepo.AddAdjustmentAmountAsync(app.ServiceLineId, gc, adjAmount);
+                    affectedServiceLineIds.Add(app.ServiceLineId);
                     if (srv.ClaID.HasValue) affectedClaimIds.Add(srv.ClaID.Value);
+                }
+
+                if (isPayer && payerId > 0 && currentResponsiblePayerId == payerId && (toApply > 0 || app.Adjustments.Count > 0))
+                {
+                    await _serviceLineRepo.AdvanceResponsiblePartyAsync(app.ServiceLineId);
                 }
             }
 
+            await RecalculateServiceLinesAsync(affectedServiceLineIds);
             await RecalculateAffectedClaimsAsync(affectedClaimIds);
 
             // Equation check: Charge = Paid + Adjustments + Balance (per claim)
@@ -220,6 +251,7 @@ public class PaymentService : IPaymentService
         bool isPayer = pay.Value.PayerId.HasValue;
         var lines = await _serviceLineRepo.GetForAutoApplyAsync(pay.Value.PatientId, pay.Value.PayerId, isPayer);
         var affectedClaimIds = new HashSet<int>();
+        var affectedServiceLineIds = new HashSet<int>();
         decimal applied = 0;
         foreach (var srv in lines)
         {
@@ -227,13 +259,12 @@ public class PaymentService : IPaymentService
             decimal balance = isPayer ? (srv.Charges - srv.TotalInsAmtPaid - srv.TotalCOAdj - srv.TotalCRAdj - srv.TotalOAAdj - srv.TotalPIAdj - srv.TotalPRAdj) : (srv.Charges - srv.TotalPatAmtPaid - srv.TotalCOAdj - srv.TotalCRAdj - srv.TotalOAAdj - srv.TotalPIAdj - srv.TotalPRAdj);
             if (balance <= 0) continue;
             decimal toApply = Math.Min(remaining - applied, balance);
-            if (isPayer)
-                await _serviceLineRepo.AddInsPaidAsync(srv.SrvID, toApply);
-            else
-                await _serviceLineRepo.AddPatPaidAsync(srv.SrvID, toApply);
+            await _disbursementRepo.AddAsync(paymentId, srv.SrvID, srv.SrvGUID, toApply);
             applied += toApply;
+            affectedServiceLineIds.Add(srv.SrvID);
             if (srv.ClaID.HasValue) affectedClaimIds.Add(srv.ClaID.Value);
         }
+        await RecalculateServiceLinesAsync(affectedServiceLineIds);
         await RecalculateAffectedClaimsAsync(affectedClaimIds);
         await _paymentRepo.SetDisbursedAsync(paymentId, pay.Value.Disbursed + applied);
     }
@@ -246,25 +277,29 @@ public class PaymentService : IPaymentService
         if (remaining <= 0) return;
         bool isPayer = pay.Value.PayerId.HasValue;
         var affectedClaimIds = new HashSet<int>();
+        var affectedServiceLineIds = new HashSet<int>();
         decimal totalApply = 0;
         foreach (var app in applications)
         {
             var info = await _serviceLineRepo.GetBalanceInfoAsync(app.ServiceLineId);
             if (info == null) continue;
+            var currentResponsiblePayerId = await _serviceLineRepo.GetPayerIdForLineAsync(app.ServiceLineId);
             decimal balance = isPayer ? (info.Value.Charges - info.Value.InsPaid - info.Value.TotalAdj) : (info.Value.Charges - info.Value.PatPaid - info.Value.TotalAdj);
             if (balance <= 0) continue;
             decimal toApply = Math.Min(app.PaymentAmount, Math.Min(remaining - totalApply, balance));
             if (toApply <= 0) continue;
-            if (isPayer)
-                await _serviceLineRepo.AddInsPaidAsync(app.ServiceLineId, toApply);
-            else
-                await _serviceLineRepo.AddPatPaidAsync(app.ServiceLineId, toApply);
             totalApply += toApply;
+            affectedServiceLineIds.Add(app.ServiceLineId);
             var srv = await _serviceLineRepo.GetTotalsByIdAsync(app.ServiceLineId);
             if (srv?.ClaID != null) affectedClaimIds.Add(srv.ClaID.Value);
             Guid srvGuid = await GetServiceLineGuidAsync(app.ServiceLineId);
             await _disbursementRepo.AddAsync(paymentId, app.ServiceLineId, srvGuid, toApply);
+            if (isPayer && pay.Value.PayerId.HasValue && pay.Value.PayerId.Value > 0 && currentResponsiblePayerId == pay.Value.PayerId.Value && toApply > 0)
+            {
+                await _serviceLineRepo.AdvanceResponsiblePartyAsync(app.ServiceLineId);
+            }
         }
+        await RecalculateServiceLinesAsync(affectedServiceLineIds);
         await RecalculateAffectedClaimsAsync(affectedClaimIds);
         await _paymentRepo.SetDisbursedAsync(paymentId, pay.Value.Disbursed + totalApply);
     }
@@ -280,18 +315,13 @@ public class PaymentService : IPaymentService
         var pay = await _paymentRepo.GetByIdAsync(paymentId);
         if (pay == null) return;
         var adjs = await _adjustmentRepo.GetByPaymentIdAsync(paymentId);
-        foreach (var (_, srvId, groupCode, amount) in adjs)
-            await _serviceLineRepo.AddAdjustmentAmountAsync(srvId, groupCode, -amount);
         var disbs = await _disbursementRepo.GetByPaymentIdAsync(paymentId);
-        foreach (var (_, srvId, amount) in disbs)
-        {
-            if (pay.Value.PayerId.HasValue)
-                await _serviceLineRepo.AddInsPaidAsync(srvId, -amount);
-            else
-                await _serviceLineRepo.AddPatPaidAsync(srvId, -amount);
-        }
         await _adjustmentRepo.DeleteByPaymentIdAsync(paymentId);
         await _disbursementRepo.DeleteByPaymentIdAsync(paymentId);
+        var affectedServiceLineIds = new HashSet<int>();
+        foreach (var (_, srvId, _, _) in adjs) affectedServiceLineIds.Add(srvId);
+        foreach (var (_, srvId, _) in disbs) affectedServiceLineIds.Add(srvId);
+        await RecalculateServiceLinesAsync(affectedServiceLineIds);
         var affectedClaimIds = new HashSet<int>();
         foreach (var (_, srvId, _, _) in adjs)
         {
@@ -315,10 +345,18 @@ public class PaymentService : IPaymentService
             throw new InvalidOperationException("PatientId is required when PaymentSource is Patient.");
     }
 
-    private async Task<int> ResolveBillingPhysicianAsync(CreatePaymentCommand command)
+    private async Task<int?> ResolveBillingPhysicianAsync(CreatePaymentCommand command, int? normalizedPhysicianId)
     {
-        if (command.BillingPhysicianId.HasValue && command.BillingPhysicianId.Value > 0)
-            return command.BillingPhysicianId.Value;
+        if (normalizedPhysicianId.HasValue && normalizedPhysicianId.Value > 0)
+            return normalizedPhysicianId.Value;
+        if (command.ClaimId > 0)
+        {
+            var claim = await _claimRepo.GetByIdAsync(command.ClaimId);
+            if (claim == null)
+                throw new ValidationException("Claim not found.");
+
+            return await _claimRepo.GetBillingPhysicianIdAsync(command.ClaimId);
+        }
         var first = command.ServiceLineApplications.FirstOrDefault();
         if (first != null)
         {
@@ -329,7 +367,7 @@ public class PaymentService : IPaymentService
                 if (phyId.HasValue) return phyId.Value;
             }
         }
-        return 0;
+        return null;
     }
 
     private static decimal GetServiceLineBalance(ServiceLineTotals srv, bool isPayer)
@@ -348,6 +386,12 @@ public class PaymentService : IPaymentService
             await _claimRepo.UpdateTotalsAsync(claimId, totals);
             await _claimAuditService.RecordClaimEditedAsync(claimId, "Payment Applied", "Claim edited - payment applied.");
         }
+    }
+
+    private async Task RecalculateServiceLinesAsync(IEnumerable<int> serviceLineIds)
+    {
+        foreach (var serviceLineId in serviceLineIds.Distinct())
+            await _serviceLineRepo.RecalculateServiceLineAsync(serviceLineId);
     }
 
     private async Task<Guid> GetServiceLineGuidAsync(int serviceLineId)

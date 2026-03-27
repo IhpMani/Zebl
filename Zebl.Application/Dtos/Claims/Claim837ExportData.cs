@@ -1,4 +1,5 @@
 using Zebl.Application.Domain;
+using System.Collections.Generic;
 
 namespace Zebl.Application.Dtos.Claims;
 
@@ -32,6 +33,27 @@ public class Claim837ExportData
 
     /// <summary>Rendering provider (ClaRenderingPhyFID). Omitted if PayIgnoreRenderingProvider.</summary>
     public ProviderExportDto? RenderingProvider { get; set; }
+
+    /// <summary>Service lines used for Loop 2400 export.</summary>
+    public List<ServiceLine837ExportDto> ServiceLines { get; set; } = new();
+}
+
+public class ServiceLine837ExportDto
+{
+    public int SrvID { get; set; }
+    public DateOnly? SrvFromDate { get; set; }
+    public DateOnly? SrvToDate { get; set; }
+    public string? SrvProcedureCode { get; set; }
+    public string? SrvModifier1 { get; set; }
+    public string? SrvModifier2 { get; set; }
+    public string? SrvModifier3 { get; set; }
+    public string? SrvModifier4 { get; set; }
+    public decimal SrvCharges { get; set; }
+    public float? SrvUnits { get; set; }
+    public string? SrvDesc { get; set; }
+    public string? SrvNationalDrugCode { get; set; }
+    public double? SrvDrugUnitCount { get; set; }
+    public string? SrvDrugUnitMeasurement { get; set; }
 }
 
 public class ClaimInsuredExportDto

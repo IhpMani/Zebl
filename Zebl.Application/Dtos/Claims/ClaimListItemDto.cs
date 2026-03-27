@@ -15,6 +15,12 @@ namespace Zebl.Application.Dtos.Claims
         
         [Range(0, double.MaxValue, ErrorMessage = "Total charge must be non-negative")]
         public decimal? ClaTotalChargeTRIG { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Insurance balance must be non-negative")]
+        public decimal? ClaTotalInsBalanceTRIG { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Patient balance must be non-negative")]
+        public decimal? ClaTotalPatBalanceTRIG { get; set; }
         
         [Range(0, double.MaxValue, ErrorMessage = "Total amount paid must be non-negative")]
         public decimal? ClaTotalAmtPaidCC { get; set; }
@@ -23,6 +29,10 @@ namespace Zebl.Application.Dtos.Claims
         
         // Important columns
         public string? ClaClassification { get; set; }
+        public DateOnly? ClaDateTotalFrom { get; set; }
+        public int? ClaBillTo { get; set; }
+        public string? PatFullNameCC { get; set; }
+        public string? PrimaryPayerName { get; set; }
         public int ClaPatFID { get; set; }
         public int ClaAttendingPhyFID { get; set; }
         public int ClaBillingPhyFID { get; set; }
@@ -31,6 +41,8 @@ namespace Zebl.Application.Dtos.Claims
         public string? ClaTypeOfBill { get; set; }
         public string? ClaAdmissionType { get; set; }
         public string? ClaPatientStatus { get; set; }
+        public string? ClaCreatedUserName { get; set; }
+        public string? ClaLastUserName { get; set; }
         public string? ClaDiagnosis1 { get; set; }
         public string? ClaDiagnosis2 { get; set; }
         public string? ClaDiagnosis3 { get; set; }

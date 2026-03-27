@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Zebl.Application.Abstractions;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
+using Zebl.Infrastructure.Services;
 
 namespace Zebl.Api.Services;
 
@@ -17,19 +18,22 @@ public class Hl7ImportService
     private readonly Hl7ParserService _parser;
     private readonly ICurrentUserContext _userContext;
     private readonly IClaimAuditService _claimAuditService;
+    private readonly ClaimInitialStatusProvider _claimInitialStatus;
 
     public Hl7ImportService(
         ZeblDbContext db,
         ILogger<Hl7ImportService> logger,
         Hl7ParserService parser,
         ICurrentUserContext userContext,
-        IClaimAuditService claimAuditService)
+        IClaimAuditService claimAuditService,
+        ClaimInitialStatusProvider claimInitialStatus)
     {
         _db = db;
         _logger = logger;
         _parser = parser;
         _userContext = userContext;
         _claimAuditService = claimAuditService;
+        _claimInitialStatus = claimInitialStatus;
     }
 
     /// <summary>
@@ -447,10 +451,12 @@ public class Hl7ImportService
             throw new InvalidOperationException("HL7 Import Error: No attending physician available to assign to claim.");
         }
 
+        var initialClaStatus = await _claimInitialStatus.GetInitialClaStatusStringAsync();
+
         var newClaim = new Claim
         {
             ClaPatFID = patientId,
-            ClaStatus = "Imported", // Default status for imported claims
+            ClaStatus = initialClaStatus,
             ClaSubmissionMethod = "Electronic", // HL7 imports are electronic
             ClaAdmittedDate = admittedDate,
             ClaDischargedDate = dischargedDate,

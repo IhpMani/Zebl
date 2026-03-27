@@ -136,30 +136,31 @@ public partial class ZeblDbContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
 
+            // Three relationships to Service_Line: by SrvID (AdjSrvF), by SrvGUID (AdjSrv), task line (AdjTaskF).
             entity.HasOne(d => d.AdjPayF).WithMany(p => p.Adjustments)
                 .HasForeignKey(d => d.AdjPayFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Adjustment_Payer");
 
             entity.HasOne(d => d.AdjPmtF).WithMany(p => p.Adjustments)
                 .HasForeignKey(d => d.AdjPmtFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Adjustment_Payment");
 
             entity.HasOne(d => d.AdjSrvF).WithMany(p => p.AdjustmentAdjSrvFs)
                 .HasForeignKey(d => d.AdjSrvFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Adjustment_ServiceLine_SrvID");
 
             entity.HasOne(d => d.AdjSrv).WithMany(p => p.AdjustmentAdjSrvs)
                 .HasPrincipalKey(p => p.SrvGUID)
                 .HasForeignKey(d => d.AdjSrvGUID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Adjustment_ServiceLine_SrvGUID");
 
             entity.HasOne(d => d.AdjTaskF).WithMany(p => p.AdjustmentAdjTaskFs)
                 .HasForeignKey(d => d.AdjTaskFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Adjustment_TaskSrv");
         });
 
@@ -475,49 +476,50 @@ public partial class ZeblDbContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.ClaPrimaryClaimFID);
 
+            // Eight FKs to Physician (distinct roles). Each HasOne/HasForeignKey pair removes ambiguity for EF.
             entity.HasOne(d => d.ClaAttendingPhyF).WithMany(p => p.ClaimClaAttendingPhyFs)
                 .HasForeignKey(d => d.ClaAttendingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_AttendingPhy");
 
             entity.HasOne(d => d.ClaBillingPhyF).WithMany(p => p.ClaimClaBillingPhyFs)
                 .HasForeignKey(d => d.ClaBillingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_BillingPhy");
 
             entity.HasOne(d => d.ClaFacilityPhyF).WithMany(p => p.ClaimClaFacilityPhyFs)
                 .HasForeignKey(d => d.ClaFacilityPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_FacilityPhy");
 
             entity.HasOne(d => d.ClaOperatingPhyF).WithMany(p => p.ClaimClaOperatingPhyFs)
                 .HasForeignKey(d => d.ClaOperatingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_OperatingPhy");
 
             entity.HasOne(d => d.ClaOrderingPhyF).WithMany(p => p.ClaimClaOrderingPhyFs)
                 .HasForeignKey(d => d.ClaOrderingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_OrderingPhy");
 
             entity.HasOne(d => d.ClaPatF).WithMany(p => p.Claims)
                 .HasForeignKey(d => d.ClaPatFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_Patient");
 
             entity.HasOne(d => d.ClaReferringPhyF).WithMany(p => p.ClaimClaReferringPhyFs)
                 .HasForeignKey(d => d.ClaReferringPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_ReferringPhy");
 
             entity.HasOne(d => d.ClaRenderingPhyF).WithMany(p => p.ClaimClaRenderingPhyFs)
                 .HasForeignKey(d => d.ClaRenderingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_RenderingPhy");
 
             entity.HasOne(d => d.ClaSupervisingPhyF).WithMany(p => p.ClaimClaSupervisingPhyFs)
                 .HasForeignKey(d => d.ClaSupervisingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Claim_SupervisingPhy");
         });
 
@@ -958,34 +960,35 @@ public partial class ZeblDbContext : DbContext
             // Ignore PatEZClaimPayConsent - column does not exist in database
             entity.Ignore(e => e.PatEZClaimPayConsent);
 
+            // Six FKs to Physician (distinct roles); explicit mapping per FK property.
             entity.HasOne(d => d.PatBillingPhyF).WithMany(p => p.PatientPatBillingPhyFs)
                 .HasForeignKey(d => d.PatBillingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Patient_BillingPhysician");
 
             entity.HasOne(d => d.PatFacilityPhyF).WithMany(p => p.PatientPatFacilityPhyFs)
                 .HasForeignKey(d => d.PatFacilityPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Patient_FacilityPhysician");
 
             entity.HasOne(d => d.PatOrderingPhyF).WithMany(p => p.PatientPatOrderingPhyFs)
                 .HasForeignKey(d => d.PatOrderingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Patient_OrderingPhysician");
 
             entity.HasOne(d => d.PatReferringPhyF).WithMany(p => p.PatientPatReferringPhyFs)
                 .HasForeignKey(d => d.PatReferringPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Patient_ReferringPhysician");
 
             entity.HasOne(d => d.PatRenderingPhyF).WithMany(p => p.PatientPatRenderingPhyFs)
                 .HasForeignKey(d => d.PatRenderingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Patient_RenderingPhysician");
 
             entity.HasOne(d => d.PatSupervisingPhyF).WithMany(p => p.PatientPatSupervisingPhyFs)
                 .HasForeignKey(d => d.PatSupervisingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Patient_SupervisingPhysician");
         });
 
@@ -1182,12 +1185,12 @@ public partial class ZeblDbContext : DbContext
 
             entity.HasOne(d => d.PmtBFEPF).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.PmtBFEPFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Payment_BFEPhysician");
 
             entity.HasOne(d => d.PmtPatF).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.PmtPatFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Payment_Patient");
 
             entity.HasOne(d => d.PmtPayF).WithMany(p => p.Payments)
@@ -1367,11 +1370,12 @@ public partial class ZeblDbContext : DbContext
 
             entity.HasOne(d => d.ProcBillingPhyF).WithMany(p => p.Procedure_Codes)
                 .HasForeignKey(d => d.ProcBillingPhyFID)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_ProcedureCode_BillingPhysician");
 
             entity.HasOne(d => d.ProcPayF).WithMany(p => p.Procedure_Codes)
                 .HasForeignKey(d => d.ProcPayFID)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ProcedureCode_Payer");
         });
@@ -1512,6 +1516,7 @@ public partial class ZeblDbContext : DbContext
 
             entity.HasOne(d => d.SrvClaF).WithMany(p => p.Service_Lines)
                 .HasForeignKey(d => d.SrvClaFID)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_ServiceLine_Claim");
 
             entity.HasOne(d => d.SrvResponsiblePartyNavigation).WithMany(p => p.Service_Lines)

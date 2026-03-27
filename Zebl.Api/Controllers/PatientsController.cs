@@ -356,8 +356,6 @@ namespace Zebl.Api.Controllers
                     .Where(pi => pi.PatInsSequence >= 1 && pi.PatInsSequence <= 5)
                     .OrderBy(pi => pi.PatInsSequence)
                     .ToList();
-                var primaryIns = insuredList.FirstOrDefault(pi => pi.PatInsSequence == 1);
-                var secondaryIns = insuredList.FirstOrDefault(pi => pi.PatInsSequence == 2);
 
                 InsuranceInfoDto? ToInsDto(Patient_Insured? pi)
                 {
@@ -390,6 +388,83 @@ namespace Zebl.Api.Controllers
                         PatInsEligStatus = pi.PatInsEligStatus
                     };
                 }
+
+                // Fallback: if Patient_Insured links are missing, derive insurance from Claim_Insured
+                // so Patient screen preloads primary/secondary insurance without requiring "Add Ins".
+                var insuranceDtos = insuredList
+                    .Select(ToInsDto)
+                    .Where(x => x != null)
+                    .Cast<InsuranceInfoDto>()
+                    .ToList();
+
+                if (!insuranceDtos.Any())
+                {
+                    var claimInsRaw = await _db.Claim_Insureds.AsNoTracking()
+                        .Where(ci => ci.ClaInsPatFID == id && ci.ClaInsSequence.HasValue && ci.ClaInsSequence >= 1 && ci.ClaInsSequence <= 5)
+                        .Select(ci => new
+                        {
+                            ci.ClaInsGUID,
+                            ci.ClaInsSequence,
+                            ci.ClaInsDateTimeModified,
+                            ci.ClaInsDateTimeCreated,
+                            ci.ClaInsPayFID,
+                            PayerName = ci.ClaInsPayF != null ? ci.ClaInsPayF.PayName : null,
+                            ci.ClaInsGroupNumber,
+                            ci.ClaInsIDNumber,
+                            ci.ClaInsFirstName,
+                            ci.ClaInsLastName,
+                            ci.ClaInsMI,
+                            ci.ClaInsPlanName,
+                            ci.ClaInsRelationToInsured,
+                            ci.ClaInsBirthDate,
+                            ci.ClaInsAddress,
+                            ci.ClaInsCity,
+                            ci.ClaInsState,
+                            ci.ClaInsZip,
+                            ci.ClaInsPhone,
+                            ci.ClaInsEmployer,
+                            ci.ClaInsAcceptAssignment,
+                            ci.ClaInsClaimFilingIndicator,
+                            ci.ClaInsSSN
+                        })
+                        .ToListAsync();
+
+                    insuranceDtos = claimInsRaw
+                        .OrderByDescending(ci => ci.ClaInsDateTimeModified)
+                        .ThenByDescending(ci => ci.ClaInsDateTimeCreated)
+                        .GroupBy(ci => ci.ClaInsSequence!.Value)
+                        .Select(g => g.First())
+                        .OrderBy(ci => ci.ClaInsSequence!.Value)
+                        .Select(ci => new InsuranceInfoDto
+                        {
+                            PatInsGUID = ci.ClaInsGUID,
+                            PatInsSequence = ci.ClaInsSequence!.Value,
+                            PayID = ci.ClaInsPayFID,
+                            PayerName = ci.PayerName,
+                            InsGroupNumber = ci.ClaInsGroupNumber,
+                            InsIDNumber = ci.ClaInsIDNumber,
+                            InsFirstName = ci.ClaInsFirstName,
+                            InsLastName = ci.ClaInsLastName,
+                            InsMI = ci.ClaInsMI,
+                            InsPlanName = ci.ClaInsPlanName,
+                            PatInsRelationToInsured = ci.ClaInsRelationToInsured,
+                            InsBirthDate = ci.ClaInsBirthDate.HasValue ? ci.ClaInsBirthDate.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                            InsAddress = ci.ClaInsAddress,
+                            InsCity = ci.ClaInsCity,
+                            InsState = ci.ClaInsState,
+                            InsZip = ci.ClaInsZip,
+                            InsPhone = ci.ClaInsPhone,
+                            InsEmployer = ci.ClaInsEmployer,
+                            InsAcceptAssignment = ci.ClaInsAcceptAssignment ?? 0,
+                            InsClaimFilingIndicator = ci.ClaInsClaimFilingIndicator,
+                            InsSSN = ci.ClaInsSSN,
+                            PatInsEligStatus = null
+                        })
+                        .ToList();
+                }
+
+                var primaryInsurance = insuranceDtos.FirstOrDefault(pi => pi.PatInsSequence == 1);
+                var secondaryInsurance = insuranceDtos.FirstOrDefault(pi => pi.PatInsSequence == 2);
 
                 var patientNotes = new List<PatientNoteDto>();
                 try
@@ -495,9 +570,9 @@ namespace Zebl.Api.Controllers
                     PatTotalBalanceCC = patient.PatTotalBalanceCC,
                     PatDateTimeCreated = patient.PatDateTimeCreated,
                     PatDateTimeModified = patient.PatDateTimeModified,
-                    PrimaryInsurance = ToInsDto(primaryIns),
-                    SecondaryInsurance = ToInsDto(secondaryIns),
-                    InsuranceList = insuredList.Select(ToInsDto).Where(x => x != null).Cast<InsuranceInfoDto>().ToList(),
+                    PrimaryInsurance = primaryInsurance,
+                    SecondaryInsurance = secondaryInsurance,
+                    InsuranceList = insuranceDtos,
                     RenderingPhysician = physDict.GetValueOrDefault(patient.PatRenderingPhyFID),
                     BillingPhysician = physDict.GetValueOrDefault(patient.PatBillingPhyFID),
                     FacilityPhysician = physDict.GetValueOrDefault(patient.PatFacilityPhyFID),
@@ -718,6 +793,48 @@ namespace Zebl.Api.Controllers
                             if (ins.InsSSN != null) { existing.PatInsIns.InsSSN = ins.InsSSN.Length > 15 ? ins.InsSSN[..15] : ins.InsSSN; modified = true; }
                         }
                     }
+                    else if (ins.PayID.HasValue)
+                    {
+                        // Defensive path: UI may send a PatInsGUID that does not exist yet.
+                        // In that case, create the missing Patient_Insured link (and Insured payload) instead of skipping.
+                        var newInsured = new Insured
+                        {
+                            InsGUID = Guid.NewGuid(),
+                            InsPayID = ins.PayID.Value,
+                            InsGroupNumber = ins.GroupNumber != null && ins.GroupNumber.Length > 50 ? ins.GroupNumber[..50] : ins.GroupNumber,
+                            InsIDNumber = ins.MemberID != null && ins.MemberID.Length > 50 ? ins.MemberID[..50] : ins.MemberID,
+                            InsFirstName = ins.InsFirstName != null && ins.InsFirstName.Length > 50 ? ins.InsFirstName[..50] : ins.InsFirstName,
+                            InsLastName = ins.InsLastName != null && ins.InsLastName.Length > 50 ? ins.InsLastName[..50] : ins.InsLastName,
+                            InsMI = ins.InsMI != null && ins.InsMI.Length > 5 ? ins.InsMI[..5] : ins.InsMI,
+                            InsPlanName = ins.PlanName != null && ins.PlanName.Length > 50 ? ins.PlanName[..50] : ins.PlanName,
+                            InsCityStateZipCC = "",
+                            InsAcceptAssignment = ins.InsAcceptAssignment ?? (short)0,
+                            InsBirthDate = ins.InsBirthDate.HasValue ? DateOnly.FromDateTime(ins.InsBirthDate.Value) : null,
+                            InsAddress = ins.InsAddress != null && ins.InsAddress.Length > 50 ? ins.InsAddress[..50] : ins.InsAddress,
+                            InsCity = ins.InsCity != null && ins.InsCity.Length > 50 ? ins.InsCity[..50] : ins.InsCity,
+                            InsState = ins.InsState != null && ins.InsState.Length > 10 ? ins.InsState[..10] : ins.InsState,
+                            InsZip = ins.InsZip != null && ins.InsZip.Length > 20 ? ins.InsZip[..20] : ins.InsZip,
+                            InsPhone = ins.InsPhone != null && ins.InsPhone.Length > 25 ? ins.InsPhone[..25] : ins.InsPhone,
+                            InsEmployer = ins.InsEmployer != null && ins.InsEmployer.Length > 50 ? ins.InsEmployer[..50] : ins.InsEmployer,
+                            InsClaimFilingIndicator = ins.InsClaimFilingIndicator != null && ins.InsClaimFilingIndicator.Length > 5 ? ins.InsClaimFilingIndicator[..5] : ins.InsClaimFilingIndicator,
+                            InsSSN = ins.InsSSN != null && ins.InsSSN.Length > 15 ? ins.InsSSN[..15] : ins.InsSSN
+                        };
+                        _db.Insureds.Add(newInsured);
+                        await _db.SaveChangesAsync();
+
+                        var seq = ins.Sequence < 1 ? 1 : ins.Sequence > 5 ? 5 : ins.Sequence;
+                        var newPatIns = new Patient_Insured
+                        {
+                            PatInsGUID = ins.PatInsGUID.Value,
+                            PatInsPatFID = patient.PatID,
+                            PatInsInsGUID = newInsured.InsGUID,
+                            PatInsSequence = seq,
+                            PatInsRelationToInsured = ins.RelationToInsured,
+                            PatInsSequenceDescriptionCC = seq == 1 ? "Primary" : seq == 2 ? "Secondary" : $"Insurance {seq}"
+                        };
+                        _db.Patient_Insureds.Add(newPatIns);
+                        modified = true;
+                    }
                 }
                 else if (ins.PayID.HasValue)
                 {
@@ -770,9 +887,13 @@ namespace Zebl.Api.Controllers
                         PatInsGUID = Guid.NewGuid(),
                         PatInsPatFID = patient.PatID,
                         PatInsInsGUID = newInsured.InsGUID,
-                        PatInsSequence = 1,
+                        PatInsSequence = ins.Sequence < 1 ? 1 : ins.Sequence > 5 ? 5 : ins.Sequence,
                         PatInsRelationToInsured = ins.RelationToInsured,
-                        PatInsSequenceDescriptionCC = "Primary"
+                        PatInsSequenceDescriptionCC = (ins.Sequence < 1 ? 1 : ins.Sequence > 5 ? 5 : ins.Sequence) == 1
+                            ? "Primary"
+                            : (ins.Sequence < 1 ? 1 : ins.Sequence > 5 ? 5 : ins.Sequence) == 2
+                                ? "Secondary"
+                                : $"Insurance {(ins.Sequence < 1 ? 1 : ins.Sequence > 5 ? 5 : ins.Sequence)}"
                     };
                     _db.Patient_Insureds.Add(newPatIns);
                     modified = true;

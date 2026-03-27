@@ -12,6 +12,8 @@ namespace Zebl.Api.Controllers;
 [Authorize(Policy = "RequireAuth")]
 public class PayersController : ControllerBase
 {
+    private const int MaxPageSize = 10000;
+
     private readonly PayerService _payerService;
     private readonly ILogger<PayersController> _logger;
 
@@ -28,12 +30,12 @@ public class PayersController : ControllerBase
         [FromQuery] bool inactive = false,
         [FromQuery] string? classificationList = null)
     {
-        if (page < 1 || pageSize < 1 || pageSize > 5000)
+        if (page < 1 || pageSize < 1 || pageSize > MaxPageSize)
         {
             return BadRequest(new ErrorResponseDto
             {
                 ErrorCode = "INVALID_ARGUMENT",
-                Message = "Page must be at least 1 and page size must be between 1 and 5000"
+                Message = $"Page must be at least 1 and page size must be between 1 and {MaxPageSize}"
             });
         }
 

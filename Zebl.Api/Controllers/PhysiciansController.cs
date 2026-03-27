@@ -1,12 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CsvHelper;
+using CsvHelper.Configuration;
+using System.Globalization;
+using System.Dynamic;
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using Zebl.Application.Dtos.Common;
 using Zebl.Application.Dtos.Physicians;
 using Zebl.Infrastructure.Persistence.Context;
+using Zebl.Infrastructure.Persistence.Entities;
 
 namespace Zebl.Api.Controllers
 {
@@ -463,6 +468,111 @@ namespace Zebl.Api.Controllers
             return Ok(new ApiResponse<PhysicianDetailDto>
             {
                 Data = result
+            });
+        }
+
+        [HttpPost("import")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> ImportPhysicians(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("CSV file required");
+
+            using var stream = file.OpenReadStream();
+            using var reader = new StreamReader(stream);
+            var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var records = csv.GetRecords<dynamic>().ToList();
+
+            int inserted = 0;
+            int skipped = 0;
+
+            foreach (var row in records)
+            {
+                var dict = row as IDictionary<string, object>;
+                if (dict == null)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                string displayName = dict.ContainsKey("Display Name") ? dict["Display Name"]?.ToString() : "";
+                string firstName = dict.ContainsKey("First Name") ? dict["First Name"]?.ToString() : "";
+                string lastName = dict.ContainsKey("Last Name") ? dict["Last Name"]?.ToString() : "";
+                string middleName = dict.ContainsKey("Middle Name") ? dict["Middle Name"]?.ToString() : "";
+                string npi = dict.ContainsKey("NPI") ? dict["NPI"]?.ToString() : "";
+                string type = dict.ContainsKey("Type") ? dict["Type"]?.ToString() : "Rendering";
+                string taxonomy = dict.ContainsKey("Taxonomy Code") ? dict["Taxonomy Code"]?.ToString() : "";
+                string phone = dict.ContainsKey("Phone #") ? dict["Phone #"]?.ToString() : "";
+                string addr1 = dict.ContainsKey("Address 1") ? dict["Address 1"]?.ToString() : "";
+                string addr2 = dict.ContainsKey("Address 2") ? dict["Address 2"]?.ToString() : "";
+                string city = dict.ContainsKey("City") ? dict["City"]?.ToString() : "";
+                string state = dict.ContainsKey("State") ? dict["State"]?.ToString() : "";
+                string zip = dict.ContainsKey("Zip") ? dict["Zip"]?.ToString() : "";
+                string email = dict.ContainsKey("Email") ? dict["Email"]?.ToString() : "";
+                string fax = dict.ContainsKey("Fax") ? dict["Fax"]?.ToString() : "";
+
+                if (string.IsNullOrWhiteSpace(npi))
+                {
+                    skipped++;
+                    continue;
+                }
+
+                var physician = new Physician
+                {
+                    PhyName = displayName,
+                    PhyFirstName = firstName,
+                    PhyLastName = lastName,
+                    PhyMiddleName = middleName,
+                    PhyNPI = npi,
+                    PhyType = type,
+                    PhySpecialtyCode = taxonomy,
+                    PhyTelephone = phone,
+                    PhyAddress1 = addr1,
+                    PhyAddress2 = addr2,
+                    PhyCity = city,
+                    PhyState = state,
+                    PhyZip = zip,
+                    PhyEMail = email,
+                    PhyFax = fax,
+                    PhyInactive = false,
+                    PhyDateTimeCreated = DateTime.UtcNow
+                };
+
+                var existing = await _db.Physicians
+                    .FirstOrDefaultAsync(p => p.PhyNPI == physician.PhyNPI);
+
+                if (existing != null)
+                {
+                    existing.PhyName = physician.PhyName;
+                    existing.PhyFirstName = physician.PhyFirstName;
+                    existing.PhyLastName = physician.PhyLastName;
+                    existing.PhyMiddleName = physician.PhyMiddleName;
+                    existing.PhyType = physician.PhyType;
+                    existing.PhySpecialtyCode = physician.PhySpecialtyCode;
+                    existing.PhyTelephone = physician.PhyTelephone;
+                    existing.PhyAddress1 = physician.PhyAddress1;
+                    existing.PhyAddress2 = physician.PhyAddress2;
+                    existing.PhyCity = physician.PhyCity;
+                    existing.PhyState = physician.PhyState;
+                    existing.PhyZip = physician.PhyZip;
+                    existing.PhyEMail = physician.PhyEMail;
+                    existing.PhyFax = physician.PhyFax;
+                    existing.PhyInactive = false;
+                    existing.PhyDateTimeModified = DateTime.UtcNow;
+                }
+                else
+                {
+                    _db.Physicians.Add(physician);
+                    inserted++;
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                inserted,
+                skipped
             });
         }
 

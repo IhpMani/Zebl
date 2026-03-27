@@ -11,10 +11,6 @@ public class SecondaryTriggerService : ISecondaryTriggerService
     private readonly IClaimRepository _claimRepo;
     private readonly ISecondaryForwardableRulesRepository _rulesRepo;
 
-    private const string StatusForwardedToSecondary = "ForwardedToSecondary";
-    private const string StatusClosed = "Closed";
-    private const string StatusReadyToSubmit = "ReadyToSubmit";
-
     public SecondaryTriggerService(
         IClaimRepository claimRepo,
         ISecondaryForwardableRulesRepository rulesRepo)
@@ -34,10 +30,10 @@ public class SecondaryTriggerService : ISecondaryTriggerService
             return result;
         }
 
-        // PART 8 — Safety: do not create secondary if claim already closed
-        if (string.Equals(claim.Status, StatusClosed, StringComparison.OrdinalIgnoreCase))
+        // PART 8 — Safety: do not create secondary if primary already forwarded to secondary workflow
+        if (string.Equals(claim.Status, ClaimStatusCatalog.ToStorage(ClaimStatus.Other), StringComparison.OrdinalIgnoreCase))
         {
-            result.Reason = "ClaimAlreadyClosed";
+            result.Reason = "ClaimAlreadyForwarded";
             return result;
         }
 
@@ -71,7 +67,7 @@ public class SecondaryTriggerService : ISecondaryTriggerService
         if (forwardAmount <= 0.001m)
         {
             result.Reason = "NoForwardableBalance";
-            await _claimRepo.UpdateClaimStatusAsync(claimId, StatusClosed);
+            await _claimRepo.UpdateClaimStatusAsync(claimId, ClaimStatusCatalog.ToStorage(ClaimStatus.Submitted));
             return result;
         }
 
@@ -91,9 +87,9 @@ public class SecondaryTriggerService : ISecondaryTriggerService
         try
         {
             var newClaimId = await _claimRepo.CreateSecondaryClaimAsync(claimId, claim.SecondaryPayerId.Value, forwardAmount, claim);
-            await _claimRepo.UpdateClaimStatusAsync(claimId, StatusForwardedToSecondary);
+            await _claimRepo.UpdateClaimStatusAsync(claimId, ClaimStatusCatalog.ToStorage(ClaimStatus.Other));
             result.Triggered = true;
-            result.Reason = StatusForwardedToSecondary;
+            result.Reason = "ForwardedToSecondary";
             result.SecondaryClaimId = newClaimId;
             return result;
         }

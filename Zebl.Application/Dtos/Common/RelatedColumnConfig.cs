@@ -22,6 +22,8 @@ namespace Zebl.Application.Dtos.Common
                     new RelatedColumnDefinition { Table = "Patient", Key = "patCity", Label = "Patient City", Path = "ClaPatF.PatCity" },
                     new RelatedColumnDefinition { Table = "Patient", Key = "patState", Label = "Patient State", Path = "ClaPatF.PatState" },
                     new RelatedColumnDefinition { Table = "Patient", Key = "patBirthDate", Label = "Patient Birth Date", Path = "ClaPatF.PatBirthDate" },
+                    // Payer columns
+                    new RelatedColumnDefinition { Table = "Payer", Key = "primaryPayerName", Label = "Primary Payer", Path = "ClaPatF.Patient_Insureds(PatInsSequence=1).PatInsIns.InsPay.PayName" },
                     // Rendering Physician columns
                     new RelatedColumnDefinition { Table = "Physician", Key = "renderingPhyName", Label = "Rendering Physician", Path = "ClaRenderingPhyF.PhyName" },
                     new RelatedColumnDefinition { Table = "Physician", Key = "renderingPhyNPI", Label = "Rendering Physician NPI", Path = "ClaRenderingPhyF.PhyNPI" },

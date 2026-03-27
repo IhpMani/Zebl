@@ -1,9 +1,11 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Zebl.Application.Abstractions;
+using Zebl.Application.Domain;
 using Zebl.Infrastructure.Services;
 
 namespace Zebl.Api.Controllers;
@@ -60,6 +62,8 @@ public class ProgramSettingsController : ControllerBase
         }
 
         var raw = await _service.GetSectionAsync(section, cancellationToken);
+        if (string.Equals(section, "claim", StringComparison.OrdinalIgnoreCase))
+            return Ok(NormalizeClaimSectionSettings(raw));
         return Ok(raw);
     }
 
@@ -110,9 +114,32 @@ public class ProgramSettingsController : ControllerBase
             return NoContent();
         }
 
+        if (string.Equals(section, "claim", StringComparison.OrdinalIgnoreCase))
+        {
+            settings = NormalizeClaimSectionSettings(settings);
+        }
+
         await _service.SaveSectionAsync(section, settings, updatedBy, cancellationToken);
 
         return NoContent();
+    }
+
+    private static JsonElement NormalizeClaimSectionSettings(JsonElement settings)
+    {
+        if (settings.ValueKind != JsonValueKind.Object)
+            return settings;
+
+        var node = JsonNode.Parse(settings.GetRawText());
+        if (node is not JsonObject obj)
+            return settings;
+
+        var raw = obj["initialClaimStatus"]?.GetValue<string>()?.Trim();
+        if (!ClaimStatusCatalog.TryParse(raw, out var st))
+            st = ClaimStatus.OnHold;
+        obj["initialClaimStatus"] = ClaimStatusCatalog.ToStorage(st);
+
+        using var doc = JsonDocument.Parse(obj.ToJsonString());
+        return doc.RootElement.Clone();
     }
 }
 

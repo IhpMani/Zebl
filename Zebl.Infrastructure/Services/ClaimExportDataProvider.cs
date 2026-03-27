@@ -84,6 +84,29 @@ public class ClaimExportDataProvider : IClaimExportDataProvider
             RenderingProvider = claim.ClaRenderingPhyF == null ? null : MapPhysician(claim.ClaRenderingPhyF)
         };
 
+        result.ServiceLines = await _context.Service_Lines
+            .AsNoTracking()
+            .Where(s => s.SrvClaFID == claimId)
+            .OrderBy(s => s.SrvID)
+            .Select(s => new ServiceLine837ExportDto
+            {
+                SrvID = s.SrvID,
+                SrvFromDate = s.SrvFromDate,
+                SrvToDate = s.SrvToDate,
+                SrvProcedureCode = s.SrvProcedureCode,
+                SrvModifier1 = s.SrvModifier1,
+                SrvModifier2 = s.SrvModifier2,
+                SrvModifier3 = s.SrvModifier3,
+                SrvModifier4 = s.SrvModifier4,
+                SrvCharges = s.SrvCharges,
+                SrvUnits = s.SrvUnits,
+                SrvDesc = s.SrvDesc,
+                SrvNationalDrugCode = s.SrvNationalDrugCode,
+                SrvDrugUnitCount = s.SrvDrugUnitCount,
+                SrvDrugUnitMeasurement = s.SrvDrugUnitMeasurement
+            })
+            .ToListAsync();
+
         return result;
     }
 

@@ -42,9 +42,12 @@ builder.Services.AddDbContext<ZeblDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 
-    options.EnableDetailedErrors();
-    options.EnableSensitiveDataLogging();
-    options.LogTo(Console.WriteLine, LogLevel.Information);
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+        options.LogTo(Console.WriteLine, LogLevel.Information);
+    }
 });
 #endregion
 
@@ -153,6 +156,7 @@ builder.Services.AddScoped<Zebl.Api.Services.Hl7ImportService>();
 builder.Services.AddScoped<Zebl.Application.Abstractions.IClaimAuditService, Zebl.Infrastructure.Services.ClaimAuditService>();
 builder.Services.AddScoped<Zebl.Api.Services.EntityMetadataService>();
 builder.Services.AddScoped<Zebl.Infrastructure.Services.ProgramSettingsService>();
+builder.Services.AddScoped<Zebl.Infrastructure.Services.ClaimInitialStatusProvider>();
 
 // Patient Eligibility (clearinghouse credentials only; password encrypted at rest)
 builder.Services.AddDataProtection();
@@ -256,9 +260,10 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-#region Apply pending migrations and ensure Claim columns exist
-using (var scope = app.Services.CreateScope())
+#region Database startup — migrations only in development (production: dotnet ef database update)
+if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ZeblDbContext>();
     try
     {
@@ -266,148 +271,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Log.Warning(ex, "Database migration failed (app will continue). Ensure DB is reachable and migrations are valid.");
-    }
-
-    // Ensure Claim table has columns that may be missing (fixes PUT /api/claims/{id} 500)
-    try
-    {
-        db.Database.ExecuteSqlRaw(@"
-IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Claim') AND name = 'ClaAdditionalData')
-    ALTER TABLE [Claim] ADD [ClaAdditionalData] xml NULL;
-");
-        db.Database.ExecuteSqlRaw(@"
-IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Claim') AND name = 'ClaClaimType')
-    ALTER TABLE [Claim] ADD [ClaClaimType] nvarchar(20) NULL;
-");
-        db.Database.ExecuteSqlRaw(@"
-IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Claim') AND name = 'ClaPrimaryClaimFID')
-    ALTER TABLE [Claim] ADD [ClaPrimaryClaimFID] int NULL;
-");
-    }
-    catch (Exception ex)
-    {
-        Log.Warning(ex, "Ensure Claim columns failed (non-fatal).");
-    }
-
-    // Ensure Code Library tables exist even if EF migrations are out-of-sync.
-    // This prevents 500s like "Invalid object name 'Reason_Code'" for /api/code-library/* endpoints.
-    try
-    {
-        db.Database.ExecuteSqlRaw(@"
-IF OBJECT_ID(N'[Diagnosis_Code]', N'U') IS NULL
-BEGIN
-    CREATE TABLE [Diagnosis_Code] (
-        [Id] int IDENTITY(1,1) NOT NULL,
-        [Code] varchar(20) NOT NULL,
-        [Description] varchar(255) NULL,
-        [CodeType] varchar(10) NOT NULL,
-        [IsActive] bit NOT NULL,
-        [CreatedAt] datetime2 NOT NULL,
-        [UpdatedAt] datetime2 NOT NULL,
-        CONSTRAINT [PK_Diagnosis_Code_Id] PRIMARY KEY ([Id])
-    );
-    CREATE INDEX [IX_Diagnosis_Code_Code] ON [Diagnosis_Code] ([Code]);
-END
-");
-
-        db.Database.ExecuteSqlRaw(@"
-IF OBJECT_ID(N'[Modifier_Code]', N'U') IS NULL
-BEGIN
-    CREATE TABLE [Modifier_Code] (
-        [Id] int IDENTITY(1,1) NOT NULL,
-        [Code] varchar(10) NOT NULL,
-        [Description] varchar(255) NULL,
-        [IsActive] bit NOT NULL,
-        [CreatedAt] datetime2 NOT NULL,
-        [UpdatedAt] datetime2 NOT NULL,
-        CONSTRAINT [PK_Modifier_Code_Id] PRIMARY KEY ([Id])
-    );
-    CREATE INDEX [IX_Modifier_Code_Code] ON [Modifier_Code] ([Code]);
-END
-");
-
-        db.Database.ExecuteSqlRaw(@"
-IF OBJECT_ID(N'[Place_of_Service]', N'U') IS NULL
-BEGIN
-    CREATE TABLE [Place_of_Service] (
-        [Id] int IDENTITY(1,1) NOT NULL,
-        [Code] varchar(10) NOT NULL,
-        [Description] varchar(255) NULL,
-        [IsActive] bit NOT NULL,
-        [CreatedAt] datetime2 NOT NULL,
-        [UpdatedAt] datetime2 NOT NULL,
-        CONSTRAINT [PK_Place_of_Service_Id] PRIMARY KEY ([Id])
-    );
-    CREATE INDEX [IX_Place_of_Service_Code] ON [Place_of_Service] ([Code]);
-END
-");
-
-        db.Database.ExecuteSqlRaw(@"
-IF OBJECT_ID(N'[Reason_Code]', N'U') IS NULL
-BEGIN
-    CREATE TABLE [Reason_Code] (
-        [Id] int IDENTITY(1,1) NOT NULL,
-        [Code] varchar(10) NOT NULL,
-        [Description] varchar(255) NULL,
-        [IsActive] bit NOT NULL,
-        [CreatedAt] datetime2 NOT NULL,
-        [UpdatedAt] datetime2 NOT NULL,
-        CONSTRAINT [PK_Reason_Code_Id] PRIMARY KEY ([Id])
-    );
-    CREATE INDEX [IX_Reason_Code_Code] ON [Reason_Code] ([Code]);
-END
-");
-
-        db.Database.ExecuteSqlRaw(@"
-IF OBJECT_ID(N'[Remark_Code]', N'U') IS NULL
-BEGIN
-    CREATE TABLE [Remark_Code] (
-        [Id] int IDENTITY(1,1) NOT NULL,
-        [Code] varchar(20) NOT NULL,
-        [Description] varchar(255) NULL,
-        [IsActive] bit NOT NULL,
-        [CreatedAt] datetime2 NOT NULL,
-        [UpdatedAt] datetime2 NOT NULL,
-        CONSTRAINT [PK_Remark_Code_Id] PRIMARY KEY ([Id])
-    );
-    CREATE INDEX [IX_Remark_Code_Code] ON [Remark_Code] ([Code]);
-END
-");
-    }
-    catch (Exception ex)
-    {
-        Log.Warning(ex, "Ensure Code Library tables failed (non-fatal).");
-    }
-
-    // Ensure City / State / ZIP library table exists even if EF migrations are out-of-sync.
-    // This prevents runtime 500s for the CityStateZip library endpoints.
-    try
-    {
-        db.Database.ExecuteSqlRaw(@"
-IF OBJECT_ID(N'[CityStateZipLibrary]', N'U') IS NULL
-BEGIN
-    CREATE TABLE [CityStateZipLibrary] (
-        [Id] int IDENTITY(1,1) NOT NULL,
-        [City] nvarchar(100) NOT NULL,
-        [State] nvarchar(10) NOT NULL,
-        [Zip] nvarchar(15) NOT NULL,
-        [IsActive] bit NOT NULL CONSTRAINT [DF_CityStateZipLibrary_IsActive] DEFAULT ((1)),
-        [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_CityStateZipLibrary_CreatedAt] DEFAULT (sysutcdatetime()),
-        [UpdatedAt] datetime2 NOT NULL CONSTRAINT [DF_CityStateZipLibrary_UpdatedAt] DEFAULT (sysutcdatetime()),
-        CONSTRAINT [PK_CityStateZipLibrary_Id] PRIMARY KEY ([Id])
-    );
-END
-");
-
-        db.Database.ExecuteSqlRaw(@"
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_CityStateZip_State' AND object_id = OBJECT_ID('CityStateZipLibrary'))
-    CREATE INDEX [IX_CityStateZip_State] ON [CityStateZipLibrary] ([State]);
-");
-    }
-    catch (Exception ex)
-    {
-        Log.Warning(ex, "Ensure CityStateZipLibrary table failed (non-fatal).");
+        Log.Warning(ex, "Development migration failed. Apply migrations manually if needed.");
     }
 }
 #endregion

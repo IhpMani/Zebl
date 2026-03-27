@@ -68,7 +68,7 @@ public partial class Procedure_Code : IProcedureCode
 
     public string? ProcNDCCode { get; set; }
 
-    public int ProcPayFID { get; set; }
+    public int? ProcPayFID { get; set; }
 
     public string? ProcProductCode { get; set; }
 

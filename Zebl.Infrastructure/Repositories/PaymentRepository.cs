@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using Zebl.Application.Dtos.Payments;
 using Zebl.Application.Repositories;
 using Zebl.Infrastructure.Persistence.Context;
@@ -15,15 +16,16 @@ public class PaymentRepository : IPaymentRepository
         _context = context;
     }
 
-    public async Task<int> AddAsync(int payId, int patientId, int billingPhysicianId, decimal amount, DateOnly paymentDate, string? ref835 = null)
+    public async Task<int> AddAsync(int payId, int patientId, int? billingPhysicianId, decimal amount, DateOnly paymentDate, string? ref835 = null)
     {
+        var validPhysicianId = await ValidateBillingPhysicianIdAsync(billingPhysicianId);
         var now = DateTime.UtcNow;
         var payment = new Payment
         {
             PmtAmount = amount,
             PmtPayFID = payId,
             PmtPatFID = patientId,
-            PmtBFEPFID = billingPhysicianId,
+            PmtBFEPFID = validPhysicianId ?? throw new ValidationException("Invalid billing physician."),
             PmtDate = paymentDate,
             Pmt835Ref = ref835,
             PmtDateTimeCreated = now,
@@ -36,15 +38,16 @@ public class PaymentRepository : IPaymentRepository
         return payment.PmtID;
     }
 
-    public async Task<int> CreatePaymentAsync(int? payerId, int patientId, int billingPhysicianId, decimal amount, DateOnly date, string? method, string? reference1, string? reference2, string? note, string? ref835 = null)
+    public async Task<int> CreatePaymentAsync(int? payerId, int patientId, int? billingPhysicianId, decimal amount, DateOnly date, string? method, string? reference1, string? reference2, string? note, string? ref835 = null)
     {
+        var validPhysicianId = await ValidateBillingPhysicianIdAsync(billingPhysicianId);
         var now = DateTime.UtcNow;
         var payment = new Payment
         {
             PmtAmount = amount,
             PmtPayFID = payerId,
             PmtPatFID = patientId,
-            PmtBFEPFID = billingPhysicianId,
+            PmtBFEPFID = validPhysicianId ?? throw new ValidationException("Invalid billing physician."),
             PmtDate = date,
             PmtMethod = method,
             PmtOtherReference1 = reference1,
@@ -59,6 +62,21 @@ public class PaymentRepository : IPaymentRepository
         _context.Payments.Add(payment);
         await _context.SaveChangesAsync();
         return payment.PmtID;
+    }
+
+    private async Task<int?> ValidateBillingPhysicianIdAsync(int? billingPhysicianId)
+    {
+        var physicianId = billingPhysicianId == 0 ? null : billingPhysicianId;
+        if (!physicianId.HasValue)
+            return null;
+
+        var exists = await _context.Physicians
+            .AsNoTracking()
+            .AnyAsync(p => p.PhyID == physicianId.Value);
+        if (!exists)
+            throw new ValidationException("Invalid billing physician.");
+
+        return physicianId;
     }
 
     public async Task<(int? PayerId, int PatientId, decimal Amount, decimal Disbursed)?> GetByIdAsync(int paymentId)

@@ -10,12 +10,12 @@ public interface IPaymentRepository
     /// <summary>
     /// Creates a payment record (e.g. from 835 ERA). Returns the new PmtID.
     /// </summary>
-    Task<int> AddAsync(int payId, int patientId, int billingPhysicianId, decimal amount, DateOnly paymentDate, string? ref835 = null);
+    Task<int> AddAsync(int payId, int patientId, int? billingPhysicianId, decimal amount, DateOnly paymentDate, string? ref835 = null);
 
     /// <summary>
     /// Create payment with full fields (payment entry). Returns PmtID. ref835 stored in Pmt835Ref when provided.
     /// </summary>
-    Task<int> CreatePaymentAsync(int? payerId, int patientId, int billingPhysicianId, decimal amount, DateOnly date, string? method, string? reference1, string? reference2, string? note, string? ref835);
+    Task<int> CreatePaymentAsync(int? payerId, int patientId, int? billingPhysicianId, decimal amount, DateOnly date, string? method, string? reference1, string? reference2, string? note, string? ref835);
 
     Task<(int? PayerId, int PatientId, decimal Amount, decimal Disbursed)?> GetByIdAsync(int paymentId);
     Task<bool> ExistsDuplicateAsync(decimal amount, string? reference1);

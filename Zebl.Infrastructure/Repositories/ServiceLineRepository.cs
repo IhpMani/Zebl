@@ -109,6 +109,8 @@ public class ServiceLineRepository : IServiceLineRepository
                 x.s.SrvResponsibleParty,
                 x.s.SrvTotalInsAmtPaidTRIG,
                 x.s.SrvTotalPatAmtPaidTRIG,
+                x.s.SrvTotalAmtAppliedCC,
+                x.s.SrvTotalBalanceCC,
                 x.s.SrvTotalCOAdjTRIG,
                 x.s.SrvTotalCRAdjTRIG,
                 x.s.SrvTotalOAAdjTRIG,
@@ -118,13 +120,13 @@ public class ServiceLineRepository : IServiceLineRepository
             })
             .ToListAsync();
 
-        // EZClaim-style: load ONLY service lines with remaining balance
+        // EZClaim-style: load ONLY service lines with remaining balance (prefer persisted SrvTotalBalanceCC).
         decimal TotalAdj(decimal co, decimal cr, decimal oa, decimal pi, decimal pr) => co + cr + oa + pi + pr;
         list = list.Where(x =>
         {
-            var applied = isPayerSource ? x.SrvTotalInsAmtPaidTRIG : x.SrvTotalPatAmtPaidTRIG;
             var totalAdj = TotalAdj(x.SrvTotalCOAdjTRIG, x.SrvTotalCRAdjTRIG, x.SrvTotalOAAdjTRIG, x.SrvTotalPIAdjTRIG, x.SrvTotalPRAdjTRIG);
-            var balance = x.SrvCharges - applied - totalAdj;
+            var appliedTotal = x.SrvTotalAmtAppliedCC ?? (x.SrvTotalInsAmtPaidTRIG + x.SrvTotalPatAmtPaidTRIG);
+            var balance = x.SrvTotalBalanceCC ?? (x.SrvCharges - appliedTotal - totalAdj);
             return balance > 0.001m;
         }).ToList();
 
@@ -140,13 +142,11 @@ public class ServiceLineRepository : IServiceLineRepository
                 payerNames[pay.PayID] = pay.PayName;
         }
 
-        decimal Applied(int isPayer, decimal insPaid, decimal patPaid) => isPayer != 0 ? insPaid : patPaid;
-
         return list.Select(x =>
         {
-            var applied = Applied(isPayerSource ? 1 : 0, x.SrvTotalInsAmtPaidTRIG, x.SrvTotalPatAmtPaidTRIG);
             var totalAdj = TotalAdj(x.SrvTotalCOAdjTRIG, x.SrvTotalCRAdjTRIG, x.SrvTotalOAAdjTRIG, x.SrvTotalPIAdjTRIG, x.SrvTotalPRAdjTRIG);
-            var balance = x.SrvCharges - applied - totalAdj;
+            var appliedCc = x.SrvTotalAmtAppliedCC ?? (x.SrvTotalInsAmtPaidTRIG + x.SrvTotalPatAmtPaidTRIG);
+            var balance = x.SrvTotalBalanceCC ?? (x.SrvCharges - appliedCc - totalAdj);
             var responsible = x.SrvResponsibleParty == 0 ? "Patient" : (payerNames.TryGetValue(x.SrvResponsibleParty, out var name) ? name : null);
             return new PaymentEntryServiceLineDto
             {
@@ -156,7 +156,7 @@ public class ServiceLineRepository : IServiceLineRepository
                 Proc = x.SrvProcedureCode,
                 Charge = x.SrvCharges,
                 Responsible = responsible,
-                Applied = applied,
+                Applied = appliedCc,
                 Balance = balance
             };
         }).ToList();
@@ -164,52 +164,83 @@ public class ServiceLineRepository : IServiceLineRepository
 
     public async Task<int?> AddInsPaidAsync(int serviceLineId, decimal amount)
     {
-        var s = await _context.Service_Lines.FindAsync(serviceLineId);
-        if (s == null) return null;
-        s.SrvTotalInsAmtPaidTRIG += amount;
-        SetServiceLineBalance(s);
-        s.SrvDateTimeModified = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return s.SrvClaFID;
+        // Incremental math removed to avoid drift; recompute from source tables.
+        return await RecalculateServiceLineAsync(serviceLineId);
     }
 
     public async Task<int?> AddPatPaidAsync(int serviceLineId, decimal amount)
     {
-        var s = await _context.Service_Lines.FindAsync(serviceLineId);
-        if (s == null) return null;
-        s.SrvTotalPatAmtPaidTRIG += amount;
-        SetServiceLineBalance(s);
-        s.SrvDateTimeModified = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return s.SrvClaFID;
+        // Incremental math removed to avoid drift; recompute from source tables.
+        return await RecalculateServiceLineAsync(serviceLineId);
     }
 
     public async Task<int?> AddAdjustmentAmountAsync(int serviceLineId, string groupCode, decimal amount)
     {
-        var s = await _context.Service_Lines.FindAsync(serviceLineId);
-        if (s == null) return null;
-        var gc = groupCode.Trim().ToUpperInvariant();
-        if (gc.Length > 2) gc = gc.Substring(0, 2);
-        switch (gc)
-        {
-            case "CO": s.SrvTotalCOAdjTRIG += amount; break;
-            case "PR": s.SrvTotalPRAdjTRIG += amount; break;
-            case "OA": s.SrvTotalOAAdjTRIG += amount; break;
-            case "PI": s.SrvTotalPIAdjTRIG += amount; break;
-            case "CR": s.SrvTotalCRAdjTRIG += amount; break;
-        }
-        SetServiceLineBalance(s);
-        s.SrvDateTimeModified = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return s.SrvClaFID;
+        // Incremental math removed to avoid drift; recompute from source tables.
+        return await RecalculateServiceLineAsync(serviceLineId);
     }
 
-    /// <summary>Recalculate SrvTotalBalanceCC = Charge - Paid - Adjustments (EZClaim equation).</summary>
-    private static void SetServiceLineBalance(Service_Line s)
+    public async Task<int?> RecalculateServiceLineAsync(int serviceLineId)
     {
-        decimal paid = s.SrvTotalInsAmtPaidTRIG + s.SrvTotalPatAmtPaidTRIG;
-        decimal totalAdj = s.SrvTotalCOAdjTRIG + s.SrvTotalCRAdjTRIG + s.SrvTotalOAAdjTRIG + s.SrvTotalPIAdjTRIG + s.SrvTotalPRAdjTRIG;
-        s.SrvTotalBalanceCC = s.SrvCharges - paid - totalAdj;
+        return await RecalculateServiceLineFinancials(serviceLineId);
+    }
+
+    private async Task<int?> RecalculateServiceLineFinancials(int srvId)
+    {
+        var s = await _context.Service_Lines.FindAsync(srvId);
+        if (s == null) return null;
+
+        var disbursements = await (
+            from d in _context.Disbursements.AsNoTracking()
+            join p in _context.Payments.AsNoTracking() on d.DisbPmtFID equals p.PmtID
+            where d.DisbSrvFID == srvId
+            select new
+            {
+                d.DisbAmount,
+                IsPayerPayment = p.PmtPayFID.HasValue && p.PmtPayFID.Value > 0
+            })
+            .ToListAsync();
+
+        var insPaid = disbursements
+            .Where(x => x.IsPayerPayment)
+            .Sum(x => x.DisbAmount);
+        var patPaid = disbursements
+            .Where(x => !x.IsPayerPayment)
+            .Sum(x => x.DisbAmount);
+
+        var adjustments = await _context.Adjustments.AsNoTracking()
+            .Where(a => a.AdjSrvFID == srvId)
+            .Select(a => new { a.AdjGroupCode, a.AdjAmount })
+            .ToListAsync();
+
+        decimal SumByGroup(string gc) => adjustments
+            .Where(a => (a.AdjGroupCode ?? string.Empty).Trim().ToUpperInvariant() == gc)
+            .Sum(a => a.AdjAmount);
+
+        s.SrvTotalInsAmtPaidTRIG = insPaid;
+        s.SrvTotalPatAmtPaidTRIG = patPaid;
+        s.SrvTotalCOAdjTRIG = SumByGroup("CO");
+        s.SrvTotalCRAdjTRIG = SumByGroup("CR");
+        s.SrvTotalOAAdjTRIG = SumByGroup("OA");
+        s.SrvTotalPIAdjTRIG = SumByGroup("PI");
+        s.SrvTotalPRAdjTRIG = SumByGroup("PR");
+
+        var totalAdj = s.SrvTotalCOAdjTRIG + s.SrvTotalCRAdjTRIG + s.SrvTotalOAAdjTRIG + s.SrvTotalPIAdjTRIG + s.SrvTotalPRAdjTRIG;
+        var balance = s.SrvCharges - s.SrvTotalInsAmtPaidTRIG - s.SrvTotalPatAmtPaidTRIG - totalAdj;
+        var patBalance = s.SrvTotalPatAmtPaidTRIG > 0 ? 0m : balance;
+        var insBalance = Math.Max(balance - patBalance, 0m);
+
+        // Centralized financial totals: never leave these as NULL.
+        s.SrvTotalAdjCC = totalAdj;
+        s.SrvTotalAmtPaidCC = s.SrvTotalInsAmtPaidTRIG + s.SrvTotalPatAmtPaidTRIG;
+        s.SrvTotalAmtAppliedCC = s.SrvTotalAmtPaidCC + totalAdj;
+        s.SrvTotalBalanceCC = balance;
+        s.SrvTotalPatBalanceCC = patBalance;
+        s.SrvTotalInsBalanceCC = insBalance;
+        s.SrvDateTimeModified = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return s.SrvClaFID;
     }
 
     public async Task<(decimal Charges, decimal AllowedAmt, decimal InsPaid, decimal PatPaid, decimal TotalAdj)?> GetBalanceInfoAsync(int serviceLineId)
@@ -224,5 +255,40 @@ public class ServiceLineRepository : IServiceLineRepository
     {
         var s = await _context.Service_Lines.AsNoTracking().FirstOrDefaultAsync(x => x.SrvID == serviceLineId);
         return s?.SrvResponsibleParty ?? 0;
+    }
+
+    public async Task AdvanceResponsiblePartyAsync(int serviceLineId)
+    {
+        var s = await _context.Service_Lines.FindAsync(serviceLineId);
+        if (s == null || !s.SrvClaFID.HasValue) return;
+
+        // Determine claim-level primary/secondary payers from insured sequence.
+        var insureds = await _context.Claim_Insureds.AsNoTracking()
+            .Where(ci => ci.ClaInsClaFID == s.SrvClaFID.Value && ci.ClaInsSequence.HasValue && (ci.ClaInsSequence == 1 || ci.ClaInsSequence == 2))
+            .Select(ci => new { ci.ClaInsSequence, ci.ClaInsPayFID })
+            .ToListAsync();
+
+        var primaryPayerId = insureds.FirstOrDefault(x => x.ClaInsSequence == 1)?.ClaInsPayFID ?? 0;
+        var secondaryPayerId = insureds.FirstOrDefault(x => x.ClaInsSequence == 2)?.ClaInsPayFID ?? 0;
+
+        var current = s.SrvResponsibleParty;
+        var next = current;
+
+        if (current > 0 && current == primaryPayerId)
+        {
+            next = secondaryPayerId > 0 ? secondaryPayerId : 0;
+        }
+        else if (current > 0 && current == secondaryPayerId)
+        {
+            next = 0;
+        }
+
+        if (next != current)
+        {
+            s.SrvResponsibleParty = next;
+            s.SrvRespChangeDate = DateTime.UtcNow;
+            s.SrvDateTimeModified = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
     }
 }

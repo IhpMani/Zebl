@@ -3,16 +3,19 @@ using Zebl.Application.Domain;
 using Zebl.Application.Repositories;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
+using Zebl.Infrastructure.Services;
 
 namespace Zebl.Infrastructure.Repositories;
 
 public class ClaimRepository : IClaimRepository
 {
     private readonly ZeblDbContext _context;
+    private readonly ClaimInitialStatusProvider _claimInitialStatus;
 
-    public ClaimRepository(ZeblDbContext context)
+    public ClaimRepository(ZeblDbContext context, ClaimInitialStatusProvider claimInitialStatus)
     {
         _context = context;
+        _claimInitialStatus = claimInitialStatus;
     }
 
     public async Task<ClaimData?> GetByIdAsync(int claimId)
@@ -145,6 +148,7 @@ public class ClaimRepository : IClaimRepository
         var firstLine = primary.Service_Lines?.FirstOrDefault();
         var primaryInsured = primary.Claim_Insureds?.FirstOrDefault(ci => ci.ClaInsSequence == 1);
         var now = DateTime.UtcNow;
+        var initialStatus = await _claimInitialStatus.GetInitialClaStatusStringAsync();
         var newClaim = new Claim
         {
             ClaID = 0,
@@ -169,7 +173,7 @@ public class ClaimRepository : IClaimRepository
             ClaDiagnosis5 = primary.ClaDiagnosis5,
             ClaICDIndicator = primary.ClaICDIndicator,
             ClaSubmissionMethod = primary.ClaSubmissionMethod ?? "Electronic",
-            ClaStatus = "ReadyToSubmit",
+            ClaStatus = initialStatus,
             ClaTotalChargeTRIG = forwardAmount,
             ClaTotalInsAmtPaidTRIG = 0,
             ClaTotalPatAmtPaidTRIG = 0,

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Zebl.Application.Domain;
 
 namespace Zebl.Api.Controllers;
 
@@ -13,14 +14,9 @@ public class ClaimStatusController : ControllerBase
     [HttpGet]
     public IActionResult GetStatuses()
     {
-        // Basic set of statuses; can be extended later or driven from DB/ListValue.
-        var items = new[]
-        {
-            new ClaimStatusDto("NEW", "New"),
-            new ClaimStatusDto("ReadyToSubmit", "Ready to Submit"),
-            new ClaimStatusDto("Hold", "Hold"),
-            new ClaimStatusDto("Billed", "Billed")
-        };
+        var items = ClaimStatusCatalog.All
+            .Select(x => new ClaimStatusDto(ClaimStatusCatalog.ToStorage(x.Status), x.DisplayName))
+            .ToArray();
 
         return Ok(items);
     }

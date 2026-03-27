@@ -41,6 +41,9 @@ public class ProcedureCodeLookupService : IProcedureCodeLookupService
                 (p.ProcStart == null || p.ProcStart <= sd) &&
                 (p.ProcEnd == null || p.ProcEnd >= sd));
 
+        if (payerId.HasValue)
+            query = query.Where(p => p.ProcPayFID == null || p.ProcPayFID == payerId.Value);
+
         if (!string.IsNullOrWhiteSpace(productCode))
             query = query.Where(p => p.ProcProductCode == productCode.Trim());
         else
@@ -53,6 +56,7 @@ public class ProcedureCodeLookupService : IProcedureCodeLookupService
                 Priority =
                     (billingPhysicianId.HasValue && p.ProcBillingPhyFID == billingPhysicianId.Value ? 8 : 0) +
                     (payerId.HasValue && p.ProcPayFID == payerId.Value ? 4 : 0) +
+                    (payerId.HasValue && p.ProcPayFID == null ? 2 : 0) +
                     (rateClassTrimmed != null && p.ProcRateClass == rateClassTrimmed ? 2 : 0)
             })
             .OrderByDescending(x => x.Priority)

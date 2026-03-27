@@ -20,8 +20,12 @@ public interface IServiceLineRepository
     Task<int?> AddPatPaidAsync(int serviceLineId, decimal amount);
     /// <summary>Add to the appropriate SrvTotal*AdjTRIG by group code (CO, PR, OA, PI, CR). Returns claim id.</summary>
     Task<int?> AddAdjustmentAmountAsync(int serviceLineId, string groupCode, decimal amount);
+    /// <summary>Recalculate SrvTotal*TRIG fields for one service line from Disbursement/Adjustment source tables.</summary>
+    Task<int?> RecalculateServiceLineAsync(int serviceLineId);
     /// <summary>Get SrvCharges, SrvAllowedAmt for pay-button logic.</summary>
     Task<(decimal Charges, decimal AllowedAmt, decimal InsPaid, decimal PatPaid, decimal TotalAdj)?> GetBalanceInfoAsync(int serviceLineId);
     /// <summary>Get responsible payer ID for service line (for adjustment).</summary>
     Task<int> GetPayerIdForLineAsync(int serviceLineId);
+    /// <summary>Advance responsible party: Primary -> Secondary -> Patient.</summary>
+    Task AdvanceResponsiblePartyAsync(int serviceLineId);
 }

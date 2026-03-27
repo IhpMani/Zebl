@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Xml.Serialization;
 using Zebl.Application.Abstractions;
+using Zebl.Application.Domain;
 using Zebl.Application.Dtos.Claims;
 using Zebl.Application.Services;
 using Zebl.Application.Dtos.Common;
@@ -176,9 +177,10 @@ namespace Zebl.Api.Controllers
                     .ToHashSet();
             }
 
-            // Get available column definitions
-            var availableColumns = RelatedColumnConfig.GetAvailableColumns()["Claim"];
-            var columnsToInclude = availableColumns.Where(c => requestedColumns.Contains(c.Key)).ToList();
+            // Use requested keys directly so Claim List Add Column is not constrained by a stale server whitelist.
+            var columnsToInclude = requestedColumns
+                .Select(k => new RelatedColumnDefinition { Key = k, Label = k, Table = "Claim", Path = k })
+                .ToList();
             
             // Pre-evaluate which columns are requested to avoid evaluating in Select()
             var hasPatFirstName = columnsToInclude.Any(col => col.Key == "patFirstName");
@@ -189,6 +191,26 @@ namespace Zebl.Api.Controllers
             var hasPatCity = columnsToInclude.Any(col => col.Key == "patCity");
             var hasPatState = columnsToInclude.Any(col => col.Key == "patState");
             var hasPatBirthDate = columnsToInclude.Any(col => col.Key == "patBirthDate");
+            var hasPatDob = columnsToInclude.Any(col => col.Key == "patDOB");
+            var hasPatClassification = columnsToInclude.Any(col => col.Key == "patClassification");
+            var hasPrimaryPayerName = columnsToInclude.Any(col => col.Key == "primaryPayerName");
+            var hasAttendingPhysicianName = columnsToInclude.Any(col => col.Key == "attendingPhysicianName");
+            var hasReferringPhysicianName = columnsToInclude.Any(col => col.Key == "referringPhysicianName");
+            var hasRenderingPhysicianName = columnsToInclude.Any(col => col.Key == "renderingPhysicianName");
+            var hasOperatingPhysicianName = columnsToInclude.Any(col => col.Key == "operatingPhysicianName");
+            var hasOrderingPhysicianName = columnsToInclude.Any(col => col.Key == "orderingPhysicianName");
+            var hasBillingPhysicianName = columnsToInclude.Any(col => col.Key == "billingPhysicianName");
+            var hasSupervisingPhysicianName = columnsToInclude.Any(col => col.Key == "supervisingPhysicianName");
+            var hasSecondaryPayerName = columnsToInclude.Any(col => col.Key == "secondaryPayerName");
+            var hasPrimaryPayerID = columnsToInclude.Any(col => col.Key == "primaryPayerID");
+            var hasPrimaryPayerPhone = columnsToInclude.Any(col => col.Key == "primaryPayerPhone");
+            var hasPriInsClaimFilingInd = columnsToInclude.Any(col => col.Key == "priInsClaimFilingInd");
+            var hasSecInsClaimFilingInd = columnsToInclude.Any(col => col.Key == "secInsClaimFilingInd");
+            var hasPrimaryInsuredID = columnsToInclude.Any(col => col.Key == "primaryInsuredID");
+            var hasPrimaryInsuredName = columnsToInclude.Any(col => col.Key == "primaryInsuredName");
+            var hasPrimaryInsuredDOB = columnsToInclude.Any(col => col.Key == "primaryInsuredDOB");
+            var hasPrimaryInsuredEmployer = columnsToInclude.Any(col => col.Key == "primaryInsuredEmployer");
+            var hasPrimaryInsuredPlan = columnsToInclude.Any(col => col.Key == "primaryInsuredPlan");
             var hasRenderingPhyName = columnsToInclude.Any(col => col.Key == "renderingPhyName");
             var hasRenderingPhyNPI = columnsToInclude.Any(col => col.Key == "renderingPhyNPI");
             var hasBillingPhyName = columnsToInclude.Any(col => col.Key == "billingPhyName");
@@ -240,23 +262,35 @@ namespace Zebl.Api.Controllers
             // Total Charge range filter
             if (minTotalCharge.HasValue)
             {
-                query = query.Where(c => c.ClaTotalChargeTRIG >= minTotalCharge.Value);
+                query = query.Where(c =>
+                    (_db.Service_Lines
+                        .Where(s => s.SrvClaFID == c.ClaID)
+                        .Sum(s => (decimal?)s.SrvCharges) ?? 0m) >= minTotalCharge.Value);
             }
 
             if (maxTotalCharge.HasValue)
             {
-                query = query.Where(c => c.ClaTotalChargeTRIG <= maxTotalCharge.Value);
+                query = query.Where(c =>
+                    (_db.Service_Lines
+                        .Where(s => s.SrvClaFID == c.ClaID)
+                        .Sum(s => (decimal?)s.SrvCharges) ?? 0m) <= maxTotalCharge.Value);
             }
 
             // Total Balance range filter
             if (minTotalBalance.HasValue)
             {
-                query = query.Where(c => c.ClaTotalBalanceCC.HasValue && c.ClaTotalBalanceCC >= minTotalBalance.Value);
+                query = query.Where(c =>
+                    (_db.Service_Lines
+                        .Where(s => s.SrvClaFID == c.ClaID)
+                        .Sum(s => s.SrvTotalBalanceCC) ?? 0m) >= minTotalBalance.Value);
             }
 
             if (maxTotalBalance.HasValue)
             {
-                query = query.Where(c => c.ClaTotalBalanceCC.HasValue && c.ClaTotalBalanceCC <= maxTotalBalance.Value);
+                query = query.Where(c =>
+                    (_db.Service_Lines
+                        .Where(s => s.SrvClaFID == c.ClaID)
+                        .Sum(s => s.SrvTotalBalanceCC) ?? 0m) <= maxTotalBalance.Value);
             }
 
             // Patient filter (for ribbon: open claims for a specific patient)
@@ -286,9 +320,13 @@ namespace Zebl.Api.Controllers
                 else if (decimal.TryParse(searchText, out decimal searchDecimal))
                 {
                     query = query.Where(c =>
-                        c.ClaTotalChargeTRIG == searchDecimal ||
+                        ((_db.Service_Lines
+                            .Where(s => s.SrvClaFID == c.ClaID)
+                            .Sum(s => (decimal?)s.SrvCharges) ?? 0m) == searchDecimal) ||
                         (c.ClaTotalAmtPaidCC.HasValue && c.ClaTotalAmtPaidCC.Value == searchDecimal) ||
-                        (c.ClaTotalBalanceCC.HasValue && c.ClaTotalBalanceCC.Value == searchDecimal));
+                        ((_db.Service_Lines
+                            .Where(s => s.SrvClaFID == c.ClaID)
+                            .Sum(s => s.SrvTotalBalanceCC) ?? 0m) == searchDecimal));
                 }
                 else
                 {
@@ -391,10 +429,31 @@ namespace Zebl.Api.Controllers
                                        ClaID = c.ClaID,
                                        ClaStatus = c.ClaStatus,
                                        ClaDateTimeCreated = c.ClaDateTimeCreated,
-                                       ClaTotalChargeTRIG = c.ClaTotalChargeTRIG,
+                                       ClaTotalChargeTRIG = _db.Service_Lines
+                                           .Where(s => s.SrvClaFID == c.ClaID)
+                                           .Sum(s => (decimal?)s.SrvCharges) ?? 0m,
+                                       ClaTotalInsBalanceTRIG = _db.Service_Lines
+                                           .Where(s => s.SrvClaFID == c.ClaID)
+                                           .Sum(s => s.SrvTotalInsBalanceCC) ?? 0m,
+                                       ClaTotalPatBalanceTRIG = _db.Service_Lines
+                                           .Where(s => s.SrvClaFID == c.ClaID)
+                                           .Sum(s => s.SrvTotalPatBalanceCC) ?? 0m,
                                        ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
-                                       ClaTotalBalanceCC = c.ClaTotalBalanceCC,
-                                       ClaClassification = c.ClaClassification,
+                                       ClaTotalBalanceCC = _db.Service_Lines
+                                           .Where(s => s.SrvClaFID == c.ClaID)
+                                           .Sum(s => s.SrvTotalBalanceCC) ?? 0m,
+                                       ClaClassification = c.ClaClassification ?? (fac != null ? fac.PhyName : null),
+                                       ClaDateTotalFrom = c.ClaDateTotalFrom,
+                                       ClaBillTo = c.ClaBillTo,
+                                       PatFullNameCC = p != null ? p.PatFullNameCC : null,
+                                       PrimaryPayerName = _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsPay.PayName)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsPayF.PayName)
+                                               .FirstOrDefault(),
                                        ClaPatFID = c.ClaPatFID,
                                        ClaAttendingPhyFID = c.ClaAttendingPhyFID,
                                        ClaBillingPhyFID = c.ClaBillingPhyFID,
@@ -403,6 +462,8 @@ namespace Zebl.Api.Controllers
                                        ClaTypeOfBill = c.ClaTypeOfBill,
                                        ClaAdmissionType = c.ClaAdmissionType,
                                        ClaPatientStatus = c.ClaPatientStatus,
+                                       ClaCreatedUserName = c.ClaCreatedUserName,
+                                       ClaLastUserName = c.ClaLastUserName,
                                        ClaDiagnosis1 = c.ClaDiagnosis1,
                                        ClaDiagnosis2 = c.ClaDiagnosis2,
                                        ClaDiagnosis3 = c.ClaDiagnosis3,
@@ -410,14 +471,148 @@ namespace Zebl.Api.Controllers
                                        ClaFirstDateTRIG = c.ClaFirstDateTRIG,
                                        ClaLastDateTRIG = c.ClaLastDateTRIG
                                    },
+                                   ClaimEntity = c,
                                    PatFirstName = hasPatFirstName ? (p != null ? p.PatFirstName : null) : null,
                                    PatLastName = hasPatLastName ? (p != null ? p.PatLastName : null) : null,
                                    PatFullNameCC = hasPatFullNameCC ? (p != null ? p.PatFullNameCC : null) : null,
+                                   PrimaryPayerName = hasPrimaryPayerName
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsPay.PayName)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsPayF.PayName)
+                                               .FirstOrDefault()
+                                       : null,
                                    PatAccountNo = hasPatAccountNo ? (p != null ? p.PatAccountNo : null) : null,
                                    PatPhoneNo = hasPatPhoneNo ? (p != null ? p.PatPhoneNo : null) : null,
                                    PatCity = hasPatCity ? (p != null ? p.PatCity : null) : null,
                                    PatState = hasPatState ? (p != null ? p.PatState : null) : null,
                                    PatBirthDate = hasPatBirthDate ? (p != null ? p.PatBirthDate : (DateOnly?)null) : null,
+                                   PatDob = hasPatDob ? (p != null ? p.PatBirthDate : (DateOnly?)null) : null,
+                                   PatClassification = hasPatClassification ? (p != null ? p.PatClassification : null) : null,
+                                   AttendingPhysicianName = hasAttendingPhysicianName
+                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaAttendingPhyFID).Select(px => px.PhyName).FirstOrDefault()
+                                       : null,
+                                   ReferringPhysicianName = hasReferringPhysicianName
+                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaReferringPhyFID).Select(px => px.PhyName).FirstOrDefault()
+                                       : null,
+                                   RenderingPhysicianName = hasRenderingPhysicianName
+                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaRenderingPhyFID).Select(px => px.PhyName).FirstOrDefault()
+                                       : null,
+                                   OperatingPhysicianName = hasOperatingPhysicianName
+                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaOperatingPhyFID).Select(px => px.PhyName).FirstOrDefault()
+                                       : null,
+                                   OrderingPhysicianName = hasOrderingPhysicianName
+                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaOrderingPhyFID).Select(px => px.PhyName).FirstOrDefault()
+                                       : null,
+                                   BillingPhysicianName = hasBillingPhysicianName
+                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaBillingPhyFID).Select(px => px.PhyName).FirstOrDefault()
+                                       : null,
+                                   SupervisingPhysicianName = hasSupervisingPhysicianName
+                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaSupervisingPhyFID).Select(px => px.PhyName).FirstOrDefault()
+                                       : null,
+                                   SecondaryPayerName = hasSecondaryPayerName
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 2)
+                                           .Select(pi => pi.PatInsIns.InsPay.PayName)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 2)
+                                               .Select(ci => ci.ClaInsPayF.PayName)
+                                               .FirstOrDefault()
+                                       : null,
+                                   PrimaryPayerID = hasPrimaryPayerID
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsPay.PayExternalID)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsPayF.PayExternalID)
+                                               .FirstOrDefault()
+                                       : null,
+                                   PrimaryPayerPhone = hasPrimaryPayerPhone
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsPay.PayPhoneNo)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsPayF.PayPhoneNo)
+                                               .FirstOrDefault()
+                                       : null,
+                                   PriInsClaimFilingInd = hasPriInsClaimFilingInd
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsClaimFilingIndicator)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsClaimFilingIndicator)
+                                               .FirstOrDefault()
+                                       : null,
+                                   SecInsClaimFilingInd = hasSecInsClaimFilingInd
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 2)
+                                           .Select(pi => pi.PatInsIns.InsClaimFilingIndicator)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 2)
+                                               .Select(ci => ci.ClaInsClaimFilingIndicator)
+                                               .FirstOrDefault()
+                                       : null,
+                                   PrimaryInsuredID = hasPrimaryInsuredID
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsIDNumber)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsIDNumber)
+                                               .FirstOrDefault()
+                                       : null,
+                                   PrimaryInsuredName = hasPrimaryInsuredName
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => ((pi.PatInsIns.InsLastName ?? "") + ", " + (pi.PatInsIns.InsFirstName ?? "")).Trim().Trim(','))
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ((ci.ClaInsLastName ?? "") + ", " + (ci.ClaInsFirstName ?? "")).Trim().Trim(','))
+                                               .FirstOrDefault()
+                                       : null,
+                                   PrimaryInsuredDOB = hasPrimaryInsuredDOB
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsBirthDate)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsBirthDate)
+                                               .FirstOrDefault()
+                                       : null,
+                                   PrimaryInsuredEmployer = hasPrimaryInsuredEmployer
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsEmployer)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsEmployer)
+                                               .FirstOrDefault()
+                                       : null,
+                                   PrimaryInsuredPlan = hasPrimaryInsuredPlan
+                                       ? _db.Patient_Insureds
+                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                                           .Select(pi => pi.PatInsIns.InsPlanName)
+                                           .FirstOrDefault()
+                                           ?? _db.Claim_Insureds
+                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                               .Select(ci => ci.ClaInsPlanName)
+                                               .FirstOrDefault()
+                                       : null,
                                    RenderingPhyName = hasRenderingPhyName ? (rend != null ? rend.PhyName : null) : null,
                                    RenderingPhyNPI = hasRenderingPhyNPI ? (rend != null ? rend.PhyNPI : null) : null,
                                    BillingPhyName = hasBillingPhyName ? (bill != null ? bill.PhyName : null) : null,
@@ -442,18 +637,56 @@ namespace Zebl.Api.Controllers
                             "patFirstName" => d.PatFirstName,
                             "patLastName" => d.PatLastName,
                             "patFullNameCC" => d.PatFullNameCC,
+                            "primaryPayerName" => d.PrimaryPayerName,
                             "patAccountNo" => d.PatAccountNo,
                             "patPhoneNo" => d.PatPhoneNo,
                             "patCity" => d.PatCity,
                             "patState" => d.PatState,
                             "patBirthDate" => d.PatBirthDate,
+                            "patDOB" => d.PatDob,
+                            "patClassification" => d.PatClassification,
+                            "patID" => d.Claim.ClaPatFID,
+                            "claDateTotalFrom" => d.Claim.ClaDateTotalFrom,
+                            "claLastDateTRIG" => d.Claim.ClaLastDateTRIG,
+                            "claFirstDOS" => d.Claim.ClaFirstDateTRIG,
+                            "claLastDOS" => d.Claim.ClaLastDateTRIG,
+                            "claTotalChargeTRIG" => d.Claim.ClaTotalChargeTRIG,
+                            "claTotalInsBalanceTRIG" => d.Claim.ClaTotalInsBalanceTRIG,
+                            "claTotalPatBalanceTRIG" => d.Claim.ClaTotalPatBalanceTRIG,
+                            "claTotalBalanceCC" => d.Claim.ClaTotalBalanceCC,
+                            "claTotalCharge" => d.Claim.ClaTotalChargeTRIG,
+                            "claTotalInsBalance" => d.Claim.ClaTotalInsBalanceTRIG,
+                            "claTotalPatBalance" => d.Claim.ClaTotalPatBalanceTRIG,
+                            "claTotalBalance" => d.Claim.ClaTotalBalanceCC,
+                            "attendingPhysicianName" => d.AttendingPhysicianName,
+                            "referringPhysicianName" => d.ReferringPhysicianName,
+                            "renderingPhysicianName" => d.RenderingPhysicianName,
+                            "operatingPhysicianName" => d.OperatingPhysicianName,
+                            "orderingPhysicianName" => d.OrderingPhysicianName,
+                            "billingPhysicianName" => d.BillingPhysicianName,
+                            "supervisingPhysicianName" => d.SupervisingPhysicianName,
+                            "secondaryPayerName" => d.SecondaryPayerName,
+                            "primaryPayerID" => d.PrimaryPayerID,
+                            "primaryPayerPhone" => d.PrimaryPayerPhone,
+                            "priInsClaimFilingInd" => d.PriInsClaimFilingInd,
+                            "secInsClaimFilingInd" => d.SecInsClaimFilingInd,
+                            "primaryInsuredID" => d.PrimaryInsuredID,
+                            "primaryInsuredName" => string.IsNullOrWhiteSpace(d.PrimaryInsuredName) ? null : d.PrimaryInsuredName,
+                            "primaryInsuredDOB" => d.PrimaryInsuredDOB,
+                            "primaryInsuredEmployer" => d.PrimaryInsuredEmployer,
+                            "primaryInsuredPlan" => d.PrimaryInsuredPlan,
                             "renderingPhyName" => d.RenderingPhyName,
                             "renderingPhyNPI" => d.RenderingPhyNPI,
                             "billingPhyName" => d.BillingPhyName,
                             "billingPhyNPI" => d.BillingPhyNPI,
                             "facilityName" => d.FacilityPhyName,
+                            "claClassification" => d.Claim.ClaClassification ?? d.FacilityPhyName,
                             _ => null
                         };
+                        if (value == null)
+                        {
+                            value = GetClaimColumnValue(d.ClaimEntity, col.Key);
+                        }
                         claim.AdditionalColumns[col.Key] = value;
                     }
                     return claim;
@@ -470,10 +703,34 @@ namespace Zebl.Api.Controllers
                         ClaID = c.ClaID,
                         ClaStatus = c.ClaStatus,
                         ClaDateTimeCreated = c.ClaDateTimeCreated,
-                        ClaTotalChargeTRIG = c.ClaTotalChargeTRIG,
+                        ClaTotalChargeTRIG = _db.Service_Lines
+                            .Where(s => s.SrvClaFID == c.ClaID)
+                            .Sum(s => (decimal?)s.SrvCharges) ?? 0m,
+                        ClaTotalInsBalanceTRIG = _db.Service_Lines
+                            .Where(s => s.SrvClaFID == c.ClaID)
+                            .Sum(s => s.SrvTotalInsBalanceCC) ?? 0m,
+                        ClaTotalPatBalanceTRIG = _db.Service_Lines
+                            .Where(s => s.SrvClaFID == c.ClaID)
+                            .Sum(s => s.SrvTotalPatBalanceCC) ?? 0m,
                         ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
-                        ClaTotalBalanceCC = c.ClaTotalBalanceCC,
-                        ClaClassification = c.ClaClassification,
+                        ClaTotalBalanceCC = _db.Service_Lines
+                            .Where(s => s.SrvClaFID == c.ClaID)
+                            .Sum(s => s.SrvTotalBalanceCC) ?? 0m,
+                        ClaClassification = c.ClaClassification ?? _db.Physicians
+                            .Where(px => px.PhyID == c.ClaFacilityPhyFID)
+                            .Select(px => px.PhyName)
+                            .FirstOrDefault(),
+                        ClaDateTotalFrom = c.ClaDateTotalFrom,
+                        ClaBillTo = c.ClaBillTo,
+                        PatFullNameCC = c.ClaPatF.PatFullNameCC,
+                        PrimaryPayerName = _db.Patient_Insureds
+                            .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                            .Select(pi => pi.PatInsIns.InsPay.PayName)
+                            .FirstOrDefault()
+                            ?? _db.Claim_Insureds
+                                .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                                .Select(ci => ci.ClaInsPayF.PayName)
+                                .FirstOrDefault(),
                         ClaPatFID = c.ClaPatFID,
                         ClaAttendingPhyFID = c.ClaAttendingPhyFID,
                         ClaBillingPhyFID = c.ClaBillingPhyFID,
@@ -482,6 +739,8 @@ namespace Zebl.Api.Controllers
                         ClaTypeOfBill = c.ClaTypeOfBill,
                         ClaAdmissionType = c.ClaAdmissionType,
                         ClaPatientStatus = c.ClaPatientStatus,
+                        ClaCreatedUserName = c.ClaCreatedUserName,
+                        ClaLastUserName = c.ClaLastUserName,
                         ClaDiagnosis1 = c.ClaDiagnosis1,
                         ClaDiagnosis2 = c.ClaDiagnosis2,
                         ClaDiagnosis3 = c.ClaDiagnosis3,
@@ -504,6 +763,147 @@ namespace Zebl.Api.Controllers
             });
         }
 
+        [HttpGet("user-kpis")]
+        public async Task<IActionResult> GetUserKpis([FromQuery] int trendDays = 30)
+        {
+            var userName = _userContext.UserName?.Trim();
+            if (string.IsNullOrWhiteSpace(userName))
+            {
+                return Ok(new UserKpiDashboardDto());
+            }
+
+            if (trendDays < 7) trendDays = 7;
+            if (trendDays > 90) trendDays = 90;
+
+            var nowUtc = DateTime.UtcNow;
+            var trendStartUtc = nowUtc.Date.AddDays(-(trendDays - 1));
+            var editedClaimIds = _db.Claim_Audits
+                .AsNoTracking()
+                .Where(a => a.UserName != null && a.UserName == userName)
+                .Where(a => a.ActivityType != null && EF.Functions.Like(a.ActivityType, "%Edit%"))
+                .Select(a => a.ClaFID)
+                .Distinct();
+            var userClaims = _db.Claims
+                .AsNoTracking()
+                .Where(c => editedClaimIds.Contains(c.ClaID));
+
+            var totalClaims = await userClaims.CountAsync();
+            if (totalClaims == 0)
+            {
+                return Ok(new UserKpiDashboardDto
+                {
+                    UserName = userName
+                });
+            }
+
+            var totalPaid = await userClaims.SumAsync(c => c.ClaTotalAmtPaidCC ?? 0m);
+            var claimIds = userClaims.Select(c => c.ClaID);
+            var financialSums = await _db.Service_Lines
+                .Where(s => s.SrvClaFID.HasValue && claimIds.Contains(s.SrvClaFID.Value))
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    TotalCharge = g.Sum(x => (decimal?)x.SrvCharges) ?? 0m,
+                    TotalBalance = g.Sum(x => x.SrvTotalBalanceCC) ?? 0m
+                })
+                .FirstOrDefaultAsync();
+
+            var statusData = await userClaims
+                .GroupBy(c => string.IsNullOrWhiteSpace(c.ClaStatus) ? "Unknown" : c.ClaStatus!)
+                .Select(g => new UserKpiStatusPointDto
+                {
+                    Label = g.Key,
+                    Value = g.Count()
+                })
+                .OrderByDescending(x => x.Value)
+                .ToListAsync();
+
+            var trendRows = await _db.Claim_Audits
+                .AsNoTracking()
+                .Where(a => a.UserName != null && a.UserName == userName)
+                .Where(a => a.ActivityType != null && EF.Functions.Like(a.ActivityType, "%Edit%"))
+                .Where(a => a.ActivityDate >= trendStartUtc)
+                .GroupBy(a => a.ActivityDate.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var trendMap = trendRows.ToDictionary(x => x.Date, x => x.Count);
+            var trendData = new List<UserKpiTrendPointDto>(trendDays);
+            for (var i = 0; i < trendDays; i++)
+            {
+                var day = trendStartUtc.AddDays(i).Date;
+                trendData.Add(new UserKpiTrendPointDto
+                {
+                    Label = day.ToString("MMM dd"),
+                    Value = trendMap.TryGetValue(day, out var count) ? count : 0
+                });
+            }
+
+            var claimBalances = await (
+                from c in userClaims
+                join s in _db.Service_Lines.AsNoTracking() on c.ClaID equals s.SrvClaFID into sg
+                select new
+                {
+                    c.ClaDateTimeCreated,
+                    Balance = sg.Sum(x => x.SrvTotalBalanceCC) ?? 0m
+                })
+                .ToListAsync();
+
+            decimal bucket0To30 = 0m;
+            decimal bucket31To60 = 0m;
+            decimal bucket61To90 = 0m;
+            decimal bucket90Plus = 0m;
+            foreach (var row in claimBalances)
+            {
+                if (row.Balance <= 0m) continue;
+                var ageDays = (int)(nowUtc.Date - row.ClaDateTimeCreated.Date).TotalDays;
+                if (ageDays <= 30) bucket0To30 += row.Balance;
+                else if (ageDays <= 60) bucket31To60 += row.Balance;
+                else if (ageDays <= 90) bucket61To90 += row.Balance;
+                else bucket90Plus += row.Balance;
+            }
+            var agingData = new List<UserKpiAgingBucketDto>
+            {
+                new() { Label = "0-30", Value = bucket0To30 },
+                new() { Label = "31-60", Value = bucket31To60 },
+                new() { Label = "61-90", Value = bucket61To90 },
+                new() { Label = "90+", Value = bucket90Plus }
+            };
+
+            var topPayers = await (
+                from c in userClaims
+                let payerName = _db.Patient_Insureds
+                        .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
+                        .Select(pi => pi.PatInsIns.InsPay.PayName)
+                        .FirstOrDefault()
+                    ?? _db.Claim_Insureds
+                        .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
+                        .Select(ci => ci.ClaInsPayF.PayName)
+                        .FirstOrDefault()
+                    ?? "Unknown"
+                group c by payerName into g
+                orderby g.Count() descending
+                select new UserKpiPayerPointDto
+                {
+                    Label = g.Key,
+                    Value = g.Count()
+                })
+                .Take(5)
+                .ToListAsync();
+
+            return Ok(new UserKpiDashboardDto
+            {
+                UserName = userName,
+                TotalClaims = totalClaims,
+                TotalCharge = financialSums?.TotalCharge ?? 0m,
+                TotalPaid = totalPaid,
+                TotalBalance = financialSums?.TotalBalance ?? 0m,
+                ClaimsByStatus = statusData,
+                ClaimsTrend = trendData,
+                AgingBuckets = agingData,
+                TopPayers = topPayers
+            });
+        }
+
         [HttpGet("available-columns")]
         public IActionResult GetAvailableColumns()
         {
@@ -512,6 +912,45 @@ namespace Zebl.Api.Controllers
             {
                 Data = availableColumns
             });
+        }
+
+        private static object? GetClaimColumnValue(Claim claimEntity, string key)
+        {
+            // Common UI aliases from Add Column registry to Claim entity members.
+            var claimKey = key switch
+            {
+                "claFirstDOS" => "ClaFirstDateTRIG",
+                "claLastDOS" => "ClaLastDateTRIG",
+                "claPaidDate" => "ClaPaidDateTRIG",
+                "claDischargeDate" => "ClaDischargedDate",
+                "claDischargeHour" => "ClaDischargedHour",
+                "claLastExported" => "ClaLastExportedDate",
+                "claLastPrinted" => "ClaLastPrintedDate",
+                "claCreatedTimestamp" => "ClaDateTimeCreated",
+                "claModifiedTimestamp" => "ClaDateTimeModified",
+                "claCreatedUser" => "ClaCreatedUserName",
+                "claModifiedUser" => "ClaLastUserName",
+                "claTotalInsAmtPaid" => "ClaTotalInsAmtPaidTRIG",
+                "claTotalPatAmtPaid" => "ClaTotalPatAmtPaidTRIG",
+                "claTotalCharge" => "ClaTotalChargeTRIG",
+                "claTotalInsBalance" => "ClaTotalInsBalanceTRIG",
+                "claTotalPatBalance" => "ClaTotalPatBalanceTRIG",
+                "claVisitNumber" => "ClaMedicalRecordNumber",
+                _ => key
+            };
+
+            if (string.Equals(key, "claActive", StringComparison.OrdinalIgnoreCase))
+            {
+                return !(claimEntity.ClaArchived ?? false);
+            }
+
+            var pascal = char.ToUpperInvariant(claimKey[0]) + claimKey.Substring(1);
+            var prop = typeof(Claim).GetProperty(
+                pascal,
+                System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.IgnoreCase);
+            return prop?.GetValue(claimEntity);
         }
 
         /// <summary>
@@ -926,11 +1365,8 @@ namespace Zebl.Api.Controllers
 
             try
             {
-                // Use timeout protection (20 seconds - reduced since we removed adjustments)
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-
-                // Step 1: Get basic claim header data (NO navigation properties)
-                var claimBase = await _db.Claims
+                var claimHeader = await _db.Claims
                     .AsNoTracking()
                     .Where(c => c.ClaID == claId)
                     .Select(c => new
@@ -938,13 +1374,13 @@ namespace Zebl.Api.Controllers
                         c.ClaID,
                         c.ClaPatFID,
                         c.ClaStatus,
-                        c.ClaDateTimeCreated,
-                        c.ClaDateTimeModified,
+                        ClaDateTimeCreated = c.ClaDateTimeCreated,
+                        ClaDateTimeModified = c.ClaDateTimeModified,
                         c.ClaTotalChargeTRIG,
                         c.ClaTotalAmtPaidCC,
                         c.ClaTotalBalanceCC,
                         c.ClaTotalAmtAppliedCC,
-                        c.ClaBillDate,
+                        ClaBillDate = c.ClaBillDate.HasValue ? c.ClaBillDate.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
                         c.ClaBillTo,
                         c.ClaSubmissionMethod,
                         c.ClaInvoiceNumber,
@@ -957,13 +1393,13 @@ namespace Zebl.Api.Controllers
                         c.ClaPaperWorkInd,
                         c.ClaEDINotes,
                         c.ClaRemarks,
-                        c.ClaAdmittedDate,
-                        c.ClaDischargedDate,
-                        c.ClaDateLastSeen,
+                        ClaAdmittedDate = c.ClaAdmittedDate.HasValue ? c.ClaAdmittedDate.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                        ClaDischargedDate = c.ClaDischargedDate.HasValue ? c.ClaDischargedDate.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                        ClaDateLastSeen = c.ClaDateLastSeen.HasValue ? c.ClaDateLastSeen.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
                         c.ClaRelatedTo,
                         c.ClaRelatedToState,
-                        c.ClaFirstDateTRIG,
-                        c.ClaLastDateTRIG,
+                        ClaFirstDateTRIG = c.ClaFirstDateTRIG.HasValue ? c.ClaFirstDateTRIG.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                        ClaLastDateTRIG = c.ClaLastDateTRIG.HasValue ? c.ClaLastDateTRIG.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
                         c.ClaClassification,
                         c.ClaDiagnosis1,
                         c.ClaDiagnosis2,
@@ -977,262 +1413,242 @@ namespace Zebl.Api.Controllers
                         c.ClaDiagnosis10,
                         c.ClaDiagnosis11,
                         c.ClaDiagnosis12,
-                        c.ClaRenderingPhyFID,
-                        c.ClaReferringPhyFID,
-                        c.ClaBillingPhyFID,
-                        c.ClaFacilityPhyFID
+                        Patient = c.ClaPatF == null ? null : new
+                        {
+                            c.ClaPatF.PatID,
+                            c.ClaPatF.PatFirstName,
+                            c.ClaPatF.PatLastName,
+                            c.ClaPatF.PatFullNameCC,
+                            PatBirthDate = c.ClaPatF.PatBirthDate.HasValue ? c.ClaPatF.PatBirthDate.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                            c.ClaPatF.PatAccountNo,
+                            c.ClaPatF.PatPhoneNo,
+                            c.ClaPatF.PatCity,
+                            c.ClaPatF.PatState
+                        },
+                        RenderingPhysician = c.ClaRenderingPhyF == null ? null : new { c.ClaRenderingPhyF.PhyID, c.ClaRenderingPhyF.PhyName, c.ClaRenderingPhyF.PhyNPI },
+                        ReferringPhysician = c.ClaReferringPhyF == null ? null : new { c.ClaReferringPhyF.PhyID, c.ClaReferringPhyF.PhyName, c.ClaReferringPhyF.PhyNPI },
+                        BillingPhysician = c.ClaBillingPhyF == null ? null : new { c.ClaBillingPhyF.PhyID, c.ClaBillingPhyF.PhyName, c.ClaBillingPhyF.PhyNPI },
+                        FacilityPhysician = c.ClaFacilityPhyF == null ? null : new { c.ClaFacilityPhyF.PhyID, c.ClaFacilityPhyF.PhyName, c.ClaFacilityPhyF.PhyNPI },
                     })
                     .FirstOrDefaultAsync(cts.Token);
 
-                if (claimBase == null)
-                {
-                    return NotFound();
-                }
+                if (claimHeader == null) return NotFound();
 
-                // Step 2: Load patient separately using ClaPatFID
-                var patient = claimBase.ClaPatFID > 0
-                    ? await _db.Patients
-                        .AsNoTracking()
-                        .Where(p => p.PatID == claimBase.ClaPatFID)
-                        .Select(p => new
-                        {
-                            p.PatID,
-                            p.PatFirstName,
-                            p.PatLastName,
-                            p.PatFullNameCC,
-                            p.PatBirthDate,
-                            p.PatAccountNo,
-                            p.PatPhoneNo,
-                            p.PatCity,
-                            p.PatState
-                        })
-                        .FirstOrDefaultAsync(cts.Token)
-                    : null;
-
-                // Step 3: Load physicians separately (query individually for null-safety)
-                var renderingPhysician = claimBase.ClaRenderingPhyFID > 0
-                    ? await _db.Physicians
-                        .AsNoTracking()
-                        .Where(p => p.PhyID == claimBase.ClaRenderingPhyFID)
-                        .Select(p => new { p.PhyID, p.PhyName, p.PhyNPI })
-                        .FirstOrDefaultAsync(cts.Token)
-                    : null;
-
-                var referringPhysician = claimBase.ClaReferringPhyFID > 0
-                    ? await _db.Physicians
-                        .AsNoTracking()
-                        .Where(p => p.PhyID == claimBase.ClaReferringPhyFID)
-                        .Select(p => new { p.PhyID, p.PhyName, p.PhyNPI })
-                        .FirstOrDefaultAsync(cts.Token)
-                    : null;
-
-                var billingPhysician = claimBase.ClaBillingPhyFID > 0
-                    ? await _db.Physicians
-                        .AsNoTracking()
-                        .Where(p => p.PhyID == claimBase.ClaBillingPhyFID)
-                        .Select(p => new { p.PhyID, p.PhyName, p.PhyNPI })
-                        .FirstOrDefaultAsync(cts.Token)
-                    : null;
-
-                var facilityPhysician = claimBase.ClaFacilityPhyFID > 0
-                    ? await _db.Physicians
-                        .AsNoTracking()
-                        .Where(p => p.PhyID == claimBase.ClaFacilityPhyFID)
-                        .Select(p => new { p.PhyID, p.PhyName, p.PhyNPI })
-                        .FirstOrDefaultAsync(cts.Token)
-                    : null;
-
-                // Step 4: Get service lines and responsible parties in parallel for better performance
-                var serviceLinesTask = _db.Service_Lines
+                var claimInsured = await _db.Claim_Insureds
                     .AsNoTracking()
-                    .Where(s => s.SrvClaFID == claId)
-                    .Select(s => new
+                    .Where(ci => ci.ClaInsClaFID == claId)
+                    .Select(ci => new
                     {
-                        s.SrvID,
-                        s.SrvFromDate,
-                        s.SrvToDate,
-                        s.SrvProcedureCode,
-                        s.SrvDesc,
-                        s.SrvCharges,
-                        s.SrvUnits,
-                        s.SrvPlace,
-                        s.SrvDiagnosisPointer,
-                        s.SrvTotalBalanceCC,
-                        s.SrvTotalAmtPaidCC,
-                        s.SrvTotalAdjCC,
-                        s.SrvTotalAmtAppliedCC,
-                        s.SrvResponsibleParty
+                        ci.ClaInsGUID,
+                        ci.ClaInsSequence,
+                        ci.ClaInsPayFID,
+                        PayerName = ci.ClaInsPayF != null ? ci.ClaInsPayF.PayName : null
                     })
                     .ToListAsync(cts.Token);
 
-                // Execute service lines query first to get responsible party IDs
-                var serviceLines = await serviceLinesTask;
-
-                // Step 5: Get responsible party names (only if needed)
-                var responsiblePartyIds = serviceLines
-                    .Where(s => s.SrvResponsibleParty > 0)
-                    .Select(s => s.SrvResponsibleParty)
-                    .Distinct()
-                    .ToList();
-                
-                var responsiblePartyDict = new Dictionary<int, string?>();
-                if (responsiblePartyIds.Any())
-                {
-                    var responsibleParties = await _db.Payers
-                        .AsNoTracking()
-                        .Where(p => responsiblePartyIds.Contains(p.PayID))
-                        .Select(p => new { p.PayID, p.PayName })
-                        .ToListAsync(cts.Token);
-                    
-                    responsiblePartyDict = responsibleParties.ToDictionary(p => p.PayID, p => p.PayName);
-                }
-
-                // Load Claim_Audit activity (claim-specific only, NOT interface import logs)
-                var claimActivityList = new List<object>();
-                try
-                {
-                    var audits = await _db.Claim_Audits
-                        .AsNoTracking()
-                        .Where(a => a.ClaFID == claId)
-                        .OrderByDescending(a => a.ActivityDate)
-                        .Select(a => new { date = a.ActivityDate, user = a.UserName ?? "SYSTEM", activityType = a.ActivityType, notes = a.Notes, totalCharge = a.TotalCharge, insuranceBalance = a.InsuranceBalance, patientBalance = a.PatientBalance })
-                        .ToListAsync(cts.Token);
-                    foreach (var a in audits)
-                        claimActivityList.Add(new { date = a.date, user = a.user, activityType = a.activityType, notes = a.notes, totalCharge = a.totalCharge, insuranceBalance = a.insuranceBalance, patientBalance = a.patientBalance });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Claim_Audit table may not exist. Skipping claim activity for claim {ClaId}.", claId);
-                }
-
-                // Step 6: Build the response object
-                // NOTE: Adjustments are NOT loaded here - they are loaded separately via /api/adjustments/claims/{claId}
-                // This significantly improves performance and prevents timeouts
-                // Convert DateOnly to DateTime for JSON serialization compatibility
-                var claim = new
-                {
-                    claimBase.ClaID,
-                    ClaPatFID = claimBase.ClaPatFID,
-                    claimBase.ClaStatus,
-                    ClaDateTimeCreated = claimBase.ClaDateTimeCreated,
-                    ClaDateTimeModified = claimBase.ClaDateTimeModified,
-                    claimBase.ClaTotalChargeTRIG,
-                    claimBase.ClaTotalAmtPaidCC,
-                    claimBase.ClaTotalBalanceCC,
-                    claimBase.ClaTotalAmtAppliedCC,
-                    ClaBillDate = claimBase.ClaBillDate.HasValue 
-                        ? claimBase.ClaBillDate.Value.ToDateTime(TimeOnly.MinValue)
-                        : (DateTime?)null,
-                    claimBase.ClaBillTo,
-                    claimBase.ClaSubmissionMethod,
-                    claimBase.ClaInvoiceNumber,
-                    claimBase.ClaLocked,
-                    claimBase.ClaOriginalRefNo,
-                    claimBase.ClaDelayCode,
-                    claimBase.ClaMedicaidResubmissionCode,
-                    claimBase.ClaPaperWorkTransmissionCode,
-                    claimBase.ClaPaperWorkControlNumber,
-                    claimBase.ClaPaperWorkInd,
-                    claimBase.ClaEDINotes,
-                    claimBase.ClaRemarks,
-                    ClaAdmittedDate = claimBase.ClaAdmittedDate.HasValue 
-                        ? claimBase.ClaAdmittedDate.Value.ToDateTime(TimeOnly.MinValue)
-                        : (DateTime?)null,
-                    ClaDischargedDate = claimBase.ClaDischargedDate.HasValue 
-                        ? claimBase.ClaDischargedDate.Value.ToDateTime(TimeOnly.MinValue)
-                        : (DateTime?)null,
-                    ClaDateLastSeen = claimBase.ClaDateLastSeen.HasValue 
-                        ? claimBase.ClaDateLastSeen.Value.ToDateTime(TimeOnly.MinValue)
-                        : (DateTime?)null,
-                    claimBase.ClaRelatedTo,
-                    claimBase.ClaRelatedToState,
-                    ClaFirstDateTRIG = claimBase.ClaFirstDateTRIG.HasValue 
-                        ? claimBase.ClaFirstDateTRIG.Value.ToDateTime(TimeOnly.MinValue)
-                        : (DateTime?)null,
-                    ClaLastDateTRIG = claimBase.ClaLastDateTRIG.HasValue 
-                        ? claimBase.ClaLastDateTRIG.Value.ToDateTime(TimeOnly.MinValue)
-                        : (DateTime?)null,
-                    claimBase.ClaClassification,
-                    claimBase.ClaDiagnosis1,
-                    claimBase.ClaDiagnosis2,
-                    claimBase.ClaDiagnosis3,
-                    claimBase.ClaDiagnosis4,
-                    claimBase.ClaDiagnosis5,
-                    claimBase.ClaDiagnosis6,
-                    claimBase.ClaDiagnosis7,
-                    claimBase.ClaDiagnosis8,
-                    claimBase.ClaDiagnosis9,
-                    claimBase.ClaDiagnosis10,
-                    claimBase.ClaDiagnosis11,
-                    claimBase.ClaDiagnosis12,
-                    Patient = patient != null ? new
-                    {
-                        patient.PatID,
-                        patient.PatFirstName,
-                        patient.PatLastName,
-                        patient.PatFullNameCC,
-                        PatBirthDate = patient.PatBirthDate.HasValue 
-                            ? patient.PatBirthDate.Value.ToDateTime(TimeOnly.MinValue)
-                            : (DateTime?)null,
-                        patient.PatAccountNo,
-                        patient.PatPhoneNo,
-                        patient.PatCity,
-                        patient.PatState
-                    } : null,
-                    RenderingPhysician = renderingPhysician != null ? new
-                    {
-                        renderingPhysician.PhyID,
-                        renderingPhysician.PhyName,
-                        renderingPhysician.PhyNPI
-                    } : null,
-                    ReferringPhysician = referringPhysician != null ? new
-                    {
-                        referringPhysician.PhyID,
-                        referringPhysician.PhyName,
-                        referringPhysician.PhyNPI
-                    } : null,
-                    BillingPhysician = billingPhysician != null ? new
-                    {
-                        billingPhysician.PhyID,
-                        billingPhysician.PhyName,
-                        billingPhysician.PhyNPI
-                    } : null,
-                    FacilityPhysician = facilityPhysician != null ? new
-                    {
-                        facilityPhysician.PhyID,
-                        facilityPhysician.PhyName,
-                        facilityPhysician.PhyNPI
-                    } : null,
-                    // Service Lines - adjustments and payments loaded separately by frontend
-                    ServiceLines = serviceLines.Select(s => new
+                var serviceLineRows = await _db.Service_Lines
+                    .AsNoTracking()
+                    .Where(s => s.SrvClaFID == claId)
+                    .OrderBy(s => s.SrvID)
+                    .Select(s => new
                     {
                         s.SrvID,
-                        SrvFromDate = s.SrvFromDate != default(DateOnly) 
-                            ? s.SrvFromDate.ToDateTime(TimeOnly.MinValue)
-                            : (DateTime?)null,
-                        SrvToDate = s.SrvToDate != default(DateOnly) 
-                            ? s.SrvToDate.ToDateTime(TimeOnly.MinValue)
-                            : (DateTime?)null,
+                        SrvFromDate = s.SrvFromDate != default(DateOnly) ? s.SrvFromDate.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                        SrvToDate = s.SrvToDate != default(DateOnly) ? s.SrvToDate.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
                         s.SrvProcedureCode,
                         s.SrvDesc,
                         s.SrvCharges,
                         s.SrvUnits,
                         s.SrvPlace,
                         s.SrvDiagnosisPointer,
+                        s.SrvTotalInsAmtPaidTRIG,
+                        s.SrvTotalPatAmtPaidTRIG,
                         s.SrvTotalBalanceCC,
                         s.SrvTotalAmtPaidCC,
                         s.SrvTotalAdjCC,
                         s.SrvTotalAmtAppliedCC,
                         s.SrvResponsibleParty,
-                        ResponsiblePartyName = responsiblePartyDict.ContainsKey(s.SrvResponsibleParty) 
-                            ? responsiblePartyDict[s.SrvResponsibleParty] 
-                            : (s.SrvResponsibleParty == 0 ? "Patient" : null),
-                        // Empty arrays - loaded separately via API endpoints
-                        Adjustments = Array.Empty<object>(),
-                        Payments = Array.Empty<object>()
-                    }).ToList(),
-                    ClaimActivity = claimActivityList,
-                    AdditionalData = DeserializeClaimAdditionalData(null)
+                        ResponsiblePartyName = s.SrvResponsibleParty == 0
+                            ? "Patient"
+                            : (s.SrvResponsiblePartyNavigation != null ? s.SrvResponsiblePartyNavigation.PayName : null)
+                    })
+                    .ToListAsync(cts.Token);
+
+                var serviceLineIds = serviceLineRows.Select(s => s.SrvID).ToList();
+
+                var adjustmentRows = serviceLineIds.Count == 0
+                    ? new List<(int AdjSrvFID, int AdjID, DateTime? AdjDate, decimal AdjAmount, string AdjGroupCode, string? AdjReasonCode, DateTime AdjDateTimeCreated, string? PayerName)>()
+                    : (await _db.Adjustments
+                        .AsNoTracking()
+                        .Where(a => serviceLineIds.Contains(a.AdjSrvFID))
+                        .Select(a => new
+                        {
+                            a.AdjID,
+                            a.AdjSrvFID,
+                            AdjDate = a.AdjDate.HasValue ? a.AdjDate.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                            a.AdjAmount,
+                            a.AdjGroupCode,
+                            a.AdjReasonCode,
+                            AdjDateTimeCreated = a.AdjDateTimeCreated,
+                            PayerName = a.AdjPayF != null ? a.AdjPayF.PayName : null
+                        })
+                        .ToListAsync(cts.Token))
+                        .Select(a => (
+                            AdjSrvFID: a.AdjSrvFID,
+                            AdjID: a.AdjID,
+                            AdjDate: a.AdjDate,
+                            AdjAmount: a.AdjAmount,
+                            AdjGroupCode: a.AdjGroupCode ?? string.Empty,
+                            AdjReasonCode: a.AdjReasonCode,
+                            AdjDateTimeCreated: a.AdjDateTimeCreated,
+                            PayerName: a.PayerName))
+                        .ToList();
+
+                var disbursementRows = serviceLineIds.Count == 0
+                    ? new List<(int DisbSrvFID, int DisbID, decimal DisbAmount, DateTime DisbDateTimeCreated, object? Payment)>()
+                    : (await _db.Disbursements
+                        .AsNoTracking()
+                        .Where(d => serviceLineIds.Contains(d.DisbSrvFID))
+                        .Select(d => new
+                        {
+                            d.DisbID,
+                            d.DisbSrvFID,
+                            d.DisbAmount,
+                            d.DisbDateTimeCreated,
+                            Payment = d.DisbPmtF == null ? null : new
+                            {
+                                d.DisbPmtF.PmtID,
+                                PmtDate = d.DisbPmtF.PmtDate.ToDateTime(TimeOnly.MinValue),
+                                d.DisbPmtF.PmtAmount,
+                                d.DisbPmtF.PmtMethod,
+                                d.DisbPmtF.Pmt835Ref,
+                                d.DisbPmtF.PmtDateTimeCreated
+                            }
+                        })
+                        .ToListAsync(cts.Token))
+                        .Select(d => (
+                            DisbSrvFID: d.DisbSrvFID,
+                            DisbID: d.DisbID,
+                            DisbAmount: d.DisbAmount,
+                            DisbDateTimeCreated: d.DisbDateTimeCreated,
+                            Payment: (object?)d.Payment))
+                        .ToList();
+
+                var claimActivity = await _db.Claim_Audits
+                    .AsNoTracking()
+                    .Where(a => a.ClaFID == claId)
+                    .OrderByDescending(a => a.ActivityDate)
+                    .Take(50)
+                    .Select(a => new
+                    {
+                        date = a.ActivityDate,
+                        user = a.UserName ?? "SYSTEM",
+                        activityType = a.ActivityType,
+                        notes = a.Notes,
+                        totalCharge = a.TotalCharge,
+                        insuranceBalance = a.InsuranceBalance,
+                        patientBalance = a.PatientBalance
+                    })
+                    .ToListAsync(cts.Token);
+
+                var adjustmentsByServiceLine = adjustmentRows
+                    .GroupBy(a => a.AdjSrvFID)
+                    .ToDictionary(g => g.Key, g => g.Select(a => (object)new
+                    {
+                        a.AdjID,
+                        a.AdjDate,
+                        a.AdjAmount,
+                        a.AdjGroupCode,
+                        a.AdjReasonCode,
+                        a.AdjDateTimeCreated,
+                        a.PayerName
+                    }).ToList());
+
+                var disbursementsByServiceLine = disbursementRows
+                    .GroupBy(d => d.DisbSrvFID)
+                    .ToDictionary(g => g.Key, g => g.Select(d => (object)new
+                    {
+                        d.DisbID,
+                        d.DisbAmount,
+                        d.DisbDateTimeCreated,
+                        d.Payment
+                    }).ToList());
+
+                var serviceLines = serviceLineRows.Select(s => new
+                {
+                    s.SrvID,
+                    s.SrvFromDate,
+                    s.SrvToDate,
+                    s.SrvProcedureCode,
+                    s.SrvDesc,
+                    s.SrvCharges,
+                    s.SrvUnits,
+                    s.SrvPlace,
+                    s.SrvDiagnosisPointer,
+                    s.SrvTotalInsAmtPaidTRIG,
+                    s.SrvTotalPatAmtPaidTRIG,
+                    s.SrvTotalBalanceCC,
+                    s.SrvTotalAmtPaidCC,
+                    s.SrvTotalAdjCC,
+                    s.SrvTotalAmtAppliedCC,
+                    s.SrvResponsibleParty,
+                    s.ResponsiblePartyName,
+                    Adjustments = adjustmentsByServiceLine.TryGetValue(s.SrvID, out var adj) ? adj : new List<object>(),
+                    Disbursements = disbursementsByServiceLine.TryGetValue(s.SrvID, out var disb) ? disb : new List<object>()
+                }).ToList();
+
+                var claim = new
+                {
+                    claimHeader.ClaID,
+                    claimHeader.ClaPatFID,
+                    claimHeader.ClaStatus,
+                    claimHeader.ClaDateTimeCreated,
+                    claimHeader.ClaDateTimeModified,
+                    claimHeader.ClaTotalChargeTRIG,
+                    claimHeader.ClaTotalAmtPaidCC,
+                    claimHeader.ClaTotalBalanceCC,
+                    claimHeader.ClaTotalAmtAppliedCC,
+                    claimHeader.ClaBillDate,
+                    claimHeader.ClaBillTo,
+                    claimHeader.ClaSubmissionMethod,
+                    claimHeader.ClaInvoiceNumber,
+                    claimHeader.ClaLocked,
+                    claimHeader.ClaOriginalRefNo,
+                    claimHeader.ClaDelayCode,
+                    claimHeader.ClaMedicaidResubmissionCode,
+                    claimHeader.ClaPaperWorkTransmissionCode,
+                    claimHeader.ClaPaperWorkControlNumber,
+                    claimHeader.ClaPaperWorkInd,
+                    claimHeader.ClaEDINotes,
+                    claimHeader.ClaRemarks,
+                    claimHeader.ClaAdmittedDate,
+                    claimHeader.ClaDischargedDate,
+                    claimHeader.ClaDateLastSeen,
+                    claimHeader.ClaRelatedTo,
+                    claimHeader.ClaRelatedToState,
+                    claimHeader.ClaFirstDateTRIG,
+                    claimHeader.ClaLastDateTRIG,
+                    claimHeader.ClaClassification,
+                    claimHeader.ClaDiagnosis1,
+                    claimHeader.ClaDiagnosis2,
+                    claimHeader.ClaDiagnosis3,
+                    claimHeader.ClaDiagnosis4,
+                    claimHeader.ClaDiagnosis5,
+                    claimHeader.ClaDiagnosis6,
+                    claimHeader.ClaDiagnosis7,
+                    claimHeader.ClaDiagnosis8,
+                    claimHeader.ClaDiagnosis9,
+                    claimHeader.ClaDiagnosis10,
+                    claimHeader.ClaDiagnosis11,
+                    claimHeader.ClaDiagnosis12,
+                    claimHeader.Patient,
+                    claimHeader.RenderingPhysician,
+                    claimHeader.ReferringPhysician,
+                    claimHeader.BillingPhysician,
+                    claimHeader.FacilityPhysician,
+                    ClaimInsured = claimInsured,
+                    ServiceLines = serviceLines,
+                    ClaimActivity = claimActivity
                 };
 
                 return Ok(claim);
@@ -1276,6 +1692,11 @@ namespace Zebl.Api.Controllers
                 return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Invalid claim ID" });
             if (request == null)
                 return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Request body is required" });
+
+            if (!string.IsNullOrWhiteSpace(request.ClaStatus) && !ClaimStatusCatalog.IsValidStoredValue(request.ClaStatus))
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Invalid claim status." });
+            }
 
             try
             {
@@ -1332,41 +1753,89 @@ namespace Zebl.Api.Controllers
                     claim.ClaAdditionalData = SerializeClaimAdditionalData(request.AdditionalData);
                 }
 
-                await _db.SaveChangesAsync();
+                var serviceLineSnapshot = await _db.Service_Lines
+                    .AsNoTracking()
+                    .Where(s => s.SrvClaFID == claId)
+                    .OrderBy(s => s.SrvID)
+                    .Select(s => new { s.SrvID, s.SrvProcedureCode })
+                    .ToListAsync();
+                var serviceLineIds = serviceLineSnapshot.Select(s => s.SrvID.ToString()).ToList();
+                var serviceLineProcCodes = serviceLineSnapshot.Select(s => $"{s.SrvID}:{s.SrvProcedureCode}").ToList();
 
-                // Insert Claim_Audit record (Claim Edited or manual note) - EZClaim-style history
+                _logger.LogInformation(
+                    "Updating claim {ClaId}. Request snapshot: Status={Status}, SubmissionMethod={SubmissionMethod}, RenderingPhy={RenderingPhy}, FacilityPhy={FacilityPhy}, BillingPhy={BillingPhy}, Locked={Locked}, ServiceLineIds={ServiceLineIds}, ServiceLineProcs={ServiceLineProcs}",
+                    claId,
+                    request.ClaStatus,
+                    request.ClaSubmissionMethod,
+                    claim.ClaRenderingPhyFID,
+                    claim.ClaFacilityPhyFID,
+                    claim.ClaBillingPhyFID,
+                    request.ClaLocked,
+                    string.Join(",", serviceLineIds),
+                    string.Join(",", serviceLineProcCodes));
+
+                // Prepare claim audit before save so the request performs a single SaveChangesAsync().
+                var userName = _userContext.UserName ?? "SYSTEM";
+                var computerName = _userContext.ComputerName ?? Environment.MachineName;
+                var noteText = !string.IsNullOrWhiteSpace(request.NoteText)
+                    ? request.NoteText.Trim().Length > 500 ? request.NoteText.Trim()[..500] : request.NoteText.Trim()
+                    : "Claim edited.";
+                _db.Claim_Audits.Add(new Claim_Audit
+                {
+                    ClaFID = claId,
+                    ActivityType = "Claim Edited",
+                    ActivityDate = DateTime.UtcNow,
+                    UserName = userName,
+                    ComputerName = computerName,
+                    Notes = noteText,
+                    TotalCharge = claim.ClaTotalChargeTRIG,
+                    InsuranceBalance = claim.ClaTotalInsBalanceTRIG,
+                    PatientBalance = claim.ClaTotalPatBalanceTRIG
+                });
+
                 try
                 {
-                    var userName = _userContext.UserName ?? "SYSTEM";
-                    var computerName = _userContext.ComputerName ?? Environment.MachineName;
-                    var noteText = !string.IsNullOrWhiteSpace(request.NoteText)
-                        ? request.NoteText.Trim().Length > 500 ? request.NoteText.Trim()[..500] : request.NoteText.Trim()
-                        : "Claim edited.";
-                    _db.Claim_Audits.Add(new Claim_Audit
-                    {
-                        ClaFID = claId,
-                        ActivityType = "Claim Edited",
-                        ActivityDate = DateTime.UtcNow,
-                        UserName = userName,
-                        ComputerName = computerName,
-                        Notes = noteText,
-                        TotalCharge = claim.ClaTotalChargeTRIG,
-                        InsuranceBalance = claim.ClaTotalInsBalanceTRIG,
-                        PatientBalance = claim.ClaTotalPatBalanceTRIG
-                    });
                     await _db.SaveChangesAsync();
                 }
-                catch (Exception ex)
+                catch (DbUpdateException dbEx)
                 {
-                    _logger.LogWarning(ex, "Claim_Audit insert failed for claim {ClaId}. Claim was updated successfully.", claId);
+                    var inner = dbEx.InnerException?.Message;
+                    var trackedEntries = string.Join(", ", dbEx.Entries.Select(e => e.Entity.GetType().Name));
+                    _logger.LogError(
+                        dbEx,
+                        "DbUpdateException while updating claim {ClaId}. Tracked entities: {TrackedEntries}. Inner: {InnerMessage}",
+                        claId,
+                        trackedEntries,
+                        inner);
+                    _logger.LogError("SQL error: {Message}", dbEx.InnerException?.Message);
+                    return BadRequest(new ErrorResponseDto
+                    {
+                        ErrorCode = "FK_VALIDATION",
+                        Message = "Claim update failed due to invalid related data (e.g., physician reference)."
+                    });
                 }
 
                 _logger.LogInformation("Updated claim {ClaId}, ClaClassification={ClaClassification}", claId, claim.ClaClassification);
-                return NoContent();
+                return Ok(new
+                {
+                    claim.ClaID,
+                    claim.ClaTotalChargeTRIG,
+                    claim.ClaTotalAmtPaidCC,
+                    claim.ClaTotalBalanceCC,
+                    claim.ClaTotalAmtAppliedCC
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating claim {ClaId}", claId);
+                _logger.LogError(
+                    ex,
+                    "Error updating claim {ClaId}. Payload summary: Status={Status}, SubmissionMethod={SubmissionMethod}, RenderingPhy={RenderingPhy}, FacilityPhy={FacilityPhy}, RelatedTo={RelatedTo}",
+                    claId,
+                    request?.ClaStatus,
+                    request?.ClaSubmissionMethod,
+                    request?.ClaRenderingPhyFID,
+                    request?.ClaFacilityPhyFID,
+                    request?.ClaRelatedTo);
                 return StatusCode(500, new ErrorResponseDto { ErrorCode = "INTERNAL_ERROR", Message = "Failed to update claim" });
             }
         }

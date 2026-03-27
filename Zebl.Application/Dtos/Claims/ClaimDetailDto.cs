@@ -1,4 +1,4 @@
-﻿namespace Zebl.Application.Dtos.Claims
+namespace Zebl.Application.Dtos.Claims
 {
     public class ClaimDetailDto
     {
@@ -31,6 +31,8 @@
         public string? SrvDesc { get; set; }
         public decimal? SrvCharges { get; set; }
         public decimal? SrvUnits { get; set; }
+        public decimal? SrvTotalInsAmtPaidTRIG { get; set; }
+        public decimal? SrvTotalPatAmtPaidTRIG { get; set; }
         public decimal? SrvTotalBalanceCC { get; set; }
     }
 }

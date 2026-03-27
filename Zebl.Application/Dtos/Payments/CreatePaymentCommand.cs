@@ -8,6 +8,7 @@ public class CreatePaymentCommand
     /// <summary>Patient or Payer.</summary>
     public PaymentSourceKind PaymentSource { get; set; }
     public int? PayerId { get; set; }
+    public int ClaimId { get; set; }
     public int PatientId { get; set; }
     public decimal Amount { get; set; }
     public DateOnly Date { get; set; }

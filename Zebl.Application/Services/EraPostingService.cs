@@ -67,9 +67,9 @@ public class EraPostingService : IEraPostingService
             var statusText = claim.ClaimStatus ?? era.EraStatus;
             if (string.IsNullOrWhiteSpace(statusText)) continue;
             if (statusText.IndexOf(StatusForwarded, StringComparison.OrdinalIgnoreCase) >= 0)
-                await _claimRepo.UpdateClaimStatusAsync(claim.ClaimId.Value, "Submitted");
+                await _claimRepo.UpdateClaimStatusAsync(claim.ClaimId.Value, ClaimStatusCatalog.ToStorage(ClaimStatus.Submitted));
             else if (statusText.IndexOf(StatusProcessedPrimary, StringComparison.OrdinalIgnoreCase) >= 0)
-                await _claimRepo.UpdateClaimStatusAsync(claim.ClaimId.Value, "ReadyToSubmit");
+                await _claimRepo.UpdateClaimStatusAsync(claim.ClaimId.Value, ClaimStatusCatalog.ToStorage(ClaimStatus.RTS));
         }
 
         decimal claimAmount = era.Claims.Count > 0

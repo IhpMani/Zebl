@@ -82,7 +82,7 @@ public class ClaimExportService : IClaimExportService
         });
 
         // Status transition after successful export
-        await _claimRepo.UpdateSubmissionStatusAsync(claimId, "Electronic", "Submitted", DateTime.UtcNow);
+        await _claimRepo.UpdateSubmissionStatusAsync(claimId, "Electronic", ClaimStatusCatalog.ToStorage(ClaimStatus.Submitted), DateTime.UtcNow);
 
         return content;
     }
@@ -226,6 +226,46 @@ public class ClaimExportService : IClaimExportService
         // 2430 — RULE E: PayExportPatientAmtDueIn2430 → AMT*EAF
         if (payer.PayExportPatientAmtDueIn2430)
             sb.Append("AMT*EAF*0~");
+
+        // 2400 Service Lines (EZClaim-style)
+        var lx = 1;
+        foreach (var line in data.ServiceLines)
+        {
+            var proc = Escape(line.SrvProcedureCode ?? "");
+            var m1 = Escape(line.SrvModifier1 ?? "");
+            var m2 = Escape(line.SrvModifier2 ?? "");
+            var m3 = Escape(line.SrvModifier3 ?? "");
+            var m4 = Escape(line.SrvModifier4 ?? "");
+            var units = line.SrvUnits.HasValue && line.SrvUnits.Value > 0 ? line.SrvUnits.Value.ToString("0.##") : "1";
+            var charge = line.SrvCharges.ToString("0.00");
+            var serviceDate = line.SrvFromDate ?? line.SrvToDate;
+
+            sb.Append("LX*").Append(lx).Append("~");
+            sb.Append("SV1*HC:").Append(proc).Append(":").Append(m1).Append(":").Append(m2).Append(":").Append(m3).Append(":").Append(m4)
+              .Append("*").Append(charge)
+              .Append("*UN*").Append(units)
+              .Append("***1~");
+
+            if (serviceDate.HasValue)
+                sb.Append("DTP*472*D8*").Append(FormatDate(serviceDate)).Append("~");
+
+            // Service-line notes -> Loop 2400 NTE
+            if (!string.IsNullOrWhiteSpace(line.SrvDesc))
+                sb.Append("NTE*ADD*").Append(Escape(line.SrvDesc)).Append("~");
+
+            // Drug fields export only when NDC exists.
+            if (!string.IsNullOrWhiteSpace(line.SrvNationalDrugCode))
+            {
+                sb.Append("LIN**N4*").Append(Escape(line.SrvNationalDrugCode)).Append("~");
+                if (line.SrvDrugUnitCount.HasValue || !string.IsNullOrWhiteSpace(line.SrvDrugUnitMeasurement))
+                {
+                    var count = line.SrvDrugUnitCount.HasValue ? line.SrvDrugUnitCount.Value.ToString("0.####") : "";
+                    sb.Append("CTP***").Append(charge).Append("*").Append(Escape(count)).Append("*").Append(Escape(line.SrvDrugUnitMeasurement ?? "")).Append("~");
+                }
+            }
+
+            lx++;
+        }
 
         // SE/GE/IEA — SE02 must match ST02 (transaction set control number)
         var segmentCount = sb.ToString().Count(c => c == '~') + 1;

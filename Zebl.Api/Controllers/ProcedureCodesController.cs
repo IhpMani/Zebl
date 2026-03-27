@@ -118,9 +118,39 @@ public class ProcedureCodesController : ControllerBase
     }
 
     /// <summary>
+    /// GET single procedure code by code (EZClaim service-line lookup).
+    /// </summary>
+    [HttpGet("{code}")]
+    public async Task<ActionResult<object>> GetByCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return BadRequest(new { message = "Procedure code is required." });
+
+        var entity = await _context.Procedure_Codes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.ProcCode == code.Trim());
+
+        if (entity == null)
+            return NotFound();
+
+        return Ok(new
+        {
+            entity.ProcCode,
+            entity.ProcCharge,
+            entity.ProcAllowed,
+            entity.ProcUnits,
+            entity.ProcModifier1,
+            entity.ProcModifier2,
+            entity.ProcModifier3,
+            entity.ProcModifier4,
+            entity.ProcDescription
+        });
+    }
+
+    /// <summary>
     /// GET single procedure code by ID.
     /// </summary>
-    [HttpGet("{id:int}")]
+    [HttpGet("id/{id:int}")]
     public async Task<ActionResult<Procedure_Code>> GetById(int id)
     {
         var entity = await _context.Procedure_Codes
@@ -236,8 +266,9 @@ public class ProcedureCodesController : ControllerBase
             // Default foreign keys when not supplied
             if (item.ProcBillingPhyFID == 0)
                 item.ProcBillingPhyFID = 4;
+            // Treat 0 as unspecified payer → not restricted to a payer (NULL), not a real PayID.
             if (item.ProcPayFID == 0)
-                item.ProcPayFID = 1;
+                item.ProcPayFID = null;
         }
 
         // Validate foreign keys (Physician / Payer) up-front to avoid SQL FK violations
@@ -265,8 +296,7 @@ public class ProcedureCodesController : ControllerBase
                 });
             }
 
-            // If a non-zero payer is supplied, ensure it exists
-            if (item.ProcPayFID != 0 && !validPayerIds.Contains(item.ProcPayFID))
+            if (item.ProcPayFID.HasValue && !validPayerIds.Contains(item.ProcPayFID.Value))
             {
                 return BadRequest(new
                 {

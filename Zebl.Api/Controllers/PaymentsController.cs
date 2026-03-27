@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using Zebl.Application.Dtos.Common;
 using Zebl.Application.Dtos.Payments;
 using Zebl.Application.Exceptions;
@@ -66,6 +67,10 @@ namespace Zebl.Api.Controllers
             {
                 return BadRequest(new ErrorResponseDto { ErrorCode = "VALIDATION", Message = ex.Message });
             }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "VALIDATION", Message = ex.Message });
+            }
         }
 
         /// <summary>Auto-apply remaining payment amount to service lines (oldest claim first).</summary>
@@ -78,6 +83,10 @@ namespace Zebl.Api.Controllers
                 return Ok(new ApiResponse<object> { Data = new { paymentId = id } });
             }
             catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "VALIDATION", Message = ex.Message });
+            }
+            catch (ValidationException ex)
             {
                 return BadRequest(new ErrorResponseDto { ErrorCode = "VALIDATION", Message = ex.Message });
             }
