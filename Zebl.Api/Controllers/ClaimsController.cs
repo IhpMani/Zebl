@@ -777,10 +777,17 @@ namespace Zebl.Api.Controllers
 
             var nowUtc = DateTime.UtcNow;
             var trendStartUtc = nowUtc.Date.AddDays(-(trendDays - 1));
-            var editedClaimIds = _db.Claim_Audits
+            // Source of truth for "claims edited" = Claim_Audit (same table used by Find Claim Note).
+            var normalizedUserName = userName.ToLower();
+            var userEditAudits = _db.Claim_Audits
                 .AsNoTracking()
-                .Where(a => a.UserName != null && a.UserName == userName)
-                .Where(a => a.ActivityType != null && EF.Functions.Like(a.ActivityType, "%Edit%"))
+                .Where(a => a.ClaFID > 0)
+                .Where(a => a.UserName != null && a.UserName.ToLower() == normalizedUserName)
+                .Where(a =>
+                    a.ActivityType != null &&
+                    (EF.Functions.Like(a.ActivityType, "%Claim Edited%") || EF.Functions.Like(a.ActivityType, "%Edit%")));
+
+            var editedClaimIds = userEditAudits
                 .Select(a => a.ClaFID)
                 .Distinct();
             var userClaims = _db.Claims
@@ -818,10 +825,7 @@ namespace Zebl.Api.Controllers
                 .OrderByDescending(x => x.Value)
                 .ToListAsync();
 
-            var trendRows = await _db.Claim_Audits
-                .AsNoTracking()
-                .Where(a => a.UserName != null && a.UserName == userName)
-                .Where(a => a.ActivityType != null && EF.Functions.Like(a.ActivityType, "%Edit%"))
+            var trendRows = await userEditAudits
                 .Where(a => a.ActivityDate >= trendStartUtc)
                 .GroupBy(a => a.ActivityDate.Date)
                 .Select(g => new { Date = g.Key, Count = g.Count() })
