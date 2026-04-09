@@ -1,11 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public partial class Adjustment
+public partial class Adjustment : ITenantEntity, ITenantFacilityEntity
 {
     public int AdjID { get; set; }
+
+    public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public DateTime AdjDateTimeCreated { get; set; }
 

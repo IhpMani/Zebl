@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.Adjustments;
 using Zebl.Application.Dtos.Common;
 using Zebl.Infrastructure.Persistence.Context;
@@ -14,11 +15,13 @@ namespace Zebl.Api.Controllers
     public class AdjustmentsController : ControllerBase
     {
         private readonly ZeblDbContext _db;
+        private readonly ICurrentContext _currentContext;
         private readonly ILogger<AdjustmentsController> _logger;
 
-        public AdjustmentsController(ZeblDbContext db, ILogger<AdjustmentsController> logger)
+        public AdjustmentsController(ZeblDbContext db, ICurrentContext currentContext, ILogger<AdjustmentsController> logger)
         {
             _db = db;
+            _currentContext = currentContext;
             _logger = logger;
         }
 
@@ -39,9 +42,11 @@ namespace Zebl.Api.Controllers
             }
 
             // Pull adjustments via Service → Claim (NO joins loaded)
+            var tid = _currentContext.TenantId;
+            var fid = _currentContext.FacilityId;
             var adjustments = await _db.Adjustments
                 .AsNoTracking()
-                .Where(a => a.AdjSrvF != null && a.AdjSrvF.SrvClaFID == claId)
+                .Where(a => a.AdjSrvF != null && a.AdjSrvF.SrvClaFID == claId && a.TenantId == tid && a.FacilityId == fid)
                 .OrderByDescending(a => a.AdjID)
                 .Select(a => new AdjustmentListItemDto
                 {
@@ -105,7 +110,10 @@ namespace Zebl.Api.Controllers
             var hasPmtDateTimeCreated = columnsToInclude.Any(c => c.Key == "pmtDateTimeCreated");
             var hasPayName = columnsToInclude.Any(c => c.Key == "payName");
 
-            var query = _db.Adjustments.AsNoTracking();
+            var tid = _currentContext.TenantId;
+            var fid = _currentContext.FacilityId;
+            var query = _db.Adjustments.AsNoTracking()
+                .Where(a => a.TenantId == tid && a.FacilityId == fid);
 
             if (serviceId.HasValue)
             {

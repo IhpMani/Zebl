@@ -16,22 +16,27 @@ public class Hl7ImportService
     private readonly ZeblDbContext _db;
     private readonly ILogger<Hl7ImportService> _logger;
     private readonly Hl7ParserService _parser;
-    private readonly ICurrentUserContext _userContext;
+    private readonly IInboundContext _inboundContext;
     private readonly IClaimAuditService _claimAuditService;
     private readonly ClaimInitialStatusProvider _claimInitialStatus;
+
+    // Debug-only behavior: when enabled, we will force creation paths to avoid “everything silently discarding” while you diagnose.
+    // Set env var HL7_IMPORT_DEBUG_FORCE_CREATE=1 on the server to activate.
+    private bool ForceCreateEnabled =>
+        string.Equals(Environment.GetEnvironmentVariable("HL7_IMPORT_DEBUG_FORCE_CREATE"), "1", StringComparison.OrdinalIgnoreCase);
 
     public Hl7ImportService(
         ZeblDbContext db,
         ILogger<Hl7ImportService> logger,
         Hl7ParserService parser,
-        ICurrentUserContext userContext,
+        IInboundContext inboundContext,
         IClaimAuditService claimAuditService,
         ClaimInitialStatusProvider claimInitialStatus)
     {
         _db = db;
         _logger = logger;
         _parser = parser;
-        _userContext = userContext;
+        _inboundContext = inboundContext;
         _claimAuditService = claimAuditService;
         _claimInitialStatus = claimInitialStatus;
     }
@@ -60,23 +65,94 @@ public class Hl7ImportService
     /// </summary>
     public async Task<Hl7ImportResult> ProcessHl7Messages(List<Hl7DftMessage> messages, string fileName = "unknown.hl7")
     {
+        ArgumentNullException.ThrowIfNull(messages);
         var result = new Hl7ImportResult();
+        var integrationId = _inboundContext.IntegrationId;
+        var tenantId = _inboundContext.TenantId;
+        var facilityId = _inboundContext.FacilityId;
+        var forceCreate = ForceCreateEnabled;
 
-        _logger.LogInformation("HL7 file import started for {FileName} with {MessageCount} parsed messages", fileName, messages?.Count ?? 0);
+        if (tenantId <= 0)
+            throw new InvalidOperationException("Inbound tenant is required");
 
-        foreach (var message in messages)
+        if (facilityId <= 0)
+            throw new InvalidOperationException("Inbound facility is required");
+
+        _logger.LogInformation(
+            "HL7 Import using Tenant={TenantId}, Facility={FacilityId}",
+            tenantId,
+            facilityId);
+
+        _logger.LogInformation(
+            "HL7 file import started for {FileName} with {MessageCount} parsed messages. IntegrationId={IntegrationId}, TenantId={TenantId}, FacilityId={FacilityId}",
+            fileName, messages.Count, integrationId, tenantId, facilityId);
+        _logger.LogInformation("HL7 import debug force-create enabled={ForceCreate}", forceCreate);
+        _logger.LogWarning(
+            "[HL7-IMPORT-DEBUG] ProcessHl7Messages: inbound messages in list={Count}, File={FileName}",
+            messages.Count,
+            fileName);
+
+        for (var i = 0; i < messages.Count; i++)
         {
-            if (message == null || string.IsNullOrWhiteSpace(message.PidSegment))
+            var message = messages[i];
+
+            if (message == null)
             {
-                _logger.LogWarning("Skipping invalid HL7 message: missing PID segment");
+                result.Errors++;
+                _logger.LogWarning(
+                    "HL7 DFT import: skipping message index {MessageIndex} — message reference is null. File={FileName}",
+                    i,
+                    fileName);
                 continue;
             }
 
+            if (string.IsNullOrWhiteSpace(message.PidSegment))
+            {
+                _logger.LogWarning(
+                    "HL7 message at index {MessageIndex} has missing/blank PID segment. File={FileName}. ForceCreate={ForceCreate}",
+                    i, fileName, forceCreate);
+
+                if (!forceCreate)
+                {
+                    result.Errors++;
+                    _logger.LogWarning(
+                        "HL7 DFT import: skipping message index {MessageIndex} — blank PID (set HL7_IMPORT_DEBUG_FORCE_CREATE=1 to bypass). File={FileName}",
+                        i,
+                        fileName);
+                    continue;
+                }
+            }
+
             await using var tx = await _db.Database.BeginTransactionAsync();
+            var trackedBefore = _db.ChangeTracker.Entries().Count();
 
             try
             {
-                var messageStats = await ProcessDftMessage(message, fileName);
+                _logger.LogWarning(
+                    "[HL7-IMPORT-DEBUG] Message index {MessageIndex}: begin transaction. ChangeTracker.Entries (before ProcessDftMessage)={Tracked}. File={FileName}",
+                    i,
+                    trackedBefore,
+                    fileName);
+
+                var messageStats = await ProcessDftMessage(message, fileName, i);
+
+                _logger.LogInformation(
+                    "HL7 DFT import: message index {MessageIndex} ProcessDftMessage finished. NewPatient={NewPatient}, NewClaim={NewClaim}, ServiceLines={Sl}, Amount={Amt}. File={FileName}",
+                    i,
+                    messageStats.NewPatient,
+                    messageStats.NewClaim,
+                    messageStats.ServiceLinesCreated,
+                    messageStats.Amount,
+                    fileName);
+
+                var flushed = await _db.SaveChangesAsync();
+                _logger.LogInformation(
+                    "HL7 DFT import: pre-commit SaveChangesAsync wrote {Written} rows for message index {MessageIndex}. File={FileName}",
+                    flushed,
+                    i,
+                    fileName);
+
+                await tx.CommitAsync();
 
                 result.SuccessCount++;
                 result.NewPatientsCount += messageStats.NewPatient ? 1 : 0;
@@ -84,15 +160,42 @@ public class Hl7ImportService
                 result.NewServiceLinesCount += messageStats.ServiceLinesCreated;
                 result.TotalAmount += messageStats.Amount;
 
-                await tx.CommitAsync();
+                _logger.LogInformation(
+                    "HL7 DFT import: message index {MessageIndex} committed. Success so far={Ok}, new claims so far={Claims}. File={FileName}",
+                    i,
+                    result.SuccessCount,
+                    result.NewClaimsCount,
+                    fileName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "HL7 message failed but import continues");
-                await tx.RollbackAsync();
+                result.Errors++;
+                _logger.LogError(
+                    ex,
+                    "HL7 DFT import failed for message index {MessageIndex}; rolling back this message only and continuing file. File={FileName}",
+                    i,
+                    fileName);
+
+                try
+                {
+                    await tx.RollbackAsync();
+                }
+                catch (Exception rbEx)
+                {
+                    _logger.LogWarning(rbEx, "HL7 DFT import: rollback after message failure also threw. MessageIndex={MessageIndex}", i);
+                }
+
                 _db.ChangeTracker.Clear();
             }
         }
+
+        _logger.LogWarning(
+            "[HL7-IMPORT-DEBUG] ProcessHl7Messages END: SuccessCount={Ok}, NewPatients={Np}, NewClaims={Nc}, NewServiceLines={Sl}. File={FileName}",
+            result.SuccessCount,
+            result.NewPatientsCount,
+            result.NewClaimsCount,
+            result.NewServiceLinesCount,
+            fileName);
 
         return result;
     }
@@ -112,19 +215,69 @@ public class Hl7ImportService
     /// Processes a single DFT message: Patient → Claim → Service_Lines
     /// Returns statistics about what was created
     /// </summary>
-    private async Task<MessageStats> ProcessDftMessage(Hl7DftMessage message, string fileName)
+    private async Task<MessageStats> ProcessDftMessage(Hl7DftMessage message, string fileName, int messageIndex)
     {
         var stats = new MessageStats();
 
+        // Extract key values for logging BEFORE any DB operations.
+        var pidSegmentForExtraction = message.PidSegment ?? string.Empty;
+        var pv1SegmentForExtraction = message.Pv1Segment ?? string.Empty;
+        var pv1Has = !string.IsNullOrWhiteSpace(message.Pv1Segment);
+        var pidHas = !string.IsNullOrWhiteSpace(message.PidSegment);
+
+        var patientMrnForLog = _parser.ExtractPatientMrn(pidSegmentForExtraction);
+        var (patientFirstNameForLog, patientLastNameForLog) = _parser.ExtractPatientName(pidSegmentForExtraction);
+
+        // Insurance: log first IN1 company name and count.
+        string? insuranceCompanyNameForLog = null;
+        if (message.In1Segments != null && message.In1Segments.Count > 0)
+        {
+            var in1First = message.In1Segments[0];
+            insuranceCompanyNameForLog = _parser.NormalizeString(_parser.GetFieldValue(in1First, 4), maxLength: 100);
+        }
+
+        // Physician: log PV1 billing/referring and attending.
+        string? attendingNpiForLog = null;
+        string? billingNpiForLog = null;
+        if (!string.IsNullOrWhiteSpace(message.Pv1Segment))
+        {
+            var attendingFieldForLog = _parser.GetFieldValue(pv1SegmentForExtraction, 7);
+            var referringFieldForLog = _parser.GetFieldValue(pv1SegmentForExtraction, 8);
+            var (attNpiLog, _, _) = ParsePv1Xcn(attendingFieldForLog);
+            var (refNpiLog, _, _) = ParsePv1Xcn(referringFieldForLog);
+            attendingNpiForLog = attNpiLog;
+            billingNpiForLog = refNpiLog ?? attNpiLog;
+        }
+
+        _logger.LogInformation(
+            "HL7 DFT message index {MessageIndex} extracted: PIDPresent={PidPresent}, MRN={Mrn}, PatientName={FirstName} {LastName}, PV1Present={Pv1Present}, AttendingNPI={AttendingNpi}, BillingNPI={BillingNpi}, IN1Count={In1Count}, InsuranceCompany={InsuranceCompany}, FT1Count={Ft1Count}. File={FileName}",
+            messageIndex,
+            pidHas,
+            patientMrnForLog ?? "null",
+            patientFirstNameForLog,
+            patientLastNameForLog,
+            pv1Has,
+            attendingNpiForLog ?? "null",
+            billingNpiForLog ?? "null",
+            message.In1Segments?.Count ?? 0,
+            insuranceCompanyNameForLog ?? "null",
+            message.Ft1Segments?.Count ?? 0,
+            fileName);
+
         // Step 1: Extract patient MRN from PID-3
-        var mrn = _parser.ExtractPatientMrn(message.PidSegment);
+        var mrn = _parser.ExtractPatientMrn(pidSegmentForExtraction);
         if (string.IsNullOrWhiteSpace(mrn))
         {
-            throw new InvalidOperationException("Cannot process DFT message: PID-3 (MRN) is missing");
+            mrn = $"HL7_AUTO_{Guid.NewGuid():N}";
+            _logger.LogWarning(
+                "HL7 DFT message index {MessageIndex}: PID-3 (MRN) missing; generated MRN={Mrn} so import can proceed on empty DB. File={FileName}",
+                messageIndex,
+                mrn,
+                fileName);
         }
 
         // Step 2: Match or create Patient
-        var (patient, isNewPatient) = await MatchOrCreatePatient(message.PidSegment!, mrn);
+        var (patient, isNewPatient) = await MatchOrCreatePatient(pidSegmentForExtraction, mrn);
         if (patient == null || patient.PatID <= 0)
         {
             throw new InvalidOperationException($"Failed to create or retrieve patient with MRN: {mrn}");
@@ -150,17 +303,44 @@ public class Hl7ImportService
         }
         stats.NewClaim = isNewClaim;
 
-        // Claim is now in the database; claim.ClaID is set. Only after this point do we create Service_Line records.
-        _logger.LogInformation("HL7 Claim persisted with ClaID {ClaimId}; creating service lines.", claim.ClaID);
+        // Claim is now in the database; claim.ClaID is set.
+        _logger.LogInformation("HL7 Claim persisted with ClaID {ClaimId}; creating insurance rows and payers before service lines.", claim.ClaID);
+
+        // Step 4a: Claim_Insured + Payers MUST exist before Service_Line inserts: SrvResponsibleParty FK references Payer.PayID.
+        // Previously service lines used hardcoded PayID=1 before any payer was created, causing FK failures and zero imports.
+        await CreateClaimInsuredRecords(claim.ClaID, patient.PatID, message.In1Segments);
+
+        try
+        {
+            await _claimAuditService.AddInsuranceEditedAsync(claim.ClaID);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Claim_Audit AddInsuranceEdited failed for claim {ClaId} (non-fatal).", claim.ClaID);
+        }
+
+        var primaryPayerId = await _db.Claim_Insureds.AsNoTracking()
+            .Where(ci => ci.ClaInsClaFID == claim.ClaID && ci.ClaInsSequence == 1)
+            .Select(ci => ci.ClaInsPayFID)
+            .FirstOrDefaultAsync();
+        if (primaryPayerId <= 0)
+        {
+            var fallbackPayer = await EnsurePayerExistsAsync("HL7_DEFAULT_IN1_PAYER", null, null, null, null, null);
+            primaryPayerId = fallbackPayer.PayID;
+            _logger.LogWarning(
+                "HL7 import: no primary Claim_Insured row for claim {ClaimId}; using fallback payer PayID={PayId}.",
+                claim.ClaID,
+                primaryPayerId);
+        }
 
         var claimFirstDate = claim.ClaFirstDateTRIG ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
-        // Step 4: After claim is saved, iterate FT1 segments and add Service_Line entities (no SaveChanges in loop).
+        // Step 4b: Iterate FT1 segments and add Service_Line entities (no SaveChanges in loop).
         int serviceLinesCreated = 0;
         decimal amount = 0m;
-        foreach (var ft1Segment in message.Ft1Segments)
+        foreach (var ft1Segment in message.Ft1Segments ?? new List<string>())
         {
-            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, ft1Segment, claimFirstDate);
+            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, ft1Segment, claimFirstDate, primaryPayerId);
             if (created) serviceLinesCreated++;
             else _logger.LogDebug("Skipped FT1 segment for claim {ClaimId}: duplicate or invalid. Segment: {FT1}", claim.ClaID, ft1Segment);
             amount += charges;
@@ -170,7 +350,7 @@ public class Hl7ImportService
         {
             _logger.LogWarning("No FT1 service lines detected for claim {ClaID}. Creating default HL7 service line.", claim.ClaID);
             var defaultFt1 = $"FT1|1|||{claimFirstDate:yyyyMMdd}||||||DEFAULT|1";
-            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, defaultFt1, claimFirstDate);
+            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, defaultFt1, claimFirstDate, primaryPayerId);
             if (created)
             {
                 serviceLinesCreated++;
@@ -181,20 +361,12 @@ public class Hl7ImportService
         // Step 5: Persist all Service_Lines in one call (Claim was already saved in Step 3).
         if (serviceLinesCreated > 0)
         {
-            await _db.SaveChangesAsync();
+            var written = await _db.SaveChangesAsync();
+            _logger.LogInformation("HL7 DFT message index {MessageIndex}: Service_Line SaveChanges wrote {Written} rows. ClaimId={ClaimId}", messageIndex, written, claim.ClaID);
         }
 
         stats.ServiceLinesCreated = serviceLinesCreated;
         stats.Amount = amount;
-
-        // Step 5: Create Claim_Insured records from IN1 segments (primary + secondary only)
-        await CreateClaimInsuredRecords(claim.ClaID, patient.PatID, message.In1Segments);
-
-        // Step 5b: Insert Claim_Audit when insurance info was added/updated
-        if (message.In1Segments != null && message.In1Segments.Count > 0)
-        {
-            await _claimAuditService.AddInsuranceEditedAsync(claim.ClaID);
-        }
 
         // Step 6: Update claim totals after all service lines are created
         await UpdateClaimTotals(claim.ClaID);
@@ -212,17 +384,20 @@ public class Hl7ImportService
                 .FirstOrDefaultAsync();
             _db.Claim_Audits.Add(new Claim_Audit
             {
+                TenantId = claim.TenantId,
+                FacilityId = claim.FacilityId,
                 ClaFID = claim.ClaID,
                 ActivityType = activityType,
                 ActivityDate = DateTime.UtcNow,
-                UserName = _userContext.UserName ?? "SYSTEM",
-                ComputerName = _userContext.ComputerName ?? Environment.MachineName,
+                UserName = "SYSTEM",
+                ComputerName = Environment.MachineName,
                 Notes = noteText,
                 TotalCharge = claimForSnapshot?.ClaTotalChargeTRIG,
                 InsuranceBalance = claimForSnapshot?.ClaTotalInsBalanceTRIG,
                 PatientBalance = claimForSnapshot?.ClaTotalPatBalanceTRIG
             });
-            await _db.SaveChangesAsync();
+            var written = await _db.SaveChangesAsync();
+            _logger.LogInformation("HL7 DFT message index {MessageIndex}: Claim_Audit SaveChanges wrote {Written} rows. ClaimId={ClaimId}", messageIndex, written, claim.ClaID);
         }
         catch (Exception ex)
         {
@@ -239,16 +414,27 @@ public class Hl7ImportService
     /// </summary>
     private async Task<(Patient patient, bool isNew)> MatchOrCreatePatient(string pidSegment, string mrn)
     {
+        var tenantId = _inboundContext.TenantId;
+        var facilityId = _inboundContext.FacilityId;
+        if (tenantId <= 0 || facilityId <= 0)
+            throw new InvalidOperationException("Inbound integration tenant/facility context is required.");
+
         // Normalize MRN (trim, truncate to max length)
         var normalizedMrn = _parser.NormalizeString(mrn, maxLength: 50);
         if (string.IsNullOrWhiteSpace(normalizedMrn))
         {
-            throw new InvalidOperationException("Cannot process DFT message: PID-3 (MRN) is missing or invalid after normalization");
+            normalizedMrn = _parser.NormalizeString($"HL7_AUTO_{Guid.NewGuid():N}", maxLength: 50);
+            _logger.LogWarning(
+                "MatchOrCreatePatient: MRN empty after normalization; using generated MRN={Mrn}.",
+                normalizedMrn);
         }
 
         // Match by PatAccountNo (MRN)
         var existingPatient = await _db.Patients
-            .FirstOrDefaultAsync(p => p.PatAccountNo == normalizedMrn);
+            .FirstOrDefaultAsync(p =>
+                p.PatAccountNo == normalizedMrn &&
+                p.TenantId == tenantId &&
+                p.FacilityId == facilityId);
 
         if (existingPatient != null)
         {
@@ -274,15 +460,33 @@ public class Hl7ImportService
         var phoneField = _parser.GetFieldValue(pidSegment, 13);
         var phone = _parser.SanitizePhoneNumber(phoneField, maxLength: 25);
 
-        // Choose a default physician to satisfy FK constraints for required physician FKs
+        // Patient rows require NOT NULL physician FKs. Prefer any existing physician in inbound scope; if none,
+        // insert a minimal placeholder. Billing/attending physicians on the Claim are resolved from PV1 in CreateNewClaim.
         var defaultPhysician = await _db.Physicians
+            .Where(p => p.TenantId == tenantId && p.FacilityId == facilityId)
             .OrderBy(p => p.PhyID)
             .FirstOrDefaultAsync();
 
         if (defaultPhysician == null)
         {
-            throw new InvalidOperationException(
-                "HL7 import requires at least one Physician record. Insert a Physician before importing HL7 messages.");
+            var placeholderPhysician = new Physician
+            {
+                PhyNPI = $"IMPORT_PLACEHOLDER_{Guid.NewGuid():N}".Substring(0, 15),
+                PhyName = "HL7 Import Placeholder",
+                TenantId = tenantId,
+                FacilityId = facilityId,
+                PhyType = "Rendering",
+                PhyInactive = false,
+                PhyDateTimeCreated = DateTime.UtcNow
+            };
+            await _db.Physicians.AddAsync(placeholderPhysician);
+            var written = await _db.SaveChangesAsync();
+            _logger.LogInformation(
+                "MatchOrCreatePatient: no Physician in scope; created placeholder for Patient FKs (rows={Written}, PhyID={PhyID}). Claim PV1 resolution occurs in CreateNewClaim.",
+                written,
+                placeholderPhysician.PhyID);
+
+            defaultPhysician = placeholderPhysician;
         }
 
         var defaultPhysicianId = defaultPhysician.PhyID;
@@ -293,6 +497,8 @@ public class Hl7ImportService
         // Create new patient with all NOT NULL columns populated (EZClaim defaults)
         var newPatient = new Patient
         {
+            TenantId = tenantId,
+            FacilityId = facilityId,
             PatAccountNo = normalizedMrn, // Use normalized MRN
             PatFirstName = firstName,
             PatLastName = lastName,
@@ -334,7 +540,15 @@ public class Hl7ImportService
         };
 
         await _db.Patients.AddAsync(newPatient);
-        await _db.SaveChangesAsync(); // Save to get PatID
+        _logger.LogWarning(
+            "[HL7-IMPORT-DEBUG] MatchOrCreatePatient: about to SaveChangesAsync for new Patient MRN={Mrn}",
+            normalizedMrn);
+        var patientWritten = await _db.SaveChangesAsync(); // Save to get PatID
+        _logger.LogWarning(
+            "[HL7-IMPORT-DEBUG] MatchOrCreatePatient: SaveChangesAsync AffectedRows={Written}, PatID={PatID}",
+            patientWritten,
+            newPatient.PatID);
+        _logger.LogInformation("MatchOrCreatePatient: Patient SaveChanges wrote {Written} rows. MRN={Mrn}, Tenant={TenantId}, Facility={FacilityId}", patientWritten, normalizedMrn, tenantId, facilityId);
 
         if (newPatient.PatID <= 0)
         {
@@ -352,18 +566,31 @@ public class Hl7ImportService
     /// </summary>
     private async Task<(Claim claim, bool isNew)> CreateNewClaim(int patientId, Hl7DftMessage message)
     {
+        var tenantId = _inboundContext.TenantId;
+        var facilityId = _inboundContext.FacilityId;
+        if (tenantId <= 0 || facilityId <= 0)
+            throw new InvalidOperationException("Inbound integration tenant/facility context is required.");
+
         if (patientId <= 0)
         {
             throw new ArgumentException($"Invalid patient ID: {patientId}", nameof(patientId));
+        }
+
+        var patient = await _db.Patients.AsNoTracking()
+            .FirstOrDefaultAsync(p =>
+                p.PatID == patientId &&
+                p.TenantId == tenantId &&
+                p.FacilityId == facilityId);
+        if (patient == null)
+        {
+            throw new InvalidOperationException(
+                $"Cannot create claim. Patient {patientId} is outside current tenant/facility scope.");
         }
 
         // Extract PV1 data if available
         DateOnly? admittedDate = null;
         DateOnly? dischargedDate = null;
         string? visitNumber = null;
-        string? hl7BillingNpi = null;
-        string? hl7AttendingNpi = null;
-
         if (!string.IsNullOrWhiteSpace(message.Pv1Segment))
         {
             // PV1-19: Visit Number (Account/Visit identifier)
@@ -376,14 +603,15 @@ public class Hl7ImportService
             // PV1-45: Discharge Date
             var dischargeDateStr = _parser.GetFieldValue(message.Pv1Segment, 45);
             dischargedDate = _parser.ParseHl7Date(dischargeDateStr);
-
-            // Physician NPIs (if present)
-            // PV1-7: Attending doctor, PV1-8: Referring doctor (used as billing when available)
-            var attendingField = _parser.GetFieldValue(message.Pv1Segment, 7);
-            var referringField = _parser.GetFieldValue(message.Pv1Segment, 8);
-            hl7AttendingNpi = _parser.GetComponentValue(attendingField, 0);
-            hl7BillingNpi = _parser.GetComponentValue(referringField, 0) ?? hl7AttendingNpi;
         }
+
+        // PV1-7: Attending (XCN). PV1-8: Referring / billing physician (XCN).
+        // Components: NPI^LastName^FirstName^... (caret-separated)
+        var pv1Seg = message.Pv1Segment ?? string.Empty;
+        var attendingField = _parser.GetFieldValue(pv1Seg, 7);
+        var referringField = _parser.GetFieldValue(pv1Seg, 8);
+        var (attNpi, attLast, attFirst) = ParsePv1Xcn(attendingField);
+        var (refNpi, refLast, refFirst) = ParsePv1Xcn(referringField);
 
         // Get first service date from FT1 segments for claim date range (DOS)
         DateOnly? firstServiceDate = null;
@@ -402,59 +630,63 @@ public class Hl7ImportService
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c =>
                     c.ClaPatFID == patientId &&
+                    c.TenantId == tenantId &&
+                    c.FacilityId == facilityId &&
                     c.ClaFirstDateTRIG == firstServiceDate.Value &&
                     (visitNumber == null || c.ClaMedicalRecordNumber == visitNumber ||
                      (admittedDate.HasValue && c.ClaAdmittedDate == admittedDate.Value)));
 
             if (existingClaim != null)
             {
+                _logger.LogWarning(
+                    "[HL7-IMPORT-DEBUG] CreateNewClaim: duplicate match — returning existing ClaID={ClaID} (no new Claim INSERT). PatID={PatID}, DOS={Dos}",
+                    existingClaim.ClaID,
+                    patientId,
+                    firstServiceDate);
                 _logger.LogInformation("Found existing claim ClaID: {ClaID} for patient PatID: {PatID}, DOS: {DOS}, Visit: {Visit}",
                     existingClaim.ClaID, patientId, firstServiceDate.Value, visitNumber ?? "N/A");
                 return (existingClaim, false);
             }
         }
 
-        // Resolve Billing Physician by NPI, then fall back to first active physician
-        Physician? billingPhy = null;
-        if (!string.IsNullOrWhiteSpace(hl7BillingNpi))
-        {
-            billingPhy = await _db.Physicians.FirstOrDefaultAsync(p => p.PhyNPI == hl7BillingNpi);
-        }
+        // Attending always from PV1-7; billing/referring from PV1-8 when present, else same as attending (no random First()).
+        var attendingPhy = await FindOrCreatePhysicianFromHl7Pv1Async(
+            attNpi,
+            attFirst,
+            attLast,
+            "Attending",
+            tenantId,
+            facilityId);
 
-        if (billingPhy == null)
+        Physician billingPhy;
+        var referringMeaningful = !string.IsNullOrWhiteSpace(referringField) &&
+            (!string.IsNullOrWhiteSpace(refNpi) ||
+             !string.IsNullOrWhiteSpace(refLast) ||
+             !string.IsNullOrWhiteSpace(refFirst));
+        if (!referringMeaningful)
         {
-            billingPhy = await _db.Physicians
-                .Where(p => !p.PhyInactive)
-                .OrderBy(p => p.PhyID)
-                .FirstOrDefaultAsync();
+            billingPhy = attendingPhy;
         }
-
-        if (billingPhy == null)
+        else
         {
-            throw new InvalidOperationException("HL7 Import Error: No physician available to assign to claim.");
-        }
-
-        // Resolve Attending Physician by NPI, then fall back to billing physician
-        Physician? attendingPhy = null;
-        if (!string.IsNullOrWhiteSpace(hl7AttendingNpi))
-        {
-            attendingPhy = await _db.Physicians.FirstOrDefaultAsync(p => p.PhyNPI == hl7AttendingNpi);
-        }
-
-        if (attendingPhy == null)
-        {
-            attendingPhy = billingPhy;
-        }
-
-        if (attendingPhy == null)
-        {
-            throw new InvalidOperationException("HL7 Import Error: No attending physician available to assign to claim.");
+            var billNpi = string.IsNullOrWhiteSpace(refNpi) ? attNpi : refNpi;
+            var billFirst = string.IsNullOrWhiteSpace(refFirst) ? attFirst : refFirst;
+            var billLast = string.IsNullOrWhiteSpace(refLast) ? attLast : refLast;
+            billingPhy = await FindOrCreatePhysicianFromHl7Pv1Async(
+                billNpi,
+                billFirst,
+                billLast,
+                "Referring/Billing",
+                tenantId,
+                facilityId);
         }
 
         var initialClaStatus = await _claimInitialStatus.GetInitialClaStatusStringAsync();
 
         var newClaim = new Claim
         {
+            TenantId = tenantId,
+            FacilityId = facilityId,
             ClaPatFID = patientId,
             ClaStatus = initialClaStatus,
             ClaSubmissionMethod = "Electronic", // HL7 imports are electronic
@@ -480,6 +712,10 @@ public class Hl7ImportService
             ClaRenderingPhyFID = billingPhy.PhyID,
             ClaSupervisingPhyFID = attendingPhy.PhyID
         };
+        if (newClaim.TenantId != patient.TenantId)
+        {
+            throw new InvalidOperationException("Tenant mismatch: Claim.TenantId must match Patient.TenantId.");
+        }
 
         // Safety validation before inserting claim
         if (newClaim.ClaBillingPhyFID <= 0 || newClaim.ClaAttendingPhyFID <= 0)
@@ -488,8 +724,24 @@ public class Hl7ImportService
         }
 
         _db.Claims.Add(newClaim);
+        _logger.LogWarning(
+            "[HL7-IMPORT-DEBUG] CreateNewClaim: about to SaveChangesAsync for new Claim (PatientId={PatientId}, TenantId={TenantId}, FacilityId={FacilityId}). Tracked claim entity state=Added.",
+            patientId,
+            tenantId,
+            facilityId);
         // Explicitly save the claim so ClaID is generated before any Service_Line uses SrvClaFID. Do not rely on EF ordering.
-        await _db.SaveChangesAsync();
+        var claimWritten = await _db.SaveChangesAsync();
+        _logger.LogWarning(
+            "[HL7-IMPORT-DEBUG] CreateNewClaim: SaveChangesAsync returned AffectedRows={Written}, new ClaID={ClaID}",
+            claimWritten,
+            newClaim.ClaID);
+        _logger.LogInformation("CreateNewClaim: Claim SaveChanges wrote {Written} rows. PatientId={PatientId}, ClaimTempTenant={TenantId}, ClaimTempFacility={FacilityId}", claimWritten, patientId, tenantId, facilityId);
+
+        // These logs confirm which physician IDs were linked to the created Claim.
+        _logger.LogWarning(
+            "DFT Import → Linked Physicians to Claim: BillingPhyID={BillingPhyID}, AttendingPhyID={AttendingPhyID}",
+            billingPhy.PhyID,
+            attendingPhy.PhyID);
 
         if (newClaim.ClaID <= 0)
         {
@@ -508,8 +760,20 @@ public class Hl7ImportService
     /// <param name="claimId">ClaID of the already-persisted Claim</param>
     /// <param name="ft1Segment">Raw FT1 segment string</param>
     /// <param name="claimFirstDate">Claim first service date; used as fallback when FT1 date is missing</param>
-    private async Task<(bool created, decimal charges)> CreateServiceLineFromFt1WithCharges(int claimId, string ft1Segment, DateOnly? claimFirstDate = null)
+    private async Task<(bool created, decimal charges)> CreateServiceLineFromFt1WithCharges(
+        int claimId,
+        string ft1Segment,
+        DateOnly? claimFirstDate,
+        int responsiblePartyPayerId)
     {
+        var tenantId = _inboundContext.TenantId;
+        var facilityId = _inboundContext.FacilityId;
+        var forceCreate = ForceCreateEnabled;
+        if (tenantId <= 0)
+            throw new InvalidOperationException("Inbound integration tenant context is required.");
+        if (facilityId <= 0)
+            throw new InvalidOperationException("Inbound integration facility context is required.");
+
         _logger.LogInformation("Creating ServiceLine with SrvClaFID {ClaimId}", claimId);
 
         if (claimId <= 0)
@@ -519,12 +783,20 @@ public class Hl7ImportService
         }
 
         // Ensure Claim exists in DB before inserting Service_Line (avoid FK violation)
-        var claimExists = await _db.Claims.AsNoTracking().AnyAsync(c => c.ClaID == claimId);
-        if (!claimExists)
+        var claimScope = await _db.Claims.AsNoTracking()
+            .Where(c => c.ClaID == claimId)
+            .Select(c => new { c.TenantId, c.FacilityId })
+            .FirstOrDefaultAsync();
+        if (claimScope == null)
         {
             _logger.LogError("Claim missing before ServiceLine insert for ClaimId {ClaimId}", claimId);
             return (false, 0m);
         }
+        if (claimScope.TenantId != tenantId || claimScope.FacilityId != facilityId)
+            throw new InvalidOperationException("Inbound integration tenant/facility context does not match Claim scope.");
+
+        if (responsiblePartyPayerId <= 0)
+            throw new InvalidOperationException("Responsible party payer id must be positive for HL7 service line import (FK_ServiceLine_ResponsibleParty).");
 
         if (string.IsNullOrWhiteSpace(ft1Segment))
         {
@@ -579,6 +851,8 @@ public class Hl7ImportService
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s =>
                     s.SrvClaFID == claimId &&
+                    s.TenantId == tenantId &&
+                    s.FacilityId == facilityId &&
                     s.SrvProcedureCode == procedureCode &&
                     s.SrvFromDate == serviceDate);
 
@@ -586,7 +860,13 @@ public class Hl7ImportService
             {
                 _logger.LogInformation("Found existing service line SrvID: {SrvID} for claim ClaID: {ClaID}, CPT: {CPT}, DOS: {DOS}",
                     existingServiceLine.SrvID, claimId, procedureCode, serviceDate);
-                return (false, charges); // Skip duplicate but still count amount
+                if (!forceCreate)
+                {
+                    return (false, charges); // Skip duplicate but still count amount
+                }
+
+                // Debug force-create: ignore dedup and insert another row.
+                _logger.LogWarning("ForceCreate enabled: existing service line found (SrvID={SrvID}); inserting duplicate row for claim {ClaimId}.", existingServiceLine.SrvID, claimId);
             }
         }
 
@@ -596,6 +876,8 @@ public class Hl7ImportService
         // SrvFromDate/SrvToDate are DateOnly (value type, never null). SrvCharges >= 0. CPT default "99999".
         var serviceLine = new Service_Line
         {
+            TenantId = tenantId,
+            FacilityId = facilityId,
             SrvClaFID = claimId,
             SrvFromDate = serviceDate,
             SrvToDate = serviceDate,
@@ -606,7 +888,7 @@ public class Hl7ImportService
             SrvGUID = Guid.NewGuid(),
             // Required fields with defaults
             SrvModifiersCC = string.Empty,
-            SrvResponsibleParty = 1,
+            SrvResponsibleParty = responsiblePartyPayerId,
             SrvSortTiebreaker = 0,
             SrvRespChangeDate = DateTime.UtcNow
         };
@@ -619,155 +901,397 @@ public class Hl7ImportService
     }
 
     /// <summary>
-    /// Creates Claim_Insured records from IN1 segments
-    /// Only processes primary (sequence 1) and secondary (sequence 2) insurance
+    /// Creates Claim_Insured records from IN1 segments; auto-creates payers when missing (empty DB safe).
     /// </summary>
-    private async Task CreateClaimInsuredRecords(int claimId, int patientId, List<string> in1Segments)
+    private async Task CreateClaimInsuredRecords(int claimId, int patientId, List<string>? in1Segments)
     {
-        if (claimId <= 0 || in1Segments == null || in1Segments.Count == 0)
+        _logger.LogInformation(
+            "CreateClaimInsuredRecords: claimId={ClaimId}, patientId={PatientId}, IN1Count={In1Count}",
+            claimId,
+            patientId,
+            in1Segments?.Count ?? 0);
+
+        if (claimId <= 0)
         {
+            _logger.LogWarning(
+                "CreateClaimInsuredRecords: invalid claimId={ClaimId} — cannot create insurance rows.",
+                claimId);
             return;
         }
 
-        foreach (var in1Segment in in1Segments)
+        var segments = in1Segments ?? new List<string>();
+
+        if (segments.Count == 0)
         {
-            if (string.IsNullOrWhiteSpace(in1Segment))
-            {
-                continue;
-            }
-
-            // IN1-2: Insurance Plan ID (Payer ID)
-            var payerIdStr = _parser.GetFieldValue(in1Segment, 2);
-            // IN1-3: Insurance Company ID
-            var insuranceCompanyId = _parser.GetFieldValue(in1Segment, 3);
-            // IN1-4: Insurance Company Name
-            var insuranceCompanyName = _parser.NormalizeString(_parser.GetFieldValue(in1Segment, 4), maxLength: 100);
-            // IN1-8: Insurance Group Number
-            var groupNumber = _parser.NormalizeString(_parser.GetFieldValue(in1Segment, 8), maxLength: 50);
-            // IN1-9: Insurance Group Name
-            var groupName = _parser.NormalizeString(_parser.GetFieldValue(in1Segment, 9), maxLength: 100);
-            // IN1-10: Insured's Group Emp ID
-            var insuredGroupEmpId = _parser.NormalizeString(_parser.GetFieldValue(in1Segment, 10), maxLength: 50);
-            // IN1-11: Insured's Group Emp Name
-            var insuredGroupEmpName = _parser.NormalizeString(_parser.GetFieldValue(in1Segment, 11), maxLength: 100);
-            // IN1-15: Insurance Company Address (XAD format)
-            var insuranceAddressField = _parser.GetFieldValue(in1Segment, 15);
-            var (insuranceAddress, insuranceCity, insuranceState, insuranceZip) = _parser.ParseAddress(insuranceAddressField);
-            
-            // Override with individual fields if present (IN1-16, 17, 18 take precedence)
-            var cityOverride = _parser.GetFieldValue(in1Segment, 16);
-            if (!string.IsNullOrWhiteSpace(cityOverride))
-            {
-                insuranceCity = _parser.NormalizeString(cityOverride, maxLength: 50);
-            }
-            var stateOverride = _parser.GetFieldValue(in1Segment, 17);
-            if (!string.IsNullOrWhiteSpace(stateOverride))
-            {
-                insuranceState = _parser.NormalizeStateCode(stateOverride);
-            }
-            var zipOverride = _parser.GetFieldValue(in1Segment, 18);
-            if (!string.IsNullOrWhiteSpace(zipOverride))
-            {
-                insuranceZip = _parser.NormalizeString(zipOverride, maxLength: 20);
-            }
-            
-            // IN1-19: Insurance Company Phone (XTN format)
-            var insurancePhoneField = _parser.GetFieldValue(in1Segment, 19);
-            var insurancePhone = _parser.SanitizePhoneNumber(insurancePhoneField, maxLength: 25);
-            // IN1-36: Authorization Number
-            var authorizationNumber = _parser.NormalizeString(_parser.GetFieldValue(in1Segment, 36), maxLength: 50);
-            // IN1-49: Insurance Company Plan Type
-            var planType = _parser.NormalizeString(_parser.GetFieldValue(in1Segment, 49), maxLength: 50);
-
-            // Determine sequence (primary = 1, secondary = 2)
-            // IN1-17 is typically the sequence, but we'll use position in list
-            int sequence = in1Segments.IndexOf(in1Segment) + 1;
-            if (sequence > 2) // Only process primary and secondary
-            {
-                continue;
-            }
-
-            // Find or create Payer (simplified - use insurance company name as payer name)
-            // insuranceCompanyName is already normalized above
-            var payer = await _db.Payers.FirstOrDefaultAsync(p => p.PayName == insuranceCompanyName);
-            int payerId = 0;
-            if (payer == null && !string.IsNullOrWhiteSpace(insuranceCompanyName))
-            {
-                // Create a basic payer record with sanitized values
-                payer = new Payer
-                {
-                    PayName = insuranceCompanyName, // Already normalized
-                    PayInactive = false,
-                    PayAddr1 = _parser.NormalizeString(insuranceAddress, maxLength: 50),
-                    PayCity = insuranceCity, // Already normalized
-                    PayState = insuranceState, // Already normalized to 2-char
-                    PayZip = insuranceZip, // Already normalized
-                    PayPhoneNo = insurancePhone, // Already sanitized (digits only)
-                    // Required fields with defaults
-                    PayClaimType = "Professional",
-                    PaySubmissionMethod = "Electronic",
-                    PayEligibilityPhyID = 0,
-                    PayNameWithInactiveCC = insuranceCompanyName, // Already normalized
-                    PayCityStateZipCC = string.Empty
-                };
-
-                // Build city/state/zip composite
-                var payerCityStateZipParts = new List<string>();
-                if (!string.IsNullOrWhiteSpace(insuranceCity)) payerCityStateZipParts.Add(insuranceCity);
-                if (!string.IsNullOrWhiteSpace(insuranceState)) payerCityStateZipParts.Add(insuranceState);
-                if (!string.IsNullOrWhiteSpace(insuranceZip)) payerCityStateZipParts.Add(insuranceZip);
-                payer.PayCityStateZipCC = string.Join(", ", payerCityStateZipParts);
-
-                await _db.Payers.AddAsync(payer);
-                await _db.SaveChangesAsync();
-            }
-            payerId = payer?.PayID ?? 0;
-
-            if (payerId == 0)
-            {
-                _logger.LogWarning("Cannot create Claim_Insured: No payer found or created for insurance company: {InsuranceCompany}", insuranceCompanyName);
-                continue;
-            }
-
-            // Create Claim_Insured record with sanitized values
-            var claimInsured = new Claim_Insured
-            {
-                ClaInsClaFID = claimId,
-                ClaInsPatFID = patientId,
-                ClaInsPayFID = payerId,
-                ClaInsSequence = sequence,
-                ClaInsGroupNumber = groupNumber, // Already normalized
-                ClaInsPlanName = _parser.NormalizeString(groupName ?? planType, maxLength: 100),
-                ClaInsIDNumber = insuredGroupEmpId, // Already normalized
-                ClaInsPriorAuthorizationNumber = authorizationNumber, // Already normalized
-                ClaInsAddress = _parser.NormalizeString(insuranceAddress, maxLength: 50),
-                ClaInsCity = insuranceCity, // Already normalized
-                ClaInsState = insuranceState, // Already normalized to 2-char
-                ClaInsZip = insuranceZip, // Already normalized
-                ClaInsPhone = insurancePhone, // Already sanitized (digits only)
-                ClaInsRelationToInsured = 0, // Default to Self
-                ClaInsSequenceDescriptionCC = sequence == 1 ? "Primary" : "Secondary",
-                ClaInsCityStateZipCC = string.Empty
-            };
-
-            // Build city/state/zip composite
-            var cityStateZipParts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(insuranceCity)) cityStateZipParts.Add(insuranceCity);
-            if (!string.IsNullOrWhiteSpace(insuranceState)) cityStateZipParts.Add(insuranceState);
-            if (!string.IsNullOrWhiteSpace(insuranceZip)) cityStateZipParts.Add(insuranceZip);
-            claimInsured.ClaInsCityStateZipCC = string.Join(", ", cityStateZipParts);
-
-            await _db.Claim_Insureds.AddAsync(claimInsured);
-            await _db.SaveChangesAsync();
-
-            _logger.LogDebug("Created Claim_Insured for claim ClaID: {ClaID}, sequence: {Sequence}", claimId, sequence);
+            _logger.LogWarning(
+                "CreateClaimInsuredRecords: no IN1 segments; creating primary Claim_Insured with default placeholder payer. claimId={ClaimId}",
+                claimId);
+            var defaultPayer = await EnsurePayerExistsAsync("HL7_DEFAULT_IN1_PAYER", null, null, null, null, null);
+            await AddClaimInsuredRowAsync(
+                claimId,
+                patientId,
+                defaultPayer.PayID,
+                sequence: 1,
+                groupNumber: null,
+                planName: null,
+                insuredId: null,
+                authNumber: null,
+                address: null,
+                city: null,
+                state: null,
+                zip: null,
+                phone: null);
+            return;
         }
+
+        for (var in1Index = 0; in1Index < segments.Count; in1Index++)
+        {
+            var rawSegment = segments[in1Index];
+            if (string.IsNullOrWhiteSpace(rawSegment))
+            {
+                _logger.LogWarning(
+                    "CreateClaimInsuredRecords: IN1 segment blank at index {Idx}; using minimal segment placeholder. claimId={ClaimId}",
+                    in1Index,
+                    claimId);
+                rawSegment = "IN1";
+            }
+
+            var groupNumber = _parser.NormalizeString(_parser.GetFieldValue(rawSegment, 8), maxLength: 50);
+            var groupName = _parser.NormalizeString(_parser.GetFieldValue(rawSegment, 9), maxLength: 100);
+            var insuredGroupEmpId = _parser.NormalizeString(_parser.GetFieldValue(rawSegment, 10), maxLength: 50);
+            var authorizationNumber = _parser.NormalizeString(_parser.GetFieldValue(rawSegment, 36), maxLength: 50);
+            var planType = _parser.NormalizeString(_parser.GetFieldValue(rawSegment, 49), maxLength: 50);
+
+            // Insurance company (payer): IN1-4 name, IN1-5 address (XAD), IN1-7 phone (XTN) — HL7 v2.x
+            var payerName = _parser.NormalizeString(_parser.GetFieldValue(rawSegment, 4), maxLength: 50);
+            if (string.IsNullOrWhiteSpace(payerName))
+            {
+                payerName = _parser.NormalizeString(_parser.GetFieldValue(rawSegment, 3), maxLength: 50);
+            }
+            if (string.IsNullOrWhiteSpace(payerName))
+            {
+                _logger.LogWarning(
+                    "CreateClaimInsuredRecords: missing IN1-4/IN1-3 payer name; using HL7_UNNAMED_PAYER. claimId={ClaimId}",
+                    claimId);
+                payerName = "HL7_UNNAMED_PAYER";
+            }
+
+            var addressField = _parser.GetFieldValue(rawSegment, 5);
+            var (addr1, city, state, zip) = _parser.ParseAddress(addressField);
+            state = _parser.NormalizeStateCode(state);
+            if (!string.IsNullOrWhiteSpace(zip))
+            {
+                zip = new string(zip.Where(char.IsDigit).ToArray()).Trim();
+                if (zip.Length > 10)
+                    throw new InvalidOperationException("Invalid HL7 mapping: Zip invalid");
+            }
+            else
+            {
+                zip = null;
+            }
+
+            var phoneField = _parser.GetFieldValue(rawSegment, 7);
+            var phone = _parser.SanitizePhoneNumber(phoneField, maxLength: 25);
+
+            addr1 = _parser.NormalizeString(addr1, maxLength: 50);
+            city = _parser.NormalizeString(city, maxLength: 50);
+            zip = string.IsNullOrWhiteSpace(zip) ? null : zip;
+
+            if (city != null && city.Contains('^', StringComparison.Ordinal))
+                throw new InvalidOperationException("Invalid HL7 mapping: City contains ^");
+
+            if (zip != null && zip.Length > 10)
+                throw new InvalidOperationException("Invalid HL7 mapping: Zip invalid");
+
+            if (phone != null && phone.Length < 7)
+                phone = null;
+
+            var normalizedName = payerName.Trim().ToUpperInvariant();
+
+            _logger.LogError(
+                "PAYER DEBUG → Name={Name}, City={City}, State={State}, Zip={Zip}, Phone={Phone}",
+                payerName,
+                city,
+                state,
+                zip,
+                phone);
+
+            var payer = await EnsurePayerExistsAsync(
+                normalizedName,
+                addr1,
+                city,
+                state,
+                zip,
+                phone);
+
+            // Insured subscriber address on claim: IN1-19 (XAD) — not merged into Payer
+            var insuredAddressField = _parser.GetFieldValue(rawSegment, 19);
+            var (claAddr, claCity, claState, claZip) = _parser.ParseAddress(insuredAddressField);
+            claState = _parser.NormalizeStateCode(claState);
+            if (!string.IsNullOrWhiteSpace(claZip))
+            {
+                claZip = new string(claZip.Where(char.IsDigit).ToArray()).Trim();
+                if (claZip.Length > 10)
+                    claZip = claZip.Substring(0, 10);
+            }
+            else
+            {
+                claZip = null;
+            }
+            claAddr = _parser.NormalizeString(claAddr, maxLength: 50);
+            claCity = _parser.NormalizeString(claCity, maxLength: 50);
+            claZip = string.IsNullOrWhiteSpace(claZip) ? null : claZip;
+            if (claCity != null && claCity.Contains('^', StringComparison.Ordinal))
+                claCity = null;
+            if (claZip != null && claZip.Length > 10)
+                claZip = null;
+            string? claPhone = null;
+
+            var sequence = in1Index + 1;
+            if (sequence > 2)
+            {
+                _logger.LogWarning(
+                    "CreateClaimInsuredRecords: sequence {Seq} > 2; clamping to 2. claimId={ClaimId}",
+                    sequence,
+                    claimId);
+                sequence = 2;
+            }
+
+            await AddClaimInsuredRowAsync(
+                claimId,
+                patientId,
+                payer.PayID,
+                sequence,
+                groupNumber,
+                _parser.NormalizeString(groupName ?? planType, maxLength: 100),
+                insuredGroupEmpId,
+                authorizationNumber,
+                claAddr,
+                claCity,
+                claState,
+                claZip,
+                claPhone);
+
+            _logger.LogInformation(
+                "CreateClaimInsuredRecords: added Claim_Insured claimId={ClaimId}, sequence={Sequence}, payerId={PayerId}, payerName={PayerName}",
+                claimId,
+                sequence,
+                payer.PayID,
+                normalizedName);
+        }
+    }
+
+    private async Task<Payer> EnsurePayerExistsAsync(
+        string normalizedName,
+        string? addr1,
+        string? city,
+        string? state,
+        string? zip,
+        string? phone)
+    {
+        var tenantId = _inboundContext.TenantId;
+        var facilityId = _inboundContext.FacilityId;
+
+        var payer = await _db.Payers.FirstOrDefaultAsync(p =>
+            p.PayName == normalizedName &&
+            p.TenantId == tenantId &&
+            p.FacilityId == facilityId);
+
+        if (payer != null)
+            return payer;
+
+        var payerCityStateZipParts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(city)) payerCityStateZipParts.Add(city);
+        if (!string.IsNullOrWhiteSpace(state)) payerCityStateZipParts.Add(state);
+        if (!string.IsNullOrWhiteSpace(zip)) payerCityStateZipParts.Add(zip);
+
+        payer = new Payer
+        {
+            PayName = normalizedName,
+            TenantId = tenantId,
+            FacilityId = facilityId,
+            PayInactive = false,
+            PayAddr1 = addr1,
+            PayCity = city,
+            PayState = state,
+            PayZip = zip,
+            PayPhoneNo = phone,
+            PayClaimType = "Professional",
+            PaySubmissionMethod = "Electronic",
+            PayEligibilityPhyID = 0,
+            PayNameWithInactiveCC = normalizedName,
+            PayCityStateZipCC = string.Join(", ", payerCityStateZipParts)
+        };
+
+        _logger.LogWarning("DFT Import → Creating Payer: {Name}", normalizedName);
+        await _db.Payers.AddAsync(payer);
+        var written = await _db.SaveChangesAsync();
+        _logger.LogWarning("DFT Import → Payer Saved with ID: {Id} (rows={Written})", payer.PayID, written);
+        return payer;
+    }
+
+    private async Task AddClaimInsuredRowAsync(
+        int claimId,
+        int patientId,
+        int payerId,
+        int sequence,
+        string? groupNumber,
+        string? planName,
+        string? insuredId,
+        string? authNumber,
+        string? address,
+        string? city,
+        string? state,
+        string? zip,
+        string? phone)
+    {
+        var claimInsured = new Claim_Insured
+        {
+            ClaInsClaFID = claimId,
+            ClaInsPatFID = patientId,
+            ClaInsPayFID = payerId,
+            ClaInsSequence = sequence,
+            ClaInsGroupNumber = groupNumber,
+            ClaInsPlanName = planName,
+            ClaInsIDNumber = insuredId,
+            ClaInsPriorAuthorizationNumber = authNumber,
+            ClaInsAddress = address,
+            ClaInsCity = city,
+            ClaInsState = state,
+            ClaInsZip = zip,
+            ClaInsPhone = phone,
+            ClaInsRelationToInsured = 0,
+            ClaInsSequenceDescriptionCC = sequence == 1 ? "Primary" : "Secondary",
+            ClaInsCityStateZipCC = string.Empty
+        };
+
+        var cityStateZipParts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(city)) cityStateZipParts.Add(city);
+        if (!string.IsNullOrWhiteSpace(state)) cityStateZipParts.Add(state);
+        if (!string.IsNullOrWhiteSpace(zip)) cityStateZipParts.Add(zip);
+        claimInsured.ClaInsCityStateZipCC = string.Join(", ", cityStateZipParts);
+
+        await _db.Claim_Insureds.AddAsync(claimInsured);
+        var insuredWritten = await _db.SaveChangesAsync();
+        _logger.LogInformation(
+            "CreateClaimInsuredRecords: Claim_Insured SaveChanges wrote {Written} rows. claimId={ClaimId}, sequence={Sequence}, payerId={PayerId}",
+            insuredWritten,
+            claimId,
+            sequence,
+            payerId);
     }
 
     /// <summary>
     /// Updates claim totals after all service lines are created
     /// Recalculates ClaTotalChargeTRIG and ClaTotalBalanceCC
     /// </summary>
+    /// <summary>HL7 XCN in PV1: NPI (or ID) ^ Family name ^ Given name ^ ...</summary>
+    private static (string? Npi, string? LastName, string? FirstName) ParsePv1Xcn(string? field)
+    {
+        if (string.IsNullOrWhiteSpace(field))
+            return (null, null, null);
+
+        var parts = field.Split('^', StringSplitOptions.None);
+        string? Comp(int i) =>
+            i < parts.Length && !string.IsNullOrWhiteSpace(parts[i]) ? parts[i].Trim() : null;
+        return (Comp(0), Comp(1), Comp(2));
+    }
+
+    /// <summary>
+    /// Resolves a physician by NPI when present, else by normalized first/last name; otherwise inserts with a generated key.
+    /// </summary>
+    private async Task<Physician> FindOrCreatePhysicianFromHl7Pv1Async(
+        string? npi,
+        string? firstName,
+        string? lastName,
+        string roleLabel,
+        int tenantId,
+        int facilityId)
+    {
+        string? npiNorm = null;
+        if (!string.IsNullOrWhiteSpace(npi))
+        {
+            npiNorm = npi.Trim();
+            if (npiNorm.Length > 20)
+                npiNorm = npiNorm.Substring(0, 20);
+        }
+
+        var normFirst = string.IsNullOrWhiteSpace(firstName)
+            ? null
+            : _parser.NormalizeString(firstName, maxLength: 35);
+        var normLast = string.IsNullOrWhiteSpace(lastName)
+            ? null
+            : _parser.NormalizeString(lastName, maxLength: 60);
+
+        Physician? physician = null;
+        if (npiNorm != null)
+        {
+            physician = await _db.Physicians.FirstOrDefaultAsync(p =>
+                p.PhyNPI == npiNorm &&
+                p.TenantId == tenantId &&
+                p.FacilityId == facilityId);
+        }
+        else if (normFirst != null || normLast != null)
+        {
+            physician = await _db.Physicians.FirstOrDefaultAsync(p =>
+                p.TenantId == tenantId &&
+                p.FacilityId == facilityId &&
+                (normFirst == null
+                    ? p.PhyFirstName == null || p.PhyFirstName == ""
+                    : p.PhyFirstName == normFirst) &&
+                (normLast == null
+                    ? p.PhyLastName == null || p.PhyLastName == ""
+                    : p.PhyLastName == normLast));
+        }
+
+        if (physician != null)
+        {
+            if (string.IsNullOrWhiteSpace(physician.PhyFirstName) && normFirst != null)
+                physician.PhyFirstName = normFirst;
+
+            if (string.IsNullOrWhiteSpace(physician.PhyLastName) && normLast != null)
+                physician.PhyLastName = normLast;
+
+            if (string.IsNullOrWhiteSpace(physician.PhyName))
+                physician.PhyName = $"{normFirst} {normLast}".Trim();
+
+            await _db.SaveChangesAsync();
+
+            return physician;
+        }
+
+        if (npiNorm == null && normFirst == null && normLast == null)
+            npiNorm = $"HL7_{Guid.NewGuid():N}"[..20];
+
+        var phyName = $"{normFirst} {normLast}".Trim();
+        if (string.IsNullOrWhiteSpace(phyName))
+            phyName = npiNorm ?? "HL7 Physician";
+        phyName = _parser.NormalizeString(phyName, maxLength: 100) ?? phyName;
+
+        physician = new Physician
+        {
+            PhyNPI = npiNorm,
+            PhyFirstName = normFirst,
+            PhyLastName = normLast,
+            PhyName = phyName,
+            TenantId = tenantId,
+            FacilityId = facilityId,
+            PhyType = "Rendering",
+            PhyInactive = false,
+            PhyDateTimeCreated = DateTime.UtcNow
+        };
+
+        await _db.Physicians.AddAsync(physician);
+        await _db.SaveChangesAsync();
+        _logger.LogInformation(
+            "HL7 DFT Import → Created Physician ({Role}) PhyNPI={PhyNpi} PhyID={PhyID}",
+            roleLabel,
+            physician.PhyNPI ?? "(null)",
+            physician.PhyID);
+
+        return physician;
+    }
+
     private async Task UpdateClaimTotals(int claimId)
     {
         // Get sum of all service line charges
@@ -779,12 +1303,14 @@ public class Hl7ImportService
         var claim = await _db.Claims.FindAsync(claimId);
         if (claim != null)
         {
+            var beforeBalance = claim.ClaTotalBalanceCC;
             claim.ClaTotalChargeTRIG = totalCharge;
             // Balance = Charges - Payments - Adjustments (simplified for import)
             claim.ClaTotalBalanceCC = totalCharge - (claim.ClaTotalAmtPaidCC ?? 0) - (claim.ClaTotalAmtAppliedCC ?? 0);
             // ClaDateTimeModified set by global audit on SaveChanges
-
-            await _db.SaveChangesAsync();
+            var written = await _db.SaveChangesAsync();
+            _logger.LogInformation("UpdateClaimTotals: SaveChanges wrote {Written} rows. claimId={ClaimId}, totalCharge={TotalCharge}, beforeBalance={BeforeBalance}, afterBalance={AfterBalance}",
+                written, claimId, totalCharge, beforeBalance, claim.ClaTotalBalanceCC);
         }
     }
 }

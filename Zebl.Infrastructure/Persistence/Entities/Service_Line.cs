@@ -1,11 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public partial class Service_Line
+public partial class Service_Line : ITenantEntity, ITenantFacilityEntity
 {
     public int SrvID { get; set; }
+
+    public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public DateTime SrvDateTimeCreated { get; set; }
 

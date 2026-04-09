@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Domain;
 using Zebl.Application.Services;
 using Zebl.Application.Repositories;
@@ -10,18 +11,22 @@ public class ClaimScrubService : IClaimScrubService
 {
     private readonly ZeblDbContext _context;
     private readonly IScrubRuleRepository _ruleRepository;
+    private readonly ICurrentContext _currentContext;
 
-    public ClaimScrubService(ZeblDbContext context, IScrubRuleRepository ruleRepository)
+    public ClaimScrubService(ZeblDbContext context, IScrubRuleRepository ruleRepository, ICurrentContext currentContext)
     {
         _context = context;
         _ruleRepository = ruleRepository;
+        _currentContext = currentContext;
     }
 
     public async Task<IReadOnlyList<ScrubResult>> ScrubClaimAsync(int claimId)
     {
+        var tid = _currentContext.TenantId;
+        var fid = _currentContext.FacilityId;
         var claim = await _context.Claims
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.ClaID == claimId);
+            .FirstOrDefaultAsync(c => c.ClaID == claimId && c.TenantId == tid && c.FacilityId == fid);
 
         if (claim == null)
             return Array.Empty<ScrubResult>();
@@ -35,7 +40,7 @@ public class ClaimScrubService : IClaimScrubService
 
         var serviceLines = await _context.Service_Lines
             .AsNoTracking()
-            .Where(s => s.SrvClaFID == claimId)
+            .Where(s => s.SrvClaFID == claimId && s.TenantId == tid && s.FacilityId == fid)
             .ToListAsync();
 
         // ProgramId is not yet modeled; pass null for now.

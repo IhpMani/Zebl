@@ -7,6 +7,7 @@ namespace Zebl.Application.Abstractions;
 public interface ICurrentUserContext
 {
     Guid? UserId { get; }
+    int TenantId { get; }
     string? UserName { get; }
     string? ComputerName { get; }
 }

@@ -22,12 +22,14 @@ namespace Zebl.Api.Controllers
     {
         private readonly ZeblDbContext _db;
         private readonly ICurrentUserContext _userContext;
+        private readonly ICurrentContext _currentContext;
         private readonly ILogger<PatientsController> _logger;
 
-        public PatientsController(ZeblDbContext db, ICurrentUserContext userContext, ILogger<PatientsController> logger)
+        public PatientsController(ZeblDbContext db, ICurrentUserContext userContext, ICurrentContext currentContext, ILogger<PatientsController> logger)
         {
             _db = db;
             _userContext = userContext;
+            _currentContext = currentContext;
             _logger = logger;
         }
 
@@ -70,7 +72,10 @@ namespace Zebl.Api.Controllers
                 var availableColumns = RelatedColumnConfig.GetAvailableColumns()["Patient"];
                 var columnsToInclude = availableColumns.Where(c => requestedColumns.Contains(c.Key)).ToList();
 
-                var query = _db.Patients.AsNoTracking();
+                var tenantId = _currentContext.TenantId;
+                var facilityId = _currentContext.FacilityId;
+                var query = _db.Patients.AsNoTracking()
+                    .Where(p => p.TenantId == tenantId && p.FacilityId == facilityId);
 
                 // Active filter
                 if (active.HasValue)
@@ -103,7 +108,8 @@ namespace Zebl.Api.Controllers
                 // Claim ID filter - filter patients that have a claim with this ID
                 if (claimId.HasValue)
                 {
-                    query = query.Where(p => p.Claims.Any(c => c.ClaID == claimId.Value));
+                    query = query.Where(p => p.Claims.Any(c =>
+                        c.ClaID == claimId.Value && c.TenantId == tenantId && c.FacilityId == facilityId));
                 }
 
                 // Facility (PatClassification) filter - values from Libraries → List → Patient Classification
@@ -133,7 +139,8 @@ namespace Zebl.Api.Controllers
                     if (int.TryParse(searchText, out int searchInt))
                     {
                         // If it's a number, check both Patient ID and Claim ID
-                        query = query.Where(p => p.PatID == searchInt || p.Claims.Any(c => c.ClaID == searchInt));
+                        query = query.Where(p => p.PatID == searchInt || p.Claims.Any(c =>
+                            c.ClaID == searchInt && c.TenantId == tenantId && c.FacilityId == facilityId));
                     }
                     else
                     {
@@ -325,7 +332,10 @@ namespace Zebl.Api.Controllers
                     .Include(p => p.Patient_Insureds)
                         .ThenInclude(pi => pi.PatInsIns)
                             .ThenInclude(i => i.InsPay)
-                    .FirstOrDefaultAsync(p => p.PatID == id);
+                    .FirstOrDefaultAsync(p =>
+                        p.PatID == id &&
+                        p.TenantId == _currentContext.TenantId &&
+                        p.FacilityId == _currentContext.FacilityId);
 
                 if (patient == null)
                     return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = $"Patient {id} not found." });
@@ -470,7 +480,10 @@ namespace Zebl.Api.Controllers
                 try
                 {
                     var claimIds = await _db.Claims.AsNoTracking()
-                        .Where(c => c.ClaPatFID == id)
+                        .Where(c =>
+                            c.ClaPatFID == id &&
+                            c.TenantId == _currentContext.TenantId &&
+                            c.FacilityId == _currentContext.FacilityId)
                         .Select(c => c.ClaID)
                         .ToListAsync();
 
@@ -600,12 +613,18 @@ namespace Zebl.Api.Controllers
             if (request == null)
                 return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Request body is required." });
 
+            if (_currentContext.TenantId <= 0)
+                throw new UnauthorizedAccessException("Tenant context is required.");
+
             try
             {
                 var patient = await _db.Patients
                     .Include(p => p.Patient_Insureds)
                         .ThenInclude(pi => pi.PatInsIns)
-                    .FirstOrDefaultAsync(p => p.PatID == id);
+                    .FirstOrDefaultAsync(p =>
+                        p.PatID == id &&
+                        p.TenantId == _currentContext.TenantId &&
+                        p.FacilityId == _currentContext.FacilityId);
 
                 if (patient == null)
                     return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = $"Patient {id} not found." });
@@ -704,28 +723,39 @@ namespace Zebl.Api.Controllers
                         var activityType = insuranceModified ? "Insurance Updated" : "Patient Updated";
 
                         var claimIds = await _db.Claims.AsNoTracking()
-                            .Where(c => c.ClaPatFID == id && (c.ClaArchived == null || c.ClaArchived == false))
+                            .Where(c =>
+                                c.ClaPatFID == id &&
+                                (c.ClaArchived == null || c.ClaArchived == false))
                             .Select(c => c.ClaID)
                             .ToListAsync();
 
                         foreach (var claId in claimIds)
                         {
-                            var claim = await _db.Claims.AsNoTracking()
+                            var snapshot = await _db.Claims.AsNoTracking()
                                 .Where(c => c.ClaID == claId)
-                                .Select(c => new { c.ClaTotalChargeTRIG, c.ClaTotalInsBalanceTRIG, c.ClaTotalPatBalanceTRIG })
+                                .Select(c => new
+                                {
+                                    c.TenantId,
+                                    c.FacilityId,
+                                    c.ClaTotalChargeTRIG,
+                                    c.ClaTotalInsBalanceTRIG,
+                                    c.ClaTotalPatBalanceTRIG
+                                })
                                 .FirstOrDefaultAsync();
-                            var snapshot = claim;
+                            if (snapshot == null) continue;
                             _db.Claim_Audits.Add(new Claim_Audit
                             {
+                                TenantId = snapshot.TenantId,
+                                FacilityId = snapshot.FacilityId,
                                 ClaFID = claId,
                                 ActivityType = activityType,
                                 ActivityDate = DateTime.UtcNow,
                                 UserName = userName,
                                 ComputerName = computerName,
                                 Notes = auditNote,
-                                TotalCharge = snapshot?.ClaTotalChargeTRIG,
-                                InsuranceBalance = snapshot?.ClaTotalInsBalanceTRIG,
-                                PatientBalance = snapshot?.ClaTotalPatBalanceTRIG
+                                TotalCharge = snapshot.ClaTotalChargeTRIG,
+                                InsuranceBalance = snapshot.ClaTotalInsBalanceTRIG,
+                                PatientBalance = snapshot.ClaTotalPatBalanceTRIG
                             });
                         }
                         await _db.SaveChangesAsync();

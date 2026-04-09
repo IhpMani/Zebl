@@ -20,6 +20,8 @@ public class Hl7ImportController : ControllerBase
     private readonly Hl7ImportService _importService;
     private readonly ZeblDbContext _db;
     private readonly ICurrentUserContext _userContext;
+    private readonly ICurrentContext _currentContext;
+    private readonly IInboundContext _inboundContext;
     private readonly ILogger<Hl7ImportController> _logger;
 
     public Hl7ImportController(
@@ -27,12 +29,16 @@ public class Hl7ImportController : ControllerBase
         Hl7ImportService importService,
         ZeblDbContext db,
         ICurrentUserContext userContext,
+        ICurrentContext currentContext,
+        IInboundContext inboundContext,
         ILogger<Hl7ImportController> logger)
     {
         _parser = parser;
         _importService = importService;
         _db = db;
         _userContext = userContext;
+        _currentContext = currentContext;
+        _inboundContext = inboundContext;
         _logger = logger;
     }
 
@@ -59,7 +65,21 @@ public class Hl7ImportController : ControllerBase
             return BadRequest(new { error = "File is empty" });
         }
 
+        if (_inboundContext.TenantId != _currentContext.TenantId ||
+            _inboundContext.FacilityId != _currentContext.FacilityId)
+        {
+            return BadRequest(new
+            {
+                error = "X-Integration-Id facility/tenant must match X-Facility-Id and your JWT tenant. " +
+                        "Use the integration that belongs to the facility you have selected."
+            });
+        }
+
         var fileName = file.FileName ?? "unknown.hl7";
+        var integrationHeader = Request.Headers.TryGetValue("X-Integration-Id", out var integrationValues)
+            ? integrationValues.ToString()
+            : null;
+        _logger.LogInformation("HL7 import request headers: X-Integration-Id={IntegrationHeader}", integrationHeader);
 
         try
         {
@@ -67,8 +87,16 @@ public class Hl7ImportController : ControllerBase
             List<Hl7DftMessage> messages;
             using (var fileStream = file.OpenReadStream())
             {
+                _logger.LogWarning(
+                    "[HL7-IMPORT-DEBUG] Pre-parse: FileName={FileName}, IFormFile.Length={ByteLength} bytes",
+                    fileName,
+                    file.Length);
                 _logger.LogInformation("Parsing HL7 DFT file: {FileName}, Size: {Size} bytes", fileName, file.Length);
                 messages = _parser.ParseHl7File(fileStream, fileName);
+                _logger.LogWarning(
+                    "[HL7-IMPORT-DEBUG] Post-parse: ParsedMessageCount={Count} for {FileName}",
+                    messages?.Count ?? 0,
+                    fileName);
             }
 
             if (messages == null || messages.Count == 0)
@@ -88,6 +116,8 @@ public class Hl7ImportController : ControllerBase
             {
                 var importLog = new Interface_Import_Log
                 {
+                    TenantId = _inboundContext.TenantId,
+                    FacilityId = _inboundContext.FacilityId,
                     FileName = fileName,
                     ImportDate = DateTime.UtcNow,
                     UserName = _userContext.UserName ?? "SYSTEM",
@@ -123,6 +153,7 @@ public class Hl7ImportController : ControllerBase
                 totalMessages = messages.Count,
                 successfulMessages = importResult.SuccessCount,
                 failedMessages = messages.Count - importResult.SuccessCount,
+                errors = importResult.Errors,
                 newPatients = importResult.NewPatientsCount,
                 updatedPatients = importResult.UpdatedPatientsCount,
                 newClaims = importResult.NewClaimsCount,
@@ -139,9 +170,16 @@ public class Hl7ImportController : ControllerBase
         }
         catch (Exception ex)
         {
+            if (ex is InvalidOperationException &&
+                (ex.Message.Contains("X-Integration-Id", StringComparison.OrdinalIgnoreCase) ||
+                 ex.Message.Contains("inbound integration", StringComparison.OrdinalIgnoreCase)))
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+
             _logger.LogError(ex, "Error importing HL7 file {FileName}. Exception: {ExceptionType}, Message: {Message}, StackTrace: {StackTrace}", 
                 fileName, ex.GetType().Name, ex.Message, ex.StackTrace);
-            return StatusCode(500, new { error = $"Error importing HL7 file: {ex.Message}" });
+            return StatusCode(500, new { error = "Error importing HL7 file." });
         }
     }
 
@@ -236,7 +274,7 @@ public class Hl7ImportController : ControllerBase
                 decimal messageAmount = 0m;
                 foreach (var ft1Segment in message.Ft1Segments)
                 {
-                    var chargesStr = _parser.GetFieldValue(ft1Segment, 10);
+                    var chargesStr = _parser.GetFieldValue(ft1Segment, 11);
                     var charges = _parser.ParseDecimal(chargesStr);
                     messageAmount += charges;
                 }

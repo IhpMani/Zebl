@@ -27,7 +27,16 @@ public class Hl7ParserService
         // Read entire content using ASCII (HL7 standard) then parse using PID-block logic.
         using var reader = new StreamReader(fileStream, Encoding.ASCII, leaveOpen: true);
         var raw = reader.ReadToEnd();
+        _logger.LogWarning(
+            "[HL7-IMPORT-DEBUG] Parser: raw string char count (after read)={Length} for {FileName}",
+            raw?.Length ?? 0,
+            fileName);
+        _logger.LogInformation("Parsing HL7 raw content length={Length} bytes for {FileName}", raw?.Length ?? 0, fileName);
         var parsed = ParseHl7File(raw);
+        _logger.LogWarning(
+            "[HL7-IMPORT-DEBUG] Parser: DFT^P03 message list count={Count} for {FileName}",
+            parsed.Count,
+            fileName);
         _logger.LogInformation("Parsed {Count} HL7 DFT^P03 messages from file {FileName}", parsed.Count, fileName);
         return parsed;
     }
@@ -45,7 +54,10 @@ public class Hl7ParserService
         var messages = new List<Hl7DftMessage>();
 
         if (string.IsNullOrWhiteSpace(rawHl7))
+        {
+            _logger.LogWarning("HL7 parser: raw HL7 content is empty/whitespace.");
             return messages;
+        }
 
         // HL7 segments may be separated by \r, \n, or both.
         var segments = rawHl7
@@ -57,7 +69,10 @@ public class Hl7ParserService
             .ToList();
 
         if (segments.Count == 0)
+        {
+            _logger.LogWarning("HL7 parser: no segments after splitting for DFT^P03 file payload.");
             return messages;
+        }
 
         string? mshHeader = null;
         string msh9 = string.Empty;
@@ -154,6 +169,13 @@ public class Hl7ParserService
             string.IsNullOrWhiteSpace(msh9) ||
             !msh9.Contains("DFT^P03", StringComparison.OrdinalIgnoreCase))
         {
+            _logger.LogWarning(
+                "HL7 parser: file rejected by MSH-9. MshHeaderPresent={HasMshHeader}, Msh9='{Msh9}'.",
+                !string.IsNullOrWhiteSpace(mshHeader),
+                msh9);
+            _logger.LogWarning(
+                "[HL7-IMPORT-DEBUG] Parser: returning 0 messages — MSH-9 must contain DFT^P03. Msh9='{Msh9}'.",
+                msh9);
             return new List<Hl7DftMessage>();
         }
 

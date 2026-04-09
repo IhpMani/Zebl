@@ -4,9 +4,13 @@ namespace Zebl.Infrastructure.Persistence.Entities;
 /// Entity for file-level interface import history.
 /// Separate from Claim_Audit - one record per imported file.
 /// </summary>
-public partial class Interface_Import_Log
+public partial class Interface_Import_Log : ITenantEntity, ITenantFacilityEntity
 {
     public int ImportID { get; set; }
+
+    public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public string FileName { get; set; } = null!;
 

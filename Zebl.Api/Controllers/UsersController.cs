@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Zebl.Api.Services;
+using Zebl.Application.Abstractions;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
 
@@ -14,12 +15,18 @@ public class UsersController : ControllerBase
 {
     private readonly ZeblDbContext _db;
     private readonly IAdminUserService _adminUserService;
+    private readonly ICurrentContext _currentContext;
     private readonly ILogger<UsersController> _logger;
 
-    public UsersController(ZeblDbContext db, IAdminUserService adminUserService, ILogger<UsersController> logger)
+    public UsersController(
+        ZeblDbContext db,
+        IAdminUserService adminUserService,
+        ICurrentContext currentContext,
+        ILogger<UsersController> logger)
     {
         _db = db;
         _adminUserService = adminUserService;
+        _currentContext = currentContext;
         _logger = logger;
     }
 
@@ -65,10 +72,25 @@ public class UsersController : ControllerBase
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             PasswordHash = hash,
-            PasswordSalt = salt
+            PasswordSalt = salt,
+            TenantId = _currentContext.TenantId
         };
 
+        var fid = request.FacilityId;
+        if (fid <= 0)
+            return BadRequest(new { error = "facilityId is required for explicit UserFacility access." });
+
+        var facOk = await _db.FacilityScopes.AsNoTracking()
+            .AnyAsync(
+                f => f.FacilityId == fid && f.TenantId == (user.TenantId ?? 0) && f.IsActive,
+                cancellationToken);
+        if (!facOk)
+            return BadRequest(new { error = "facilityId is not an active facility for this tenant." });
+
         await _db.AppUsers.AddAsync(user, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        _db.UserFacilities.Add(new UserFacility { UserId = user.UserGuid, FacilityId = fid });
         await _db.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Created AppUser. UserGuid={UserGuid}, UserName={UserName}", user.UserGuid, user.UserName);
@@ -115,5 +137,8 @@ public sealed class CreateUserRequest
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string? Email { get; set; }
+
+    /// <summary>Required facility assignment for the new user.</summary>
+    public int FacilityId { get; set; }
 }
 

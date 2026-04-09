@@ -1,11 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public partial class Patient
+public partial class Patient : ITenantEntity, ITenantFacilityEntity
 {
     public int PatID { get; set; }
+
+    public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public string? PatFirstName { get; set; }
 

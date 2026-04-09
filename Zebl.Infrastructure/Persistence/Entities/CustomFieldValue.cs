@@ -1,8 +1,10 @@
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public class CustomFieldValue
+public class CustomFieldValue : ITenantEntity
 {
     public int Id { get; set; }
+
+    public int TenantId { get; set; }
 
     public string EntityType { get; set; } = string.Empty;
 

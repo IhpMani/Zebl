@@ -8,6 +8,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.Common;
 using Zebl.Application.Dtos.Physicians;
 using Zebl.Infrastructure.Persistence.Context;
@@ -21,11 +22,16 @@ namespace Zebl.Api.Controllers
     public class PhysiciansController : ControllerBase
     {
         private readonly ZeblDbContext _db;
+        private readonly ICurrentContext _currentContext;
         private readonly ILogger<PhysiciansController> _logger;
 
-        public PhysiciansController(ZeblDbContext db, ILogger<PhysiciansController> logger)
+        public PhysiciansController(
+            ZeblDbContext db,
+            ICurrentContext currentContext,
+            ILogger<PhysiciansController> logger)
         {
             _db = db;
+            _currentContext = currentContext;
             _logger = logger;
         }
 
@@ -289,6 +295,17 @@ namespace Zebl.Api.Controllers
                 });
             }
 
+            if (_currentContext.TenantId <= 0 || _currentContext.FacilityId <= 0)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_CONTEXT",
+                    Message = "Tenant and facility scope are required (X-Tenant-Key and X-Facility-Id)."
+                });
+            }
+
+            var utcNow = DateTime.UtcNow;
+
             // Check for duplicate NPI if provided
             if (!string.IsNullOrWhiteSpace(dto.PhyNPI))
             {
@@ -308,6 +325,10 @@ namespace Zebl.Api.Controllers
             // Normalize and trim all string fields
             var physician = new Infrastructure.Persistence.Entities.Physician
             {
+                TenantId = _currentContext.TenantId,
+                FacilityId = _currentContext.FacilityId,
+                PhyDateTimeCreated = utcNow,
+                PhyDateTimeModified = utcNow,
                 PhyName = dto.PhyName?.Trim() ?? string.Empty,
                 PhyPrimaryCodeType = NormalizeString(dto.PhyPrimaryCodeType, 2),
                 PhyType = dto.PhyType?.Trim() ?? "Person",
@@ -478,6 +499,13 @@ namespace Zebl.Api.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("CSV file required");
 
+            if (_currentContext.TenantId <= 0 || _currentContext.FacilityId <= 0)
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_CONTEXT",
+                    Message = "Tenant and facility scope are required (X-Tenant-Key and X-Facility-Id)."
+                });
+
             using var stream = file.OpenReadStream();
             using var reader = new StreamReader(stream);
             var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
@@ -517,8 +545,11 @@ namespace Zebl.Api.Controllers
                     continue;
                 }
 
+                var utc = DateTime.UtcNow;
                 var physician = new Physician
                 {
+                    TenantId = _currentContext.TenantId,
+                    FacilityId = _currentContext.FacilityId,
                     PhyName = displayName,
                     PhyFirstName = firstName,
                     PhyLastName = lastName,
@@ -535,7 +566,12 @@ namespace Zebl.Api.Controllers
                     PhyEMail = email,
                     PhyFax = fax,
                     PhyInactive = false,
-                    PhyDateTimeCreated = DateTime.UtcNow
+                    PhyDateTimeCreated = utc,
+                    PhyDateTimeModified = utc,
+                    PhyFirstMiddleLastNameCC = string.Empty,
+                    PhyFullNameCC = string.Empty,
+                    PhyNameWithInactiveCC = string.Empty,
+                    PhyCityStateZipCC = string.Empty
                 };
 
                 var existing = await _db.Physicians

@@ -1,11 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public partial class Payer
+public partial class Payer : ITenantEntity, ITenantFacilityEntity
 {
     public int PayID { get; set; }
+
+    public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public DateTime PayDateTimeCreated { get; set; }
 

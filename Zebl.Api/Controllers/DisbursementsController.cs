@@ -51,7 +51,9 @@ namespace Zebl.Api.Controllers
             // Pull disbursements via payments → patient
             var disbursements = await _db.Disbursements
                 .AsNoTracking()
-                .Where(d => d.DisbPmtF != null && d.DisbPmtF.PmtPatFID == patientId)
+                .Where(d =>
+                    d.DisbPmtF != null &&
+                    d.DisbPmtF.PmtPatFID == patientId)
                 .OrderByDescending(d => d.DisbID)
                 .Select(d => new DisbursementListItemDto
                 {
@@ -111,7 +113,8 @@ namespace Zebl.Api.Controllers
             var hasSrvProcedureCode = columnsToInclude.Any(c => c.Key == "srvProcedureCode");
             var hasSrvDesc = columnsToInclude.Any(c => c.Key == "srvDesc");
 
-            var query = _db.Disbursements.AsNoTracking();
+            var query = _db.Disbursements.AsNoTracking()
+                .Where(d => d.DisbPmtF != null || d.DisbSrvF != null);
 
             if (paymentId.HasValue)
                 query = query.Where(d => d.DisbPmtFID == paymentId.Value);

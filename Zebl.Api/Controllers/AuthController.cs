@@ -1,15 +1,13 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Zebl.Api.Configuration;
 using Zebl.Api.Services;
+using Zebl.Application.Abstractions;
+using Zebl.Application.Dtos.Common;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
-using SecurityClaim = System.Security.Claims.Claim;
 
 namespace Zebl.Api.Controllers;
 
@@ -19,21 +17,27 @@ public class AuthController : ControllerBase
 {
     private readonly ZeblDbContext _db;
     private readonly JwtSettings _jwtSettings;
+    private readonly IJwtTokenIssuer _jwtIssuer;
     private readonly IAdminUserService _adminUserService;
     private readonly IWebHostEnvironment _environment;
+    private readonly IAuditTrail _auditTrail;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         ZeblDbContext db,
         JwtSettings jwtSettings,
+        IJwtTokenIssuer jwtIssuer,
         IAdminUserService adminUserService,
         IWebHostEnvironment environment,
+        IAuditTrail auditTrail,
         ILogger<AuthController> logger)
     {
         _db = db;
         _jwtSettings = jwtSettings;
+        _jwtIssuer = jwtIssuer;
         _adminUserService = adminUserService;
         _environment = environment;
+        _auditTrail = auditTrail;
         _logger = logger;
     }
 
@@ -42,6 +46,7 @@ public class AuthController : ControllerBase
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-security")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken = default)
     {
         if (request == null || string.IsNullOrWhiteSpace(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
@@ -51,18 +56,23 @@ public class AuthController : ControllerBase
 
         var user = await _db.AppUsers
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.UserName == request.UserName.Trim(), cancellationToken);
+            .Where(u => u.UserName == request.UserName.Trim() && u.IsActive)
+            .Select(u => new
+            {
+                u.UserGuid,
+                u.UserName,
+                u.TenantId,
+                u.FacilityId,
+                u.IsSuperAdmin,
+                u.PasswordHash,
+                u.PasswordSalt
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (user == null)
         {
-            _logger.LogWarning("Login failed: user not found. UserName={UserName}", request.UserName);
+            _logger.LogWarning("Login failed: user not found or inactive. UserName={UserName}", request.UserName);
             return Unauthorized(new { error = "Invalid username or password." });
-        }
-
-        if (!user.IsActive)
-        {
-            _logger.LogWarning("Login rejected: user inactive. UserGuid={UserGuid}", user.UserGuid);
-            return Unauthorized(new { error = "Account is inactive." });
         }
 
         if (!PasswordHasher.VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt))
@@ -71,17 +81,86 @@ public class AuthController : ControllerBase
             return Unauthorized(new { error = "Invalid username or password." });
         }
 
+        int? jwtFacilityId = null;
+        if (!user.IsSuperAdmin)
+        {
+            var allowedFacilityIds = await _db.UserFacilities.AsNoTracking()
+                .Where(uf => uf.UserId == user.UserGuid)
+                .Select(uf => uf.FacilityId)
+                .OrderBy(fid => fid)
+                .ToListAsync(cancellationToken);
+
+            if (allowedFacilityIds.Count == 0)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    errorCode = "NO_FACILITY_ACCESS",
+                    error = "No facility access is assigned. Contact your administrator."
+                });
+            }
+
+            jwtFacilityId = user.FacilityId;
+            if (jwtFacilityId is int jf && jf > 0 && allowedFacilityIds.Contains(jf))
+            {
+                /* use profile default when it is an explicitly mapped facility */
+            }
+            else
+            {
+                jwtFacilityId = allowedFacilityIds[0];
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(_jwtSettings.SecretKey))
         {
             _logger.LogError("JWT SecretKey is not configured.");
             return StatusCode(500, new { error = "Authentication is not configured." });
         }
 
+        string? tenantKey = null;
+        if (!user.IsSuperAdmin && user.TenantId is int tenantRowId && tenantRowId > 0)
+        {
+            tenantKey = await _db.Tenants.AsNoTracking()
+                .Where(t => t.TenantId == tenantRowId && t.IsActive)
+                .Select(t => t.TenantKey)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         var isAdmin = _adminUserService.IsAdminUser(user.UserName);
-        var token = BuildJwt(user.UserGuid, user.UserName, isAdmin);
-        var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
+        string token;
+        try
+        {
+            token = user.IsSuperAdmin
+                ? _jwtIssuer.IssueSuperAdminToken(user.UserGuid, user.UserName, isAdmin)
+                : _jwtIssuer.IssueOperationalToken(
+                    user.UserGuid,
+                    user.UserName,
+                    isAdmin,
+                    user.TenantId ?? 0,
+                    jwtFacilityId,
+                    tenantKey ?? string.Empty,
+                    impersonation: false);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "JWT issuance failed.");
+            return StatusCode(500, new { error = "Authentication is not configured." });
+        }
+
+        var expiresAt = _jwtIssuer.GetUtcExpiry();
 
         _logger.LogInformation("Login succeeded. UserGuid={UserGuid}, UserName={UserName}", user.UserGuid, user.UserName);
+
+        await _auditTrail.WriteAsync(
+            user.UserGuid,
+            user.TenantId,
+            new AuditMetadata
+            {
+                Action = "Login",
+                Actor = user.UserName,
+                Target = user.UserGuid.ToString(),
+                Context = user.IsSuperAdmin ? "superAdmin" : $"facility:{jwtFacilityId}"
+            },
+            cancellationToken);
 
         return Ok(new LoginResponse
         {
@@ -89,34 +168,43 @@ public class AuthController : ControllerBase
             ExpiresAtUtc = expiresAt,
             UserGuid = user.UserGuid,
             UserName = user.UserName,
-            IsAdmin = isAdmin
+            IsAdmin = isAdmin,
+            IsSuperAdmin = user.IsSuperAdmin,
+            TenantId = user.TenantId,
+            FacilityId = user.IsSuperAdmin ? null : jwtFacilityId
         });
     }
 
-    /// <summary>
-    /// Register a new user account. No authentication required; use from Swagger to create users.
-    /// Returns 409 if UserName already exists.
-    /// </summary>
     [HttpPost("register")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-security")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        if (request == null || string.IsNullOrWhiteSpace(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
+        if (request == null ||
+            string.IsNullOrWhiteSpace(request.Email) ||
+            string.IsNullOrWhiteSpace(request.Password) ||
+            string.IsNullOrWhiteSpace(request.TenantKey))
         {
-            return BadRequest(new { error = "UserName and Password are required." });
+            return BadRequest(new { error = "email, password, and tenantKey are required." });
         }
 
-        var userName = request.UserName.Trim();
-        var email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        var email = request.Email.Trim();
+        var tenantKeyNorm = request.TenantKey.Trim().ToLowerInvariant();
+
+        var tenantId = await _db.Tenants.AsNoTracking()
+            .Where(t => t.TenantKey == tenantKeyNorm && t.IsActive)
+            .Select(t => t.TenantId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (tenantId <= 0)
+            return BadRequest(new { error = "Unknown or inactive tenantKey." });
 
         var existing = await _db.AppUsers.AsNoTracking()
-            .FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
-        if (existing != null)
-        {
-            return Conflict(new { error = "UserName already exists." });
-        }
+            .AnyAsync(u => u.UserName == email, cancellationToken);
+        if (existing)
+            return Conflict(new { error = "An account with this email already exists." });
 
-        var newUser = PasswordHelper.CreateUser(userName, email, request.Password);
+        var newUser = PasswordHelper.CreateUser(email, email, request.Password);
+        newUser.TenantId = tenantId;
         await _db.AppUsers.AddAsync(newUser, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -125,15 +213,14 @@ public class AuthController : ControllerBase
         return CreatedAtAction(nameof(Login), new { userName = newUser.UserName }, new
         {
             newUser.UserGuid,
-            newUser.UserName,
+            userName = newUser.UserName,
             newUser.Email,
             newUser.IsActive,
-            newUser.CreatedAt
+            newUser.CreatedAt,
+            message = "User must be granted explicit facility access before login."
         });
     }
 
-    // TEMP – REMOVE AFTER SETUP
-    // Dev-only helper endpoint to set initial passwords without migrations/Identity.
     [HttpPost("set-password")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = true)]
@@ -142,25 +229,38 @@ public class AuthController : ControllerBase
         if (!_environment.IsDevelopment())
             return NotFound();
 
-        if (request == null || string.IsNullOrWhiteSpace(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
-            return BadRequest(new { error = "UserName and Password are required." });
+        if (request == null ||
+            string.IsNullOrWhiteSpace(request.UserName) ||
+            string.IsNullOrWhiteSpace(request.Password) ||
+            string.IsNullOrWhiteSpace(request.TenantKey))
+            return BadRequest(new { error = "userName, password, and tenantKey are required." });
+
+        var tenantKeyNorm = request.TenantKey.Trim().ToLowerInvariant();
+        var tenantId = await _db.Tenants.AsNoTracking()
+            .Where(t => t.TenantKey == tenantKeyNorm && t.IsActive)
+            .Select(t => t.TenantId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (tenantId <= 0)
+            return BadRequest(new { error = "Unknown or inactive tenantKey." });
 
         var userName = request.UserName.Trim();
 
         var user = await _db.AppUsers.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
         if (user == null)
         {
-            // Create user if missing (dev convenience)
             user = new AppUser
             {
                 UserGuid = Guid.NewGuid(),
                 UserName = userName,
                 Email = null,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                TenantId = tenantId
             };
             await _db.AppUsers.AddAsync(user, cancellationToken);
         }
+        else
+            user.TenantId = tenantId;
 
         var (hash, salt) = PasswordHasher.HashPassword(request.Password);
         user.PasswordHash = hash;
@@ -168,32 +268,6 @@ public class AuthController : ControllerBase
 
         await _db.SaveChangesAsync(cancellationToken);
         return NoContent();
-    }
-
-    private string BuildJwt(Guid userGuid, string userName, bool isAdmin)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new SecurityClaim(JwtRegisteredClaimNames.Sub, userGuid.ToString()),
-            new SecurityClaim(JwtRegisteredClaimNames.UniqueName, userName),
-            new SecurityClaim(ClaimTypes.Name, userName),  // Standard claim for User.Identity.Name / logged-in user
-            new SecurityClaim("UserGuid", userGuid.ToString()),
-            new SecurityClaim("UserName", userName),
-            new SecurityClaim("IsAdmin", isAdmin ? "true" : "false")
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: _jwtSettings.Issuer,
-            audience: _jwtSettings.Audience,
-            claims: claims,
-            notBefore: DateTime.UtcNow,
-            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
 
@@ -205,18 +279,16 @@ public class LoginRequest
 
 public class RegisterRequest
 {
-    /// <summary>User name for login.</summary>
-    public string UserName { get; set; } = string.Empty;
-    /// <summary>Optional email.</summary>
-    public string? Email { get; set; }
-    /// <summary>Plain-text password; will be hashed and not stored as plain text.</summary>
+    public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string TenantKey { get; set; } = string.Empty;
 }
 
 public class SetPasswordRequest
 {
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string TenantKey { get; set; } = string.Empty;
 }
 
 public class LoginResponse
@@ -226,4 +298,7 @@ public class LoginResponse
     public Guid UserGuid { get; set; }
     public string UserName { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
+    public bool IsSuperAdmin { get; set; }
+    public int? TenantId { get; set; }
+    public int? FacilityId { get; set; }
 }

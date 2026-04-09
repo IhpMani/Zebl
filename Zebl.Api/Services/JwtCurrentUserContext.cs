@@ -1,63 +1,54 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Zebl.Application.Abstractions;
 
 namespace Zebl.Api.Services;
 
 /// <summary>
-/// JWT present → real user from claims (UserGuid, UserName).
-/// JWT missing or not authenticated → SYSTEM user.
+/// Resolves user and tenant from JWT claims when authenticated; otherwise SYSTEM with TenantId = 0.
+/// Never throws in the constructor — tenant enforcement belongs in business logic.
 /// </summary>
 public sealed class JwtCurrentUserContext : ICurrentUserContext
 {
     public static readonly Guid SystemUserId = new("00000000-0000-0000-0000-000000000001");
-    private const string SystemUserName = "SYSTEM";
 
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly Guid? _userId;
+    private readonly string? _userName;
+    private readonly int _tenantId;
 
     public JwtCurrentUserContext(IHttpContextAccessor httpContextAccessor)
     {
-        _httpContextAccessor = httpContextAccessor;
-    }
+        var user = httpContextAccessor.HttpContext?.User;
 
-    public Guid? UserId
-    {
-        get
+        if (user?.Identity?.IsAuthenticated != true)
         {
-            var user = _httpContextAccessor.HttpContext?.User;
-            if (user?.Identity?.IsAuthenticated != true)
-                return SystemUserId;
-
-            var sub = user.FindFirstValue(ClaimTypes.NameIdentifier)
-                       ?? user.FindFirstValue("sub")
-                       ?? user.FindFirstValue("UserGuid");
-            if (string.IsNullOrEmpty(sub) || !Guid.TryParse(sub, out var guid))
-                return SystemUserId;
-            return guid;
+            _userId = null;
+            _userName = "SYSTEM";
+            _tenantId = 0;
+            return;
         }
+
+        var sub = user.FindFirst("sub")?.Value
+                  ?? user.FindFirst("UserGuid")?.Value;
+
+        Guid.TryParse(sub, out var guid);
+        _userId = guid == Guid.Empty ? null : guid;
+
+        _userName = user.Identity?.Name ?? "UNKNOWN";
+
+        var tenantClaim = user.FindFirst("tenantId")?.Value;
+        _tenantId = int.TryParse(tenantClaim, out var tid) ? tid : 0;
     }
 
-    public string? UserName
-    {
-        get
-        {
-            var user = _httpContextAccessor.HttpContext?.User;
-            if (user?.Identity?.IsAuthenticated != true)
-                return SystemUserName;
+    public Guid? UserId => _userId;
 
-            var name = user.FindFirstValue(ClaimTypes.Name)
-                       ?? user.FindFirstValue("UserName")
-                       ?? user.FindFirstValue("unique_name");
-            return string.IsNullOrEmpty(name) ? SystemUserName : name;
-        }
-    }
+    public string? UserName => _userName;
+
+    public int TenantId => _tenantId;
 
     public string? ComputerName
     {
         get
         {
-            // Always return server machine name (never null/empty).
-            // This ensures audit fields are always populated globally.
             var machineName = Environment.MachineName;
             return string.IsNullOrWhiteSpace(machineName) ? "SERVER" : machineName;
         }

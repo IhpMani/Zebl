@@ -26,6 +26,7 @@ namespace Zebl.Api.Controllers
     {
         private readonly ZeblDbContext _db;
         private readonly ICurrentUserContext _userContext;
+        private readonly ICurrentContext _currentContext;
         private readonly IClaimExportService _claimExportService;
         private readonly ISecondaryTriggerService _secondaryTriggerService;
         private readonly ILogger<ClaimsController> _logger;
@@ -36,6 +37,7 @@ namespace Zebl.Api.Controllers
         public ClaimsController(
             ZeblDbContext db,
             ICurrentUserContext userContext,
+            ICurrentContext currentContext,
             IClaimExportService claimExportService,
             ISecondaryTriggerService secondaryTriggerService,
             ILogger<ClaimsController> logger,
@@ -45,6 +47,7 @@ namespace Zebl.Api.Controllers
         {
             _db = db;
             _userContext = userContext;
+            _currentContext = currentContext;
             _claimExportService = claimExportService;
             _secondaryTriggerService = secondaryTriggerService;
             _logger = logger;
@@ -219,7 +222,10 @@ namespace Zebl.Api.Controllers
 
             // Build efficient LINQ query with server-side filtering
             // Note: We don't need Include() when using Select() - EF Core will automatically join
-            var query = _db.Claims.AsNoTracking();
+            var tenantId = _currentContext.TenantId;
+            var facilityId = _currentContext.FacilityId;
+            var query = _db.Claims.AsNoTracking()
+                .Where(c => c.TenantId == tenantId && c.FacilityId == facilityId);
 
             // Excel-style status filter: support both single status and comma-separated list
             if (!string.IsNullOrWhiteSpace(statusList))
@@ -792,7 +798,10 @@ namespace Zebl.Api.Controllers
                 .Distinct();
             var userClaims = _db.Claims
                 .AsNoTracking()
-                .Where(c => editedClaimIds.Contains(c.ClaID));
+                .Where(c =>
+                    editedClaimIds.Contains(c.ClaID) &&
+                    c.TenantId == _currentContext.TenantId &&
+                    c.FacilityId == _currentContext.FacilityId);
 
             var totalClaims = await userClaims.CountAsync();
             if (totalClaims == 0)
@@ -1207,7 +1216,10 @@ namespace Zebl.Api.Controllers
                 // Load claim and service lines for validation
                 var claim = await _db.Claims
                     .Include(c => c.Service_Lines)
-                    .FirstOrDefaultAsync(c => c.ClaID == claId);
+                    .FirstOrDefaultAsync(c =>
+                        c.ClaID == claId &&
+                        c.TenantId == _currentContext.TenantId &&
+                        c.FacilityId == _currentContext.FacilityId);
 
                 if (claim == null)
                     return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Claim not found." });
@@ -1370,9 +1382,11 @@ namespace Zebl.Api.Controllers
             try
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                var tid = _currentContext.TenantId;
+                var fid = _currentContext.FacilityId;
                 var claimHeader = await _db.Claims
                     .AsNoTracking()
-                    .Where(c => c.ClaID == claId)
+                    .Where(c => c.ClaID == claId && c.TenantId == tid && c.FacilityId == fid)
                     .Select(c => new
                     {
                         c.ClaID,
@@ -1704,7 +1718,8 @@ namespace Zebl.Api.Controllers
 
             try
             {
-                var claim = await _db.Claims.FindAsync(claId);
+                var claim = await _db.Claims
+                    .FirstOrDefaultAsync(c => c.ClaID == claId);
                 if (claim == null)
                     return NotFound();
 
@@ -1786,6 +1801,8 @@ namespace Zebl.Api.Controllers
                     : "Claim edited.";
                 _db.Claim_Audits.Add(new Claim_Audit
                 {
+                    TenantId = claim.TenantId,
+                    FacilityId = claim.FacilityId,
                     ClaFID = claId,
                     ActivityType = "Claim Edited",
                     ActivityDate = DateTime.UtcNow,

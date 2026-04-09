@@ -3,9 +3,13 @@ using System.Collections.Generic;
 
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public partial class Claim
+public partial class Claim : ITenantEntity, ITenantFacilityEntity
 {
     public int ClaID { get; set; }
+
+    public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public DateTime ClaDateTimeCreated { get; set; }
 

@@ -10,6 +10,7 @@ public sealed class SystemCurrentUserContext : ICurrentUserContext
     public static readonly Guid SystemUserId = new("00000000-0000-0000-0000-000000000001");
 
     public Guid? UserId => SystemUserId;
+    public int TenantId => throw new InvalidOperationException("SystemCurrentUserContext does not provide tenant scope.");
     public string? UserName => "SYSTEM";
     
     public string? ComputerName

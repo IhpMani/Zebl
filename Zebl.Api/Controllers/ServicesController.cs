@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.Common;
 using Zebl.Application.Dtos.Services;
 using Zebl.Application.Repositories;
@@ -16,6 +17,8 @@ namespace Zebl.Api.Controllers
     public class ServicesController : ControllerBase
     {
         private readonly ZeblDbContext _db;
+        private readonly ICurrentContext _currentContext;
+        private readonly ICurrentUserContext _currentUserContext;
         private readonly ILogger<ServicesController> _logger;
         private readonly IProcedureCodeLookupService _procedureLookupService;
         private readonly IClaimChargeCalculator _claimChargeCalculator;
@@ -23,12 +26,16 @@ namespace Zebl.Api.Controllers
 
         public ServicesController(
             ZeblDbContext db,
+            ICurrentContext currentContext,
+            ICurrentUserContext currentUserContext,
             ILogger<ServicesController> logger,
             IProcedureCodeLookupService procedureLookupService,
             IClaimChargeCalculator claimChargeCalculator,
             IServiceLineRepository serviceLineRepo)
         {
             _db = db;
+            _currentContext = currentContext;
+            _currentUserContext = currentUserContext;
             _logger = logger;
             _procedureLookupService = procedureLookupService;
             _claimChargeCalculator = claimChargeCalculator;
@@ -42,6 +49,13 @@ namespace Zebl.Api.Controllers
         [HttpGet("claims/{claId:int}")]
         public async Task<IActionResult> GetServicesForClaim(int claId)
         {
+            var tid = _currentContext.TenantId;
+            var fid = _currentContext.FacilityId;
+            var claimOk = await _db.Claims.AsNoTracking()
+                .AnyAsync(c => c.ClaID == claId && c.TenantId == tid && c.FacilityId == fid);
+            if (!claimOk)
+                return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Claim not found." });
+
             var services = await _db.Service_Lines
                 .AsNoTracking()
                 .Where(s => s.SrvClaFID == claId) // 🔴 CRITICAL FILTER
@@ -121,7 +135,10 @@ namespace Zebl.Api.Controllers
             var hasPatLastName = columnsToInclude.Any(c => c.Key == "patLastName");
             var hasPatFullNameCC = columnsToInclude.Any(c => c.Key == "patFullNameCC");
 
-            var query = _db.Service_Lines.AsNoTracking();
+            var tid = _currentContext.TenantId;
+            var fid = _currentContext.FacilityId;
+            var query = _db.Service_Lines.AsNoTracking()
+                .Where(s => s.SrvClaF != null && s.SrvClaF.TenantId == tid && s.SrvClaF.FacilityId == fid);
 
             if (claimId.HasValue)
             {
@@ -261,7 +278,20 @@ namespace Zebl.Api.Controllers
         public async Task<IActionResult> CreateServiceLine([FromRoute] int claimId, [FromBody] UpsertServiceLineRequest request)
         {
             if (request == null) return BadRequest(new { message = "Request body is required." });
-            if (!await _db.Claims.AsNoTracking().AnyAsync(c => c.ClaID == claimId)) return NotFound(new { message = "Claim not found." });
+            var userTenantId = _currentContext.TenantId;
+            if (userTenantId <= 0)
+                throw new UnauthorizedAccessException("Tenant context is required.");
+
+            var tid = _currentContext.TenantId;
+            var fid = _currentContext.FacilityId;
+            var claimScope = await _db.Claims.AsNoTracking()
+                .Where(c => c.ClaID == claimId && c.TenantId == tid && c.FacilityId == fid)
+                .Select(c => new { c.TenantId, c.FacilityId })
+                .FirstOrDefaultAsync();
+            if (claimScope == null)
+                return NotFound(new { message = "Claim not found." });
+            if (claimScope.TenantId != userTenantId)
+                throw new UnauthorizedAccessException("Tenant context is required.");
 
             var now = DateTime.UtcNow;
             var fromDate = request.SrvFromDate ?? DateOnly.FromDateTime(now);
@@ -291,7 +321,7 @@ namespace Zebl.Api.Controllers
             if (!resolvedResponsibleParty.HasValue)
             {
                 var patId = await _db.Claims.AsNoTracking()
-                    .Where(c => c.ClaID == claimId)
+                    .Where(c => c.ClaID == claimId && c.TenantId == tid && c.FacilityId == fid)
                     .Select(c => c.ClaPatFID)
                     .FirstOrDefaultAsync();
                 if (patId > 0)
@@ -318,7 +348,7 @@ namespace Zebl.Api.Controllers
             if (request.SrvID.HasValue && request.SrvID.Value > 0)
             {
                 var existing = await _db.Service_Lines.FindAsync(request.SrvID.Value);
-                if (existing != null && existing.SrvClaFID == claimId)
+                if (existing != null && existing.SrvClaFID == claimId && existing.TenantId == tid && existing.FacilityId == fid)
                 {
                     entity = existing;
                     ApplyRequestToServiceLine(entity, request);
@@ -332,6 +362,8 @@ namespace Zebl.Api.Controllers
             {
                 entity = new Service_Line
                 {
+                    TenantId = claimScope.TenantId,
+                    FacilityId = claimScope.FacilityId,
                     SrvClaFID = claimId,
                     SrvDateTimeCreated = now,
                     SrvDateTimeModified = now,
@@ -359,6 +391,15 @@ namespace Zebl.Api.Controllers
                 };
                 _db.Service_Lines.Add(entity);
                 isInsert = true;
+            }
+
+            if (entity.TenantId != claimScope.TenantId)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "TENANT_MISMATCH",
+                    Message = "Service_Line.TenantId must match Claim.TenantId."
+                });
             }
 
             _logger.LogInformation(
@@ -397,8 +438,14 @@ namespace Zebl.Api.Controllers
         public async Task<IActionResult> UpdateServiceLine([FromRoute] int claimId, [FromRoute] int srvId, [FromBody] UpsertServiceLineRequest request)
         {
             if (request == null) return BadRequest(new { message = "Request body is required." });
+            if (_currentContext.TenantId <= 0)
+                throw new UnauthorizedAccessException("Tenant context is required.");
+            var tid = _currentContext.TenantId;
+            var fid = _currentContext.FacilityId;
+            if (!await _db.Claims.AsNoTracking().AnyAsync(c => c.ClaID == claimId && c.TenantId == tid && c.FacilityId == fid))
+                return NotFound(new { message = "Service line not found." });
             var entity = await _db.Service_Lines.FindAsync(srvId);
-            if (entity != null && entity.SrvClaFID != claimId) entity = null;
+            if (entity != null && (entity.SrvClaFID != claimId || entity.TenantId != tid || entity.FacilityId != fid)) entity = null;
             if (entity == null) return NotFound(new { message = "Service line not found." });
 
             var oldUnits = entity.SrvUnits.HasValue && entity.SrvUnits.Value > 0 ? (int)Math.Round(entity.SrvUnits.Value) : 1;
@@ -493,10 +540,22 @@ namespace Zebl.Api.Controllers
         [HttpDelete("/api/claims/{claimId:int}/services/{srvId:int}")]
         public async Task<IActionResult> DeleteServiceLine([FromRoute] int claimId, [FromRoute] int srvId)
         {
+            if (_currentContext.TenantId <= 0)
+                throw new UnauthorizedAccessException("Tenant context is required.");
+            var tid = _currentContext.TenantId;
+            var fid = _currentContext.FacilityId;
+            if (!await _db.Claims.AsNoTracking().AnyAsync(c => c.ClaID == claimId && c.TenantId == tid && c.FacilityId == fid))
+                return NotFound(new { message = "Service line not found." });
             var entity = await _db.Service_Lines.FirstOrDefaultAsync(s => s.SrvID == srvId && s.SrvClaFID == claimId);
+            if (entity != null && (entity.TenantId != tid || entity.FacilityId != fid)) entity = null;
             if (entity == null) return NotFound(new { message = "Service line not found." });
 
-            var adjs = await _db.Adjustments.Where(a => a.AdjSrvFID == srvId || a.AdjTaskFID == srvId).ToListAsync();
+            var adjs = await _db.Adjustments
+                .Where(a =>
+                    (a.AdjSrvFID == srvId || a.AdjTaskFID == srvId) &&
+                    a.TenantId == tid &&
+                    a.FacilityId == fid)
+                .ToListAsync();
             if (adjs.Count > 0) _db.Adjustments.RemoveRange(adjs);
 
             var disbs = await _db.Disbursements.Where(d => d.DisbSrvFID == srvId).ToListAsync();

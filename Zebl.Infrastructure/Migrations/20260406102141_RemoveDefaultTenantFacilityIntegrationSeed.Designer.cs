@@ -12,8 +12,8 @@ using Zebl.Infrastructure.Persistence.Context;
 namespace Zebl.Infrastructure.Migrations
 {
     [DbContext(typeof(ZeblDbContext))]
-    [Migration("20260324043154_ProcedureCodeProcPayFIDNullable")]
-    partial class ProcedureCodeProcPayFIDNullable
+    [Migration("20260406102141_RemoveDefaultTenantFacilityIntegrationSeed")]
+    partial class RemoveDefaultTenantFacilityIntegrationSeed
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -289,6 +289,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasDefaultValue("Generated");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
 
                     b.Property<string>("TraceNumber")
                         .HasMaxLength(100)
@@ -739,6 +742,12 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<bool>("AdjTrackOnly")
                         .HasColumnType("bit");
 
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("AdjID")
                         .HasName("PK__Adjustme__A065A852DF7CF3F7");
 
@@ -770,10 +779,18 @@ namespace Zebl.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("IsSuperAdmin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<byte[]>("PasswordHash")
                         .HasMaxLength(64)
@@ -782,6 +799,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<byte[]>("PasswordSalt")
                         .HasMaxLength(32)
                         .HasColumnType("varbinary(32)");
+
+                    b.Property<int?>("TenantId")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserName")
                         .IsRequired()
@@ -792,6 +812,55 @@ namespace Zebl.Infrastructure.Migrations
                         .HasName("PK__AppUser__81B7740C5F82BC9D");
 
                     b.ToTable("AppUser", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.AuditLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("Hash")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Metadata")
+                        .IsRequired()
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(max)");
+
+                    b.Property<string>("PreviousHash")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<int?>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TimestampUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TimestampUtc")
+                        .HasDatabaseName("IX_AuditLog_TimestampUtc");
+
+                    b.HasIndex("UserId", "TimestampUtc")
+                        .HasDatabaseName("IX_AuditLog_UserId_TimestampUtc");
+
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.CityStateZipLibrary", b =>
@@ -1550,6 +1619,12 @@ namespace Zebl.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(4)");
 
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("ClaID")
                         .HasName("PK__Claim__E8193A9B6764AAF8");
 
@@ -1608,6 +1683,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("ClaimTemplates", (string)null);
@@ -1636,6 +1714,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("InsuranceBalance")
                         .HasColumnType("money");
 
@@ -1645,6 +1726,9 @@ namespace Zebl.Infrastructure.Migrations
 
                     b.Property<decimal?>("PatientBalance")
                         .HasColumnType("money");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("TotalCharge")
                         .HasColumnType("money");
@@ -1873,11 +1957,15 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id")
                         .HasName("PK_CustomFieldDefinitions_Id");
 
-                    b.HasIndex("EntityType", "FieldKey")
-                        .HasDatabaseName("IX_CustomFieldDefinitions_EntityType_FieldKey");
+                    b.HasIndex("TenantId", "EntityType", "FieldKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CustomFieldDefinitions_Tenant_EntityType_FieldKey");
 
                     b.ToTable("CustomFieldDefinitions", (string)null);
                 });
@@ -1905,6 +1993,9 @@ namespace Zebl.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Value")
                         .IsUnicode(false)
                         .HasColumnType("varchar(max)");
@@ -1912,8 +2003,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("PK_CustomFieldValues_Id");
 
-                    b.HasIndex("EntityType", "EntityId", "FieldKey")
-                        .HasDatabaseName("IX_CustomFieldValues_EntityType_EntityId_FieldKey");
+                    b.HasIndex("TenantId", "EntityType", "EntityId", "FieldKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CustomFieldValues_Tenant_Entity_EntityId_FieldKey");
 
                     b.ToTable("CustomFieldValues", (string)null);
                 });
@@ -2038,6 +2130,31 @@ namespace Zebl.Infrastructure.Migrations
                     b.ToTable("Disbursement", (string)null);
                 });
 
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.FacilityScope", b =>
+                {
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FacilityId")
+                        .HasName("PK_FacilityScope_FacilityId");
+
+                    b.ToTable("FacilityScope", (string)null);
+                });
+
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Hl7_Import_Log", b =>
                 {
                     b.Property<int>("ImportLogID")
@@ -2053,6 +2170,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<string>("ErrorMessage")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("FileName")
                         .IsRequired()
@@ -2078,6 +2198,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<int>("NewServiceLinesCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<int>("UpdatedPatientsCount")
                         .HasColumnType("int");
 
@@ -2085,6 +2208,34 @@ namespace Zebl.Infrastructure.Migrations
                         .HasName("PK__Hl7_Impo__ImportLogID");
 
                     b.ToTable("Hl7_Import_Log", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.InboundIntegration", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK_InboundIntegration_Id");
+
+                    b.ToTable("InboundIntegration", (string)null);
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Insured", b =>
@@ -2243,6 +2394,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<int>("DuplicateClaimsCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -2260,6 +2414,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("money");
@@ -2355,6 +2512,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PatID"));
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("PatAccountNo")
                         .HasMaxLength(50)
@@ -2854,6 +3014,9 @@ namespace Zebl.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(20)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("PatID")
                         .HasName("PK__Patient__F0DDA98550DB60C7");
 
@@ -2967,6 +3130,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PayID"));
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("PayAddr1")
                         .HasMaxLength(50)
@@ -3187,8 +3353,15 @@ namespace Zebl.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(15)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("PayID")
                         .HasName("PK__Payer__EE8FCE2FDCFA87D9");
+
+                    b.HasIndex("PayName", "TenantId", "FacilityId")
+                        .IsUnique()
+                        .HasFilter("[PayName] IS NOT NULL");
 
                     b.ToTable("Payer", (string)null);
                 });
@@ -3200,6 +3373,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PmtID"));
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Pmt835Ref")
                         .HasMaxLength(50)
@@ -3318,6 +3494,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<byte?>("PmtTransactionType")
                         .HasColumnType("tinyint");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("PmtID")
                         .HasName("PK__Payment__1587830DB215BEEC");
 
@@ -3337,6 +3516,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PhyID"));
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhyAddress1")
                         .HasMaxLength(55)
@@ -3512,6 +3694,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasMaxLength(15)
                         .IsUnicode(false)
                         .HasColumnType("varchar(15)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
 
                     b.HasKey("PhyID")
                         .HasName("PK__Physicia__5FEDBF914E56D8C8");
@@ -3874,6 +4059,9 @@ namespace Zebl.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SrvID"));
 
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<string>("SrvAdditionalData")
                         .HasColumnType("xml");
 
@@ -4172,6 +4360,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<float?>("SrvUnits")
                         .HasColumnType("real");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("SrvID")
                         .HasName("PK__Service___0367D191FA398414");
 
@@ -4185,23 +4376,72 @@ namespace Zebl.Infrastructure.Migrations
                     b.ToTable("Service_Line", (string)null);
                 });
 
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Tenant", b =>
+                {
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("TenantKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("TenantId")
+                        .HasName("PK_Tenant_TenantId");
+
+                    b.HasIndex("TenantKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tenant_TenantKey");
+
+                    b.ToTable("Tenant", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.UserFacility", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "FacilityId")
+                        .HasName("PK_UserFacility_UserId_FacilityId");
+
+                    b.ToTable("UserFacility", (string)null);
+                });
+
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Adjustment", b =>
                 {
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Payer", "AdjPayF")
                         .WithMany("Adjustments")
                         .HasForeignKey("AdjPayFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Adjustment_Payer");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Payment", "AdjPmtF")
                         .WithMany("Adjustments")
                         .HasForeignKey("AdjPmtFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Adjustment_Payment");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Service_Line", "AdjSrvF")
                         .WithMany("AdjustmentAdjSrvFs")
                         .HasForeignKey("AdjSrvFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Adjustment_ServiceLine_SrvID");
 
@@ -4209,12 +4449,14 @@ namespace Zebl.Infrastructure.Migrations
                         .WithMany("AdjustmentAdjSrvs")
                         .HasForeignKey("AdjSrvGUID")
                         .HasPrincipalKey("SrvGUID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Adjustment_ServiceLine_SrvGUID");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Service_Line", "AdjTaskF")
                         .WithMany("AdjustmentAdjTaskFs")
                         .HasForeignKey("AdjTaskFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Adjustment_TaskSrv");
 
@@ -4234,54 +4476,63 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ClaAttendingPhyF")
                         .WithMany("ClaimClaAttendingPhyFs")
                         .HasForeignKey("ClaAttendingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_AttendingPhy");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ClaBillingPhyF")
                         .WithMany("ClaimClaBillingPhyFs")
                         .HasForeignKey("ClaBillingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_BillingPhy");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ClaFacilityPhyF")
                         .WithMany("ClaimClaFacilityPhyFs")
                         .HasForeignKey("ClaFacilityPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_FacilityPhy");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ClaOperatingPhyF")
                         .WithMany("ClaimClaOperatingPhyFs")
                         .HasForeignKey("ClaOperatingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_OperatingPhy");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ClaOrderingPhyF")
                         .WithMany("ClaimClaOrderingPhyFs")
                         .HasForeignKey("ClaOrderingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_OrderingPhy");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Patient", "ClaPatF")
                         .WithMany("Claims")
                         .HasForeignKey("ClaPatFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_Patient");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ClaReferringPhyF")
                         .WithMany("ClaimClaReferringPhyFs")
                         .HasForeignKey("ClaReferringPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_ReferringPhy");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ClaRenderingPhyF")
                         .WithMany("ClaimClaRenderingPhyFs")
                         .HasForeignKey("ClaRenderingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_RenderingPhy");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ClaSupervisingPhyF")
                         .WithMany("ClaimClaSupervisingPhyFs")
                         .HasForeignKey("ClaSupervisingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Claim_SupervisingPhy");
 
@@ -4366,36 +4617,42 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "PatBillingPhyF")
                         .WithMany("PatientPatBillingPhyFs")
                         .HasForeignKey("PatBillingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Patient_BillingPhysician");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "PatFacilityPhyF")
                         .WithMany("PatientPatFacilityPhyFs")
                         .HasForeignKey("PatFacilityPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Patient_FacilityPhysician");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "PatOrderingPhyF")
                         .WithMany("PatientPatOrderingPhyFs")
                         .HasForeignKey("PatOrderingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Patient_OrderingPhysician");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "PatReferringPhyF")
                         .WithMany("PatientPatReferringPhyFs")
                         .HasForeignKey("PatReferringPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Patient_ReferringPhysician");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "PatRenderingPhyF")
                         .WithMany("PatientPatRenderingPhyFs")
                         .HasForeignKey("PatRenderingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Patient_RenderingPhysician");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "PatSupervisingPhyF")
                         .WithMany("PatientPatSupervisingPhyFs")
                         .HasForeignKey("PatSupervisingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Patient_SupervisingPhysician");
 
@@ -4436,12 +4693,14 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "PmtBFEPF")
                         .WithMany("Payments")
                         .HasForeignKey("PmtBFEPFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Payment_BFEPhysician");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Patient", "PmtPatF")
                         .WithMany("Payments")
                         .HasForeignKey("PmtPatFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Payment_Patient");
 
@@ -4462,6 +4721,7 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ProcBillingPhyF")
                         .WithMany("Procedure_Codes")
                         .HasForeignKey("ProcBillingPhyFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_ProcedureCode_BillingPhysician");
 
@@ -4480,6 +4740,7 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Claim", "SrvClaF")
                         .WithMany("Service_Lines")
                         .HasForeignKey("SrvClaFID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_ServiceLine_Claim");
 
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Payer", "SrvResponsiblePartyNavigation")

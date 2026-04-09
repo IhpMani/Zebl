@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
+using Zebl.Api.Services;
 using Zebl.Application.Dtos.Common;
 
 namespace Zebl.Api.Middleware
@@ -63,6 +64,7 @@ namespace Zebl.Api.Middleware
         private static string GetErrorCode(Exception ex) =>
             ex switch
             {
+                TenantSecurityException t => t.ErrorCode,
                 ArgumentNullException => "NULL_ARGUMENT",
                 ArgumentException => "INVALID_ARGUMENT",
                 UnauthorizedAccessException => "UNAUTHORIZED",
@@ -75,6 +77,7 @@ namespace Zebl.Api.Middleware
         private static string GetErrorMessage(Exception ex) =>
             ex switch
             {
+                TenantSecurityException t => t.Message,
                 ArgumentNullException => "Required argument is missing",
                 ArgumentException => "Invalid argument",
                 UnauthorizedAccessException => "Unauthorized",
@@ -86,6 +89,7 @@ namespace Zebl.Api.Middleware
         private static int GetStatusCode(Exception ex) =>
             ex switch
             {
+                TenantSecurityException => (int)HttpStatusCode.Forbidden,
                 ArgumentNullException => (int)HttpStatusCode.BadRequest,
                 ArgumentException => (int)HttpStatusCode.BadRequest,
                 UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,

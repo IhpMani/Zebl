@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Domain;
 using Zebl.Application.Repositories;
 using Zebl.Infrastructure.Persistence.Context;
@@ -11,18 +12,27 @@ public class ClaimRepository : IClaimRepository
 {
     private readonly ZeblDbContext _context;
     private readonly ClaimInitialStatusProvider _claimInitialStatus;
+    private readonly ICurrentContext _currentContext;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public ClaimRepository(ZeblDbContext context, ClaimInitialStatusProvider claimInitialStatus)
+    public ClaimRepository(
+        ZeblDbContext context,
+        ClaimInitialStatusProvider claimInitialStatus,
+        ICurrentContext currentContext,
+        ICurrentUserContext currentUserContext)
     {
         _context = context;
         _claimInitialStatus = claimInitialStatus;
+        _currentContext = currentContext;
+        _currentUserContext = currentUserContext;
     }
 
     public async Task<ClaimData?> GetByIdAsync(int claimId)
     {
+        var fid = _currentContext.FacilityId;
         var claim = await _context.Claims
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.ClaID == claimId);
+            .FirstOrDefaultAsync(c => c.ClaID == claimId && c.FacilityId == fid);
             
         if (claim == null)
             return null;
@@ -35,7 +45,11 @@ public class ClaimRepository : IClaimRepository
 
     public async Task UpdateSubmissionStatusAsync(int claimId, string submissionMethod, string status, DateTime lastExportedDate)
     {
-        var claim = await _context.Claims.FindAsync(claimId);
+        if (_currentContext.TenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
+
+        var fid = _currentContext.FacilityId;
+        var claim = await _context.Claims.FirstOrDefaultAsync(c => c.ClaID == claimId && c.FacilityId == fid);
         if (claim == null) return;
         claim.ClaSubmissionMethod = submissionMethod;
         claim.ClaStatus = status;
@@ -45,7 +59,11 @@ public class ClaimRepository : IClaimRepository
 
     public async Task UpdateClaimStatusAsync(int claimId, string status)
     {
-        var claim = await _context.Claims.FindAsync(claimId);
+        if (_currentContext.TenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
+
+        var fid = _currentContext.FacilityId;
+        var claim = await _context.Claims.FirstOrDefaultAsync(c => c.ClaID == claimId && c.FacilityId == fid);
         if (claim == null) return;
         claim.ClaStatus = status ?? claim.ClaStatus;
         await _context.SaveChangesAsync();
@@ -53,7 +71,11 @@ public class ClaimRepository : IClaimRepository
 
     public async Task UpdateTotalsAsync(int claimId, ClaimTotals totals)
     {
-        var claim = await _context.Claims.FindAsync(claimId);
+        if (_currentContext.TenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
+
+        var fid = _currentContext.FacilityId;
+        var claim = await _context.Claims.FirstOrDefaultAsync(c => c.ClaID == claimId && c.FacilityId == fid);
         if (claim == null) return;
         claim.ClaTotalChargeTRIG = totals.TotalCharge;
         claim.ClaTotalInsAmtPaidTRIG = totals.TotalInsAmtPaid;
@@ -70,16 +92,18 @@ public class ClaimRepository : IClaimRepository
 
     public async Task<int?> GetBillingPhysicianIdAsync(int claimId)
     {
-        var c = await _context.Claims.AsNoTracking().FirstOrDefaultAsync(x => x.ClaID == claimId);
+        var fid = _currentContext.FacilityId;
+        var c = await _context.Claims.AsNoTracking().FirstOrDefaultAsync(x => x.ClaID == claimId && x.FacilityId == fid);
         return c?.ClaBillingPhyFID;
     }
 
     public async Task<ClaimSecondaryEvalData?> GetClaimForSecondaryEvalAsync(int claimId)
     {
+        var fid = _currentContext.FacilityId;
         var c = await _context.Claims
             .AsNoTracking()
             .Include(x => x.Claim_Insureds)
-            .FirstOrDefaultAsync(x => x.ClaID == claimId);
+            .FirstOrDefaultAsync(x => x.ClaID == claimId && x.FacilityId == fid);
         if (c == null) return null;
         var primary = c.Claim_Insureds?.FirstOrDefault(ci => ci.ClaInsSequence == 1);
         var secondary = c.Claim_Insureds?.FirstOrDefault(ci => ci.ClaInsSequence == 2);
@@ -116,6 +140,10 @@ public class ClaimRepository : IClaimRepository
 
     public async Task<List<(string GroupCode, string? ReasonCode, decimal Amount)>> GetAdjustmentsByClaimIdAsync(int claimId)
     {
+        var fid = _currentContext.FacilityId;
+        var claimOk = await _context.Claims.AsNoTracking().AnyAsync(c => c.ClaID == claimId && c.FacilityId == fid);
+        if (!claimOk) return new List<(string, string?, decimal)>();
+
         var srvIds = await _context.Service_Lines
             .AsNoTracking()
             .Where(s => s.SrvClaFID == claimId)
@@ -124,7 +152,7 @@ public class ClaimRepository : IClaimRepository
         if (srvIds.Count == 0) return new List<(string, string?, decimal)>();
         var list = await _context.Adjustments
             .AsNoTracking()
-            .Where(a => srvIds.Contains(a.AdjSrvFID))
+            .Where(a => srvIds.Contains(a.AdjSrvFID) && a.FacilityId == fid)
             .Select(a => new { a.AdjGroupCode, a.AdjReasonCode, a.AdjAmount })
             .ToListAsync();
         return list.Select(a => (a.AdjGroupCode ?? "", a.AdjReasonCode, a.AdjAmount)).ToList();
@@ -132,19 +160,33 @@ public class ClaimRepository : IClaimRepository
 
     public async Task<bool> ExistsSecondaryForPrimaryAsync(int primaryClaimId)
     {
+        var fid = _currentContext.FacilityId;
         return await _context.Claims
             .AsNoTracking()
-            .AnyAsync(c => c.ClaPrimaryClaimFID == primaryClaimId && c.ClaClaimType == "Secondary");
+            .AnyAsync(c =>
+                c.ClaPrimaryClaimFID == primaryClaimId &&
+                c.ClaClaimType == "Secondary" &&
+                c.FacilityId == fid);
     }
 
     public async Task<int> CreateSecondaryClaimAsync(int primaryClaimId, int secondaryPayerId, decimal forwardAmount, ClaimSecondaryEvalData fromPrimary)
     {
+        var currentTenantId = _currentContext.TenantId;
+        if (currentTenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
+
+        var fid = _currentContext.FacilityId;
         var primary = await _context.Claims
             .Include(c => c.Claim_Insureds.OrderBy(ci => ci.ClaInsSequence))
             .Include(c => c.Service_Lines.OrderBy(s => s.SrvID))
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.ClaID == primaryClaimId);
+            .FirstOrDefaultAsync(c => c.ClaID == primaryClaimId && c.FacilityId == fid);
         if (primary == null) throw new InvalidOperationException("Primary claim not found.");
+        var patient = await _context.Patients.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.PatID == primary.ClaPatFID && p.FacilityId == fid);
+        if (patient == null) throw new InvalidOperationException("Patient not found for primary claim.");
+        if (patient.TenantId != primary.TenantId)
+            throw new InvalidOperationException("Tenant mismatch: Claim parent Patient tenant does not match primary claim tenant.");
         var firstLine = primary.Service_Lines?.FirstOrDefault();
         var primaryInsured = primary.Claim_Insureds?.FirstOrDefault(ci => ci.ClaInsSequence == 1);
         var now = DateTime.UtcNow;
@@ -152,6 +194,8 @@ public class ClaimRepository : IClaimRepository
         var newClaim = new Claim
         {
             ClaID = 0,
+            TenantId = patient.TenantId,
+            FacilityId = primary.FacilityId,
             ClaDateTimeCreated = now,
             ClaDateTimeModified = now,
             ClaClaimType = "Secondary",
@@ -186,6 +230,8 @@ public class ClaimRepository : IClaimRepository
             ClaTotalInsBalanceTRIG = forwardAmount,
             ClaTotalPatBalanceTRIG = 0
         };
+        if (newClaim.TenantId != primary.TenantId)
+            throw new InvalidOperationException("Tenant mismatch: Claim.TenantId must match primary claim tenant.");
         _context.Claims.Add(newClaim);
         await _context.SaveChangesAsync();
         var newClaimId = newClaim.ClaID;
@@ -217,6 +263,8 @@ public class ClaimRepository : IClaimRepository
         var toDate = firstLine?.SrvToDate ?? fromDate;
         var newLine = new Service_Line
         {
+            TenantId = newClaim.TenantId,
+            FacilityId = primary.FacilityId,
             SrvClaFID = newClaimId,
             SrvCharges = forwardAmount,
             SrvFromDate = fromDate,
@@ -238,6 +286,8 @@ public class ClaimRepository : IClaimRepository
             SrvTotalPIAdjTRIG = 0,
             SrvTotalPRAdjTRIG = 0
         };
+        if (newLine.TenantId != newClaim.TenantId)
+            throw new InvalidOperationException("Tenant mismatch: Service_Line.TenantId must match Claim.TenantId.");
         _context.Service_Lines.Add(newLine);
         await _context.SaveChangesAsync();
         return newClaimId;

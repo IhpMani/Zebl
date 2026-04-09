@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Zebl.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,9 +18,12 @@ namespace Zebl.Infrastructure.Migrations
                 columns: table => new
                 {
                     UserGUID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: true),
+                    FacilityId = table.Column<int>(type: "int", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    IsSuperAdmin = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysutcdatetime())"),
                     PasswordHash = table.Column<byte[]>(type: "varbinary(64)", maxLength: 64, nullable: true),
                     PasswordSalt = table.Column<byte[]>(type: "varbinary(32)", maxLength: 32, nullable: true)
@@ -26,6 +31,25 @@ namespace Zebl.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__AppUser__81B7740C5F82BC9D", x => x.UserGUID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AuditLogs",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Action = table.Column<string>(type: "varchar(256)", unicode: false, maxLength: 256, nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    TenantId = table.Column<int>(type: "int", nullable: true),
+                    TimestampUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Metadata = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
+                    Hash = table.Column<string>(type: "varchar(64)", unicode: false, maxLength: 64, nullable: true),
+                    PreviousHash = table.Column<string>(type: "varchar(64)", unicode: false, maxLength: 64, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -52,6 +76,8 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     AuditID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     ClaFID = table.Column<int>(type: "int", nullable: false),
                     ActivityType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ActivityDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -113,6 +139,7 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
                     TemplateName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     AvailableToPatientId = table.Column<int>(type: "int", nullable: true),
                     BillingProviderId = table.Column<int>(type: "int", nullable: true),
@@ -160,6 +187,7 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
                     EntityType = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
                     FieldKey = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
                     Label = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
@@ -179,6 +207,7 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
                     EntityType = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
                     EntityId = table.Column<int>(type: "int", nullable: false),
                     FieldKey = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
@@ -212,6 +241,7 @@ namespace Zebl.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
                     ReceiverLibraryId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     ConnectionLibraryId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     FileName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
@@ -299,11 +329,27 @@ namespace Zebl.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "FacilityScope",
+                columns: table => new
+                {
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacilityScope_FacilityId", x => x.FacilityId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Hl7_Import_Log",
                 columns: table => new
                 {
                     ImportLogID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ImportDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     NewPatientsCount = table.Column<int>(type: "int", nullable: false),
@@ -321,11 +367,28 @@ namespace Zebl.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "InboundIntegration",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InboundIntegration_Id", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Interface_Import_Log",
                 columns: table => new
                 {
                     ImportID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ImportDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
@@ -382,6 +445,8 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     PayID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     PayDateTimeCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PayDateTimeModified = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PayCreatedUserGUID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -446,6 +511,8 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     PhyID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     PhyDateTimeCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PhyDateTimeModified = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PhyCreatedUserGUID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -625,6 +692,32 @@ namespace Zebl.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Tenant",
+                columns: table => new
+                {
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    TenantKey = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tenant_TenantId", x => x.TenantId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserFacility",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserFacility_UserId_FacilityId", x => new { x.UserId, x.FacilityId });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Insured",
                 columns: table => new
                 {
@@ -674,6 +767,8 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     PatID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     PatFirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     PatLastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     PatMI = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: true),
@@ -795,32 +890,38 @@ namespace Zebl.Infrastructure.Migrations
                         name: "FK_Patient_BillingPhysician",
                         column: x => x.PatBillingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Patient_FacilityPhysician",
                         column: x => x.PatFacilityPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Patient_OrderingPhysician",
                         column: x => x.PatOrderingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Patient_ReferringPhysician",
                         column: x => x.PatReferringPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Patient_RenderingPhysician",
                         column: x => x.PatRenderingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Patient_SupervisingPhysician",
                         column: x => x.PatSupervisingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -856,7 +957,7 @@ namespace Zebl.Infrastructure.Migrations
                     ProcModifier4 = table.Column<string>(type: "varchar(2)", unicode: false, maxLength: 2, nullable: true),
                     ProcNote = table.Column<string>(type: "varchar(255)", unicode: false, maxLength: 255, nullable: true),
                     ProcNDCCode = table.Column<string>(type: "varchar(48)", unicode: false, maxLength: 48, nullable: true),
-                    ProcPayFID = table.Column<int>(type: "int", nullable: false),
+                    ProcPayFID = table.Column<int>(type: "int", nullable: true),
                     ProcProductCode = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
                     ProcRateClass = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
                     ProcRevenueCode = table.Column<string>(type: "varchar(4)", unicode: false, maxLength: 4, nullable: true),
@@ -875,7 +976,8 @@ namespace Zebl.Infrastructure.Migrations
                         name: "FK_ProcedureCode_BillingPhysician",
                         column: x => x.ProcBillingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ProcedureCode_Payer",
                         column: x => x.ProcPayFID,
@@ -889,6 +991,8 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     ClaID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     ClaDateTimeCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ClaDateTimeModified = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ClaCreatedUserGUID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -1064,47 +1168,56 @@ namespace Zebl.Infrastructure.Migrations
                         name: "FK_Claim_AttendingPhy",
                         column: x => x.ClaAttendingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Claim_BillingPhy",
                         column: x => x.ClaBillingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Claim_FacilityPhy",
                         column: x => x.ClaFacilityPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Claim_OperatingPhy",
                         column: x => x.ClaOperatingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Claim_OrderingPhy",
                         column: x => x.ClaOrderingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Claim_Patient",
                         column: x => x.ClaPatFID,
                         principalTable: "Patient",
-                        principalColumn: "PatID");
+                        principalColumn: "PatID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Claim_ReferringPhy",
                         column: x => x.ClaReferringPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Claim_RenderingPhy",
                         column: x => x.ClaRenderingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Claim_SupervisingPhy",
                         column: x => x.ClaSupervisingPhyFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1151,6 +1264,8 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     PmtID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     PmtDateTimeCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PmtDateTimeModified = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PmtCreatedUserGUID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -1188,12 +1303,14 @@ namespace Zebl.Infrastructure.Migrations
                         name: "FK_Payment_BFEPhysician",
                         column: x => x.PmtBFEPFID,
                         principalTable: "Physician",
-                        principalColumn: "PhyID");
+                        principalColumn: "PhyID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Payment_Patient",
                         column: x => x.PmtPatFID,
                         principalTable: "Patient",
-                        principalColumn: "PatID");
+                        principalColumn: "PatID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Payment_Payer",
                         column: x => x.PmtPayFID,
@@ -1267,6 +1384,8 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     SrvID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     SrvDateTimeCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SrvDateTimeModified = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SrvCreatedUserGUID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -1349,7 +1468,8 @@ namespace Zebl.Infrastructure.Migrations
                         name: "FK_ServiceLine_Claim",
                         column: x => x.SrvClaFID,
                         principalTable: "Claim",
-                        principalColumn: "ClaID");
+                        principalColumn: "ClaID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ServiceLine_ResponsibleParty",
                         column: x => x.SrvResponsibleParty,
@@ -1363,6 +1483,8 @@ namespace Zebl.Infrastructure.Migrations
                 {
                     AdjID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    FacilityId = table.Column<int>(type: "int", nullable: false),
                     AdjDateTimeCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     AdjDateTimeModified = table.Column<DateTime>(type: "datetime2", nullable: false),
                     AdjCreatedUserGUID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -1395,27 +1517,32 @@ namespace Zebl.Infrastructure.Migrations
                         name: "FK_Adjustment_Payer",
                         column: x => x.AdjPayFID,
                         principalTable: "Payer",
-                        principalColumn: "PayID");
+                        principalColumn: "PayID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Adjustment_Payment",
                         column: x => x.AdjPmtFID,
                         principalTable: "Payment",
-                        principalColumn: "PmtID");
+                        principalColumn: "PmtID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Adjustment_ServiceLine_SrvGUID",
                         column: x => x.AdjSrvGUID,
                         principalTable: "Service_Line",
-                        principalColumn: "SrvGUID");
+                        principalColumn: "SrvGUID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Adjustment_ServiceLine_SrvID",
                         column: x => x.AdjSrvFID,
                         principalTable: "Service_Line",
-                        principalColumn: "SrvID");
+                        principalColumn: "SrvID",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Adjustment_TaskSrv",
                         column: x => x.AdjTaskFID,
                         principalTable: "Service_Line",
-                        principalColumn: "SrvID");
+                        principalColumn: "SrvID",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1455,6 +1582,33 @@ namespace Zebl.Infrastructure.Migrations
                         principalColumn: "SrvID");
                 });
 
+            migrationBuilder.InsertData(
+                table: "FacilityScope",
+                columns: new[] { "FacilityId", "IsActive", "Name", "TenantId" },
+                values: new object[,]
+                {
+                    { 1, true, "New Jersey (NJ)", 1 },
+                    { 2, true, "Michigan (MI)", 2 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "InboundIntegration",
+                columns: new[] { "Id", "FacilityId", "IsActive", "Name", "TenantId" },
+                values: new object[,]
+                {
+                    { 1, 1, true, "NJ HL7", 1 },
+                    { 2, 2, true, "MI HL7", 2 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Tenant",
+                columns: new[] { "TenantId", "IsActive", "Name", "TenantKey" },
+                values: new object[,]
+                {
+                    { 1, true, "New Jersey", "nj" },
+                    { 2, true, "Michigan", "mi" }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Adjustment_AdjPayFID",
                 table: "Adjustment",
@@ -1479,6 +1633,16 @@ namespace Zebl.Infrastructure.Migrations
                 name: "IX_Adjustment_AdjTaskFID",
                 table: "Adjustment",
                 column: "AdjTaskFID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditLog_TimestampUtc",
+                table: "AuditLogs",
+                column: "TimestampUtc");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditLog_UserId_TimestampUtc",
+                table: "AuditLogs",
+                columns: new[] { "UserId", "TimestampUtc" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_CityStateZip_State",
@@ -1589,14 +1753,16 @@ namespace Zebl.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomFieldDefinitions_EntityType_FieldKey",
+                name: "IX_CustomFieldDefinitions_Tenant_EntityType_FieldKey",
                 table: "CustomFieldDefinitions",
-                columns: new[] { "EntityType", "FieldKey" });
+                columns: new[] { "TenantId", "EntityType", "FieldKey" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomFieldValues_EntityType_EntityId_FieldKey",
+                name: "IX_CustomFieldValues_Tenant_Entity_EntityId_FieldKey",
                 table: "CustomFieldValues",
-                columns: new[] { "EntityType", "EntityId", "FieldKey" });
+                columns: new[] { "TenantId", "EntityType", "EntityId", "FieldKey" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Diagnosis_Code_Code",
@@ -1704,6 +1870,13 @@ namespace Zebl.Infrastructure.Migrations
                 column: "PatInsPatFID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Payer_PayName_TenantId_FacilityId",
+                table: "Payer",
+                columns: new[] { "PayName", "TenantId", "FacilityId" },
+                unique: true,
+                filter: "[PayName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Payment_PmtBFEPFID",
                 table: "Payment",
                 column: "PmtBFEPFID");
@@ -1786,6 +1959,12 @@ namespace Zebl.Infrastructure.Migrations
                 table: "Service_Line",
                 column: "SrvGUID",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tenant_TenantKey",
+                table: "Tenant",
+                column: "TenantKey",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -1796,6 +1975,9 @@ namespace Zebl.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "AppUser");
+
+            migrationBuilder.DropTable(
+                name: "AuditLogs");
 
             migrationBuilder.DropTable(
                 name: "CityStateZipLibrary");
@@ -1843,7 +2025,13 @@ namespace Zebl.Infrastructure.Migrations
                 name: "EraException");
 
             migrationBuilder.DropTable(
+                name: "FacilityScope");
+
+            migrationBuilder.DropTable(
                 name: "Hl7_Import_Log");
+
+            migrationBuilder.DropTable(
+                name: "InboundIntegration");
 
             migrationBuilder.DropTable(
                 name: "Interface_Import_Log");
@@ -1880,6 +2068,12 @@ namespace Zebl.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "SecondaryForwardableAdjustmentRules");
+
+            migrationBuilder.DropTable(
+                name: "Tenant");
+
+            migrationBuilder.DropTable(
+                name: "UserFacility");
 
             migrationBuilder.DropTable(
                 name: "Payment");

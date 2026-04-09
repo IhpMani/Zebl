@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.Payments;
 using Zebl.Application.Repositories;
 using Zebl.Infrastructure.Persistence.Context;
@@ -10,18 +11,29 @@ namespace Zebl.Infrastructure.Repositories;
 public class PaymentRepository : IPaymentRepository
 {
     private readonly ZeblDbContext _context;
+    private readonly ICurrentContext _currentContext;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public PaymentRepository(ZeblDbContext context)
+    public PaymentRepository(
+        ZeblDbContext context,
+        ICurrentContext currentContext,
+        ICurrentUserContext currentUserContext)
     {
         _context = context;
+        _currentContext = currentContext;
+        _currentUserContext = currentUserContext;
     }
 
     public async Task<int> AddAsync(int payId, int patientId, int? billingPhysicianId, decimal amount, DateOnly paymentDate, string? ref835 = null)
     {
+        _ = GetRequiredTenantId();
+        var patient = await GetScopedPatientAsync(patientId);
         var validPhysicianId = await ValidateBillingPhysicianIdAsync(billingPhysicianId);
         var now = DateTime.UtcNow;
         var payment = new Payment
         {
+            TenantId = patient.TenantId,
+            FacilityId = patient.FacilityId,
             PmtAmount = amount,
             PmtPayFID = payId,
             PmtPatFID = patientId,
@@ -33,6 +45,8 @@ public class PaymentRepository : IPaymentRepository
             PmtDisbursedTRIG = 0,
             PmtChargedPlatformFee = 0
         };
+        if (payment.TenantId != patient.TenantId)
+            throw new ValidationException("Tenant mismatch: Payment.TenantId must match Patient.TenantId.");
         _context.Payments.Add(payment);
         await _context.SaveChangesAsync();
         return payment.PmtID;
@@ -40,10 +54,14 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task<int> CreatePaymentAsync(int? payerId, int patientId, int? billingPhysicianId, decimal amount, DateOnly date, string? method, string? reference1, string? reference2, string? note, string? ref835 = null)
     {
+        _ = GetRequiredTenantId();
+        var patient = await GetScopedPatientAsync(patientId);
         var validPhysicianId = await ValidateBillingPhysicianIdAsync(billingPhysicianId);
         var now = DateTime.UtcNow;
         var payment = new Payment
         {
+            TenantId = patient.TenantId,
+            FacilityId = patient.FacilityId,
             PmtAmount = amount,
             PmtPayFID = payerId,
             PmtPatFID = patientId,
@@ -59,6 +77,8 @@ public class PaymentRepository : IPaymentRepository
             PmtDisbursedTRIG = 0,
             PmtChargedPlatformFee = 0
         };
+        if (payment.TenantId != patient.TenantId)
+            throw new ValidationException("Tenant mismatch: Payment.TenantId must match Patient.TenantId.");
         _context.Payments.Add(payment);
         await _context.SaveChangesAsync();
         return payment.PmtID;
@@ -81,20 +101,31 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task<(int? PayerId, int PatientId, decimal Amount, decimal Disbursed)?> GetByIdAsync(int paymentId)
     {
-        var p = await _context.Payments.AsNoTracking().FirstOrDefaultAsync(x => x.PmtID == paymentId);
+        var fid = _currentContext.FacilityId;
+        var p = await _context.Payments.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.PmtID == paymentId && x.FacilityId == fid);
         if (p == null) return null;
         return (p.PmtPayFID, p.PmtPatFID, p.PmtAmount, p.PmtDisbursedTRIG);
     }
 
     public async Task<bool> ExistsDuplicateAsync(decimal amount, string? reference1)
     {
+        var fid = _currentContext.FacilityId;
         return await _context.Payments.AsNoTracking()
-            .AnyAsync(p => p.PmtAmount == amount && p.PmtOtherReference1 == reference1);
+            .AnyAsync(p =>
+                p.PmtAmount == amount &&
+                p.PmtOtherReference1 == reference1 &&
+                p.FacilityId == fid);
     }
 
     public async Task SetDisbursedAsync(int paymentId, decimal disbursedAmount)
     {
-        var p = await _context.Payments.FindAsync(paymentId);
+        if (_currentContext.TenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
+
+        var fid = _currentContext.FacilityId;
+        var p = await _context.Payments
+            .FirstOrDefaultAsync(x => x.PmtID == paymentId && x.FacilityId == fid);
         if (p == null) return;
         p.PmtDisbursedTRIG = disbursedAmount;
         p.PmtDateTimeModified = DateTime.UtcNow;
@@ -103,7 +134,12 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task DeleteAsync(int paymentId)
     {
-        var p = await _context.Payments.FindAsync(paymentId);
+        if (_currentContext.TenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
+
+        var fid = _currentContext.FacilityId;
+        var p = await _context.Payments
+            .FirstOrDefaultAsync(x => x.PmtID == paymentId && x.FacilityId == fid);
         if (p != null)
         {
             _context.Payments.Remove(p);
@@ -113,8 +149,9 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task<PaymentForEditDto?> GetPaymentForEditAsync(int paymentId)
     {
+        var fid = _currentContext.FacilityId;
         var p = await _context.Payments.AsNoTracking()
-            .Where(x => x.PmtID == paymentId)
+            .Where(x => x.PmtID == paymentId && x.FacilityId == fid)
             .Select(x => new PaymentForEditDto
             {
                 PaymentId = x.PmtID,
@@ -135,8 +172,9 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task<(List<PaymentDto> Payments, bool ClaimFound)> GetPaymentsForClaimAsync(int claimId)
     {
+        var fid = _currentContext.FacilityId;
         var patientId = await _context.Claims.AsNoTracking()
-            .Where(c => c.ClaID == claimId)
+            .Where(c => c.ClaID == claimId && c.FacilityId == fid)
             .Select(c => c.ClaPatFID)
             .FirstOrDefaultAsync();
         if (patientId == 0)
@@ -144,7 +182,7 @@ public class PaymentRepository : IPaymentRepository
 
         var payments = await _context.Payments
             .AsNoTracking()
-            .Where(p => p.PmtPatFID == patientId)
+            .Where(p => p.PmtPatFID == patientId && p.FacilityId == fid)
             .OrderByDescending(p => p.PmtDate)
             .Select(p => new PaymentDto
             {
@@ -162,7 +200,9 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task<(List<PaymentListItemDto> Data, int TotalCount)> GetPaymentListAsync(int page, int pageSize, int? patientId)
     {
-        IQueryable<Payment> query = _context.Payments.AsNoTracking();
+        var fid = _currentContext.FacilityId;
+        IQueryable<Payment> query = _context.Payments.AsNoTracking()
+            .Where(p => p.FacilityId == fid);
         if (patientId.HasValue && patientId.Value > 0)
             query = query.Where(p => p.PmtPatFID == patientId.Value);
         query = query.OrderByDescending(p => p.PmtDateTimeCreated);
@@ -204,5 +244,23 @@ public class PaymentRepository : IPaymentRepository
             .ToListAsync();
 
         return (data, totalCount);
+    }
+
+    private async Task<Patient> GetScopedPatientAsync(int patientId)
+    {
+        var fid = _currentContext.FacilityId;
+        var patient = await _context.Patients.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.PatID == patientId && p.FacilityId == fid);
+        if (patient == null)
+            throw new ValidationException("Patient not found in current tenant/facility scope.");
+        return patient;
+    }
+
+    private int GetRequiredTenantId()
+    {
+        var tenantId = _currentContext.TenantId;
+        if (tenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
+        return tenantId;
     }
 }

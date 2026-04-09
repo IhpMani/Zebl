@@ -1,8 +1,11 @@
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public class ClaimTemplate
+public class ClaimTemplate : ITenantEntity
 {
     public int Id { get; set; }
+
+    public int TenantId { get; set; }
+
     public string TemplateName { get; set; } = null!;
 
     public int? AvailableToPatientId { get; set; }

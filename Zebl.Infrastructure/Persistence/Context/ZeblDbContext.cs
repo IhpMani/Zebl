@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Zebl.Application.Abstractions;
 using Zebl.Application.Domain;
 using Zebl.Infrastructure.Persistence.Entities;
@@ -10,18 +11,35 @@ namespace Zebl.Infrastructure.Persistence.Context;
 
 public partial class ZeblDbContext : DbContext
 {
-    private readonly ICurrentUserContext? _userContext;
+    private readonly bool _applyTenantFacilityFilter;
+    private readonly ICurrentContext? _requestScope;
 
+    /// <summary>Design-time, <see cref="IDbContextFactory{TContext}"/>, and tests: query filters are disabled.</summary>
+    [ActivatorUtilitiesConstructor]
     public ZeblDbContext(DbContextOptions<ZeblDbContext> options)
         : base(options)
     {
+        _applyTenantFacilityFilter = false;
+        _requestScope = null;
     }
 
-    public ZeblDbContext(DbContextOptions<ZeblDbContext> options, ICurrentUserContext userContext)
+    /// <summary>Runtime: scope all filtered entities to the current <see cref="ICurrentContext"/>.</summary>
+    /// <remarks>
+    /// Do not read <see cref="ICurrentContext.FacilityId"/> in the constructor — DI may create this instance
+    /// before facility middleware runs or before optional headers (e.g. login) are present.
+    /// </remarks>
+    public ZeblDbContext(DbContextOptions<ZeblDbContext> options, ICurrentContext scope)
         : base(options)
     {
-        _userContext = userContext;
+        _applyTenantFacilityFilter = true;
+        _requestScope = scope;
     }
+
+    /// <summary>Used by EF global query filters (evaluated at query execution).</summary>
+    public int ScopedTenantIdForQuery => _requestScope!.TenantId;
+
+    /// <summary>Used by EF global query filters (evaluated at query execution).</summary>
+    public int ScopedFacilityIdForQuery => _requestScope!.FacilityId;
 
     public virtual DbSet<Adjustment> Adjustments { get; set; }
 
@@ -87,10 +105,17 @@ public partial class ZeblDbContext : DbContext
     public virtual DbSet<Reason_Code> Reason_Codes { get; set; }
     public virtual DbSet<Remark_Code> Remark_Codes { get; set; }
     public virtual DbSet<ProgramSettings> ProgramSettings { get; set; }
+    public virtual DbSet<Tenant> Tenants { get; set; }
+    public virtual DbSet<FacilityScope> FacilityScopes { get; set; }
+    public virtual DbSet<InboundIntegration> InboundIntegrations { get; set; }
+
+    public virtual DbSet<UserFacility> UserFacilities { get; set; }
 
     public virtual DbSet<CustomFieldDefinition> CustomFieldDefinitions { get; set; }
 
     public virtual DbSet<CustomFieldValue> CustomFieldValues { get; set; }
+
+    public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1041,6 +1066,15 @@ public partial class ZeblDbContext : DbContext
 
             entity.ToTable("Payer");
 
+            entity.Property(e => e.TenantId)
+                .IsRequired();
+
+            entity.Property(e => e.FacilityId)
+                .IsRequired();
+
+            entity.HasIndex(e => new { e.PayName, e.TenantId, e.FacilityId })
+                .IsUnique();
+
             entity.Property(e => e.PayAddr1)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -1203,6 +1237,12 @@ public partial class ZeblDbContext : DbContext
             entity.HasKey(e => e.PhyID).HasName("PK__Physicia__5FEDBF914E56D8C8");
 
             entity.ToTable("Physician");
+
+            entity.Property(e => e.TenantId)
+                .IsRequired();
+
+            entity.Property(e => e.FacilityId)
+                .IsRequired();
 
             entity.Property(e => e.PhyAddress1)
                 .HasMaxLength(55)
@@ -1535,8 +1575,11 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.Email).HasMaxLength(200);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsSuperAdmin).HasDefaultValue(false);
             entity.Property(e => e.PasswordHash).HasMaxLength(64);
             entity.Property(e => e.PasswordSalt).HasMaxLength(32);
+            entity.Property(e => e.TenantId).IsRequired(false);
+            entity.Property(e => e.FacilityId).IsRequired(false);
             entity.Property(e => e.UserName).HasMaxLength(100);
         });
 
@@ -1544,6 +1587,8 @@ public partial class ZeblDbContext : DbContext
         {
             entity.HasKey(e => e.ImportLogID).HasName("PK__Hl7_Impo__ImportLogID");
             entity.ToTable("Hl7_Import_Log");
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
             entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
             entity.Property(e => e.ImportDateTime).IsRequired();
             entity.Property(e => e.ErrorMessage).HasMaxLength(1000);
@@ -1555,6 +1600,8 @@ public partial class ZeblDbContext : DbContext
         {
             entity.HasKey(e => e.ImportID).HasName("PK_Interface_Import_Log");
             entity.ToTable("Interface_Import_Log");
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
             entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
             entity.Property(e => e.ImportDate).IsRequired();
             entity.Property(e => e.UserName).HasMaxLength(100);
@@ -1567,6 +1614,8 @@ public partial class ZeblDbContext : DbContext
         {
             entity.HasKey(e => e.AuditID).HasName("PK_Claim_Audit");
             entity.ToTable("Claim_Audit");
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
             entity.Property(e => e.ActivityType).HasMaxLength(50).IsRequired();
             entity.Property(e => e.ActivityDate).IsRequired();
             entity.Property(e => e.UserName).HasMaxLength(100);
@@ -1591,59 +1640,58 @@ public partial class ZeblDbContext : DbContext
         ConfigureClaimTemplates(modelBuilder);
         ConfigureCityStateZipLibrary(modelBuilder);
         ConfigureProgramSettings(modelBuilder);
+        ConfigureTenant(modelBuilder);
+        ConfigureFacilityScope(modelBuilder);
+        ConfigureInboundIntegration(modelBuilder);
+        ConfigureUserFacility(modelBuilder);
         ConfigureCustomFieldDefinition(modelBuilder);
         ConfigureCustomFieldValue(modelBuilder);
+        ConfigureAuditLog(modelBuilder);
+
+        ConfigureTenantFacilityQueryFilters(modelBuilder);
 
         OnModelCreatingPartial(modelBuilder);
     }
 
+    private void ConfigureTenantFacilityQueryFilters(ModelBuilder modelBuilder)
+    {
+        if (!_applyTenantFacilityFilter)
+            return;
+
+        // Instance members only — locals would be constantized when the model is built.
+        modelBuilder.Entity<Claim>().HasQueryFilter(c => c.TenantId == ScopedTenantIdForQuery && c.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<Patient>().HasQueryFilter(p => p.TenantId == ScopedTenantIdForQuery && p.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<PayerEntity>().HasQueryFilter(p => p.TenantId == ScopedTenantIdForQuery && p.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<Physician>().HasQueryFilter(p => p.TenantId == ScopedTenantIdForQuery && p.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<Service_Line>().HasQueryFilter(s => s.TenantId == ScopedTenantIdForQuery && s.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<Payment>().HasQueryFilter(p => p.TenantId == ScopedTenantIdForQuery && p.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<Adjustment>().HasQueryFilter(a => a.TenantId == ScopedTenantIdForQuery && a.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<Hl7_Import_Log>().HasQueryFilter(l => l.TenantId == ScopedTenantIdForQuery && l.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<Interface_Import_Log>().HasQueryFilter(l => l.TenantId == ScopedTenantIdForQuery && l.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<Claim_Audit>().HasQueryFilter(a => a.TenantId == ScopedTenantIdForQuery && a.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<CustomFieldDefinition>().HasQueryFilter(x => x.TenantId == ScopedTenantIdForQuery);
+        modelBuilder.Entity<CustomFieldValue>().HasQueryFilter(x => x.TenantId == ScopedTenantIdForQuery);
+        modelBuilder.Entity<ClaimTemplate>().HasQueryFilter(x => x.TenantId == ScopedTenantIdForQuery);
+        modelBuilder.Entity<EdiReport>().HasQueryFilter(r => r.TenantId == ScopedTenantIdForQuery);
+    }
+
     public override int SaveChanges()
     {
+        EnforceTenantRules();
         ApplyAudit();
         return base.SaveChanges();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        EnforceTenantRules();
         ApplyAudit();
         return await base.SaveChangesAsync(cancellationToken);
     }
 
     private void ApplyAudit()
     {
-        if (_userContext == null)
-            return;
-
-        var now = DateTime.UtcNow;
-        var userId = _userContext.UserId;
-        var userName = _userContext.UserName;
-        
-        // Ensure ComputerName is NEVER null or empty (fallback to server machine name).
-        // This guarantees audit fields are always populated globally for all inserts/updates.
-        var computerName = _userContext.ComputerName;
-        if (string.IsNullOrWhiteSpace(computerName))
-        {
-            computerName = Environment.MachineName;
-            if (string.IsNullOrWhiteSpace(computerName))
-                computerName = "SERVER";
-        }
-
-        foreach (var entry in ChangeTracker.Entries())
-        {
-            if (entry.Entity is IAuditableEntity auditable)
-            {
-                if (entry.State == EntityState.Added)
-                {
-                    // On Add: Set CreatedComputerName if NULL, always set LastComputerName.
-                    auditable.SetCreated(userId, userName, computerName, now);
-                }
-                else if (entry.State == EntityState.Modified)
-                {
-                    // On Update: Always set LastComputerName.
-                    auditable.SetModified(userId, userName, computerName, now);
-                }
-            }
-        }
+        // Intentionally no-op: DbContext does not resolve context services to avoid circular dependencies.
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
@@ -1867,6 +1915,7 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.IsArchived).HasDefaultValue(false);
             entity.Property(e => e.IsRead).HasDefaultValue(false);
+            entity.Property(e => e.TenantId).IsRequired();
 
             entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_EdiReport_CreatedAt");
             entity.HasIndex(e => e.Status).HasDatabaseName("IX_EdiReport_Status");
@@ -2004,6 +2053,7 @@ public partial class ZeblDbContext : DbContext
         {
             entity.ToTable("ClaimTemplates");
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.TenantId).IsRequired();
             entity.Property(e => e.TemplateName)
                 .HasMaxLength(255)
                 .IsRequired();
@@ -2071,6 +2121,106 @@ public partial class ZeblDbContext : DbContext
         });
     }
 
+    private void ConfigureTenant(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.HasKey(e => e.TenantId).HasName("PK_Tenant_TenantId");
+            entity.ToTable("Tenant");
+
+            entity.Property(e => e.TenantId)
+                .ValueGeneratedNever()
+                .HasColumnType("int");
+
+            entity.Property(e => e.TenantKey)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .IsRequired();
+
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .IsRequired();
+
+            entity.HasIndex(e => e.TenantKey)
+                .IsUnique()
+                .HasDatabaseName("IX_Tenant_TenantKey");
+        });
+    }
+
+    private void ConfigureFacilityScope(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<FacilityScope>(entity =>
+        {
+            entity.HasKey(e => e.FacilityId).HasName("PK_FacilityScope_FacilityId");
+            entity.ToTable("FacilityScope");
+
+            entity.Property(e => e.FacilityId)
+                .ValueGeneratedNever()
+                .HasColumnType("int");
+
+            entity.Property(e => e.TenantId)
+                .HasColumnType("int")
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .IsRequired();
+
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .IsRequired();
+        });
+    }
+
+    private void ConfigureUserFacility(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserFacility>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.FacilityId }).HasName("PK_UserFacility_UserId_FacilityId");
+            entity.ToTable("UserFacility");
+
+            entity.Property(e => e.UserId).HasColumnType("uniqueidentifier").IsRequired();
+            entity.Property(e => e.FacilityId).HasColumnType("int").IsRequired();
+        });
+    }
+
+    private void ConfigureAuditLog(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.ToTable("AuditLogs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Action).HasMaxLength(256).IsUnicode(false).IsRequired();
+            entity.Property(e => e.TimestampUtc).IsRequired();
+            entity.Property(e => e.Metadata).IsUnicode(false).IsRequired();
+            entity.Property(e => e.Hash).HasMaxLength(64).IsUnicode(false);
+            entity.Property(e => e.PreviousHash).HasMaxLength(64).IsUnicode(false);
+            entity.HasIndex(e => e.TimestampUtc).HasDatabaseName("IX_AuditLog_TimestampUtc");
+            entity.HasIndex(e => new { e.UserId, e.TimestampUtc }).HasDatabaseName("IX_AuditLog_UserId_TimestampUtc");
+        });
+    }
+
+    private void ConfigureInboundIntegration(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<InboundIntegration>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_InboundIntegration_Id");
+            entity.ToTable("InboundIntegration");
+            entity.Property(e => e.Id).HasColumnType("int").ValueGeneratedNever();
+            entity.Property(e => e.Name).HasMaxLength(100).IsUnicode(false).IsRequired();
+            entity.Property(e => e.TenantId).HasColumnType("int").IsRequired();
+            entity.Property(e => e.FacilityId).HasColumnType("int").IsRequired();
+            entity.Property(e => e.IsActive).HasDefaultValue(true).IsRequired();
+        });
+    }
+
     private void ConfigureCustomFieldDefinition(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CustomFieldDefinition>(entity =>
@@ -2100,8 +2250,11 @@ public partial class ZeblDbContext : DbContext
                 .HasColumnType("datetime2")
                 .IsRequired();
 
-            entity.HasIndex(e => new { e.EntityType, e.FieldKey })
-                .HasDatabaseName("IX_CustomFieldDefinitions_EntityType_FieldKey");
+            entity.Property(e => e.TenantId).IsRequired();
+
+            entity.HasIndex(e => new { e.TenantId, e.EntityType, e.FieldKey })
+                .IsUnique()
+                .HasDatabaseName("IX_CustomFieldDefinitions_Tenant_EntityType_FieldKey");
         });
     }
 
@@ -2123,8 +2276,11 @@ public partial class ZeblDbContext : DbContext
                 .IsRequired();
             entity.Property(e => e.Value).IsUnicode(false);
 
-            entity.HasIndex(e => new { e.EntityType, e.EntityId, e.FieldKey })
-                .HasDatabaseName("IX_CustomFieldValues_EntityType_EntityId_FieldKey");
+            entity.Property(e => e.TenantId).IsRequired();
+
+            entity.HasIndex(e => new { e.TenantId, e.EntityType, e.EntityId, e.FieldKey })
+                .IsUnique()
+                .HasDatabaseName("IX_CustomFieldValues_Tenant_Entity_EntityId_FieldKey");
         });
     }
 }

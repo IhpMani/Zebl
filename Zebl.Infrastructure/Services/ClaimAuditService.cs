@@ -31,22 +31,31 @@ public class ClaimAuditService : IClaimAuditService
         if (claimId <= 0) return;
         try
         {
-            decimal totalCharge = 0;
-            decimal insBalance = 0;
-            decimal patBalance = 0;
+            decimal totalCharge;
+            decimal insBalance;
+            decimal patBalance;
             var snapshot = await _db.Claims.AsNoTracking()
                 .Where(c => c.ClaID == claimId)
-                .Select(c => new { c.ClaTotalChargeTRIG, c.ClaTotalInsBalanceTRIG, c.ClaTotalPatBalanceTRIG })
+                .Select(c => new
+                {
+                    c.TenantId,
+                    c.FacilityId,
+                    c.ClaTotalChargeTRIG,
+                    c.ClaTotalInsBalanceTRIG,
+                    c.ClaTotalPatBalanceTRIG
+                })
                 .FirstOrDefaultAsync(cancellationToken);
-            if (snapshot != null)
-            {
-                totalCharge = snapshot.ClaTotalChargeTRIG;
-                insBalance = snapshot.ClaTotalInsBalanceTRIG;
-                patBalance = snapshot.ClaTotalPatBalanceTRIG;
-            }
+            if (snapshot == null)
+                return;
+
+            totalCharge = snapshot.ClaTotalChargeTRIG;
+            insBalance = snapshot.ClaTotalInsBalanceTRIG;
+            patBalance = snapshot.ClaTotalPatBalanceTRIG;
 
             _db.Claim_Audits.Add(new Claim_Audit
             {
+                TenantId = snapshot.TenantId,
+                FacilityId = snapshot.FacilityId,
                 ClaFID = claimId,
                 ActivityType = activityType ?? "Claim Edited",
                 ActivityDate = DateTime.UtcNow,

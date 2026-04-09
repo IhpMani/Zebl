@@ -6,9 +6,13 @@ namespace Zebl.Infrastructure.Persistence.Entities;
 /// Entity for tracking HL7 DFT import operations
 /// Stores import metadata and statistics
 /// </summary>
-public partial class Hl7_Import_Log
+public partial class Hl7_Import_Log : ITenantEntity, ITenantFacilityEntity
 {
     public int ImportLogID { get; set; }
+
+    public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public string FileName { get; set; } = null!;
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Domain;
 using Zebl.Application.Dtos.Payments;
 using Zebl.Application.Repositories;
@@ -10,16 +11,21 @@ namespace Zebl.Infrastructure.Repositories;
 public class ServiceLineRepository : IServiceLineRepository
 {
     private readonly ZeblDbContext _context;
+    private readonly ICurrentContext _currentContext;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public ServiceLineRepository(ZeblDbContext context)
+    public ServiceLineRepository(ZeblDbContext context, ICurrentContext currentContext, ICurrentUserContext currentUserContext)
     {
         _context = context;
+        _currentContext = currentContext;
+        _currentUserContext = currentUserContext;
     }
 
     public async Task<ServiceLineTotals?> GetTotalsByIdAsync(int serviceLineId)
     {
+        var fid = _currentContext.FacilityId;
         var s = await _context.Service_Lines.AsNoTracking()
-            .Where(x => x.SrvID == serviceLineId)
+            .Where(x => x.SrvID == serviceLineId && x.FacilityId == fid)
             .Select(x => new ServiceLineTotals
             {
                 SrvID = x.SrvID,
@@ -40,8 +46,9 @@ public class ServiceLineRepository : IServiceLineRepository
 
     public async Task<List<ServiceLineTotals>> GetTotalsByClaimIdAsync(int claimId)
     {
+        var fid = _currentContext.FacilityId;
         return await _context.Service_Lines.AsNoTracking()
-            .Where(x => x.SrvClaFID == claimId)
+            .Where(x => x.SrvClaFID == claimId && x.FacilityId == fid)
             .Select(x => new ServiceLineTotals
             {
                 SrvID = x.SrvID,
@@ -61,8 +68,12 @@ public class ServiceLineRepository : IServiceLineRepository
 
     public async Task<List<ServiceLineTotals>> GetForAutoApplyAsync(int patientId, int? payerId, bool isPayerSource)
     {
+        var fid = _currentContext.FacilityId;
         var query = _context.Service_Lines.AsNoTracking()
-            .Where(s => s.SrvClaF != null && s.SrvClaF.ClaPatFID == patientId);
+            .Where(s =>
+                s.SrvClaF != null &&
+                s.SrvClaF.ClaPatFID == patientId &&
+                s.FacilityId == fid);
         if (isPayerSource && payerId.HasValue && payerId.Value > 0)
             query = query.Where(s => s.SrvResponsibleParty == payerId.Value);
         var list = await query
@@ -88,10 +99,11 @@ public class ServiceLineRepository : IServiceLineRepository
 
     public async Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesAsync(int patientId, int? payerId, bool isPayerSource)
     {
+        var fid = _currentContext.FacilityId;
         var query = from s in _context.Service_Lines.AsNoTracking()
                     join c in _context.Claims.AsNoTracking() on s.SrvClaFID equals c.ClaID
                     join p in _context.Patients.AsNoTracking() on c.ClaPatFID equals p.PatID
-                    where c.ClaPatFID == patientId
+                    where c.ClaPatFID == patientId && s.FacilityId == fid
                     select new { s, c, p };
 
         if (isPayerSource && payerId.HasValue && payerId.Value > 0)
@@ -182,18 +194,22 @@ public class ServiceLineRepository : IServiceLineRepository
 
     public async Task<int?> RecalculateServiceLineAsync(int serviceLineId)
     {
+        if (_currentContext.TenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
         return await RecalculateServiceLineFinancials(serviceLineId);
     }
 
     private async Task<int?> RecalculateServiceLineFinancials(int srvId)
     {
-        var s = await _context.Service_Lines.FindAsync(srvId);
+        var fid = _currentContext.FacilityId;
+        var s = await _context.Service_Lines
+            .FirstOrDefaultAsync(x => x.SrvID == srvId && x.FacilityId == fid);
         if (s == null) return null;
 
         var disbursements = await (
             from d in _context.Disbursements.AsNoTracking()
             join p in _context.Payments.AsNoTracking() on d.DisbPmtFID equals p.PmtID
-            where d.DisbSrvFID == srvId
+            where d.DisbSrvFID == srvId && p.FacilityId == fid
             select new
             {
                 d.DisbAmount,
@@ -209,7 +225,7 @@ public class ServiceLineRepository : IServiceLineRepository
             .Sum(x => x.DisbAmount);
 
         var adjustments = await _context.Adjustments.AsNoTracking()
-            .Where(a => a.AdjSrvFID == srvId)
+            .Where(a => a.AdjSrvFID == srvId && a.FacilityId == fid)
             .Select(a => new { a.AdjGroupCode, a.AdjAmount })
             .ToListAsync();
 
@@ -245,7 +261,9 @@ public class ServiceLineRepository : IServiceLineRepository
 
     public async Task<(decimal Charges, decimal AllowedAmt, decimal InsPaid, decimal PatPaid, decimal TotalAdj)?> GetBalanceInfoAsync(int serviceLineId)
     {
-        var s = await _context.Service_Lines.AsNoTracking().FirstOrDefaultAsync(x => x.SrvID == serviceLineId);
+        var fid = _currentContext.FacilityId;
+        var s = await _context.Service_Lines.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.SrvID == serviceLineId && x.FacilityId == fid);
         if (s == null) return null;
         var totalAdj = s.SrvTotalCOAdjTRIG + s.SrvTotalCRAdjTRIG + s.SrvTotalOAAdjTRIG + s.SrvTotalPIAdjTRIG + s.SrvTotalPRAdjTRIG;
         return (s.SrvCharges, s.SrvAllowedAmt, s.SrvTotalInsAmtPaidTRIG, s.SrvTotalPatAmtPaidTRIG, totalAdj);
@@ -253,18 +271,28 @@ public class ServiceLineRepository : IServiceLineRepository
 
     public async Task<int> GetPayerIdForLineAsync(int serviceLineId)
     {
-        var s = await _context.Service_Lines.AsNoTracking().FirstOrDefaultAsync(x => x.SrvID == serviceLineId);
+        var fid = _currentContext.FacilityId;
+        var s = await _context.Service_Lines.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.SrvID == serviceLineId && x.FacilityId == fid);
         return s?.SrvResponsibleParty ?? 0;
     }
 
     public async Task AdvanceResponsiblePartyAsync(int serviceLineId)
     {
-        var s = await _context.Service_Lines.FindAsync(serviceLineId);
+        if (_currentContext.TenantId <= 0)
+            throw new UnauthorizedAccessException("Tenant context is required.");
+
+        var fid = _currentContext.FacilityId;
+        var s = await _context.Service_Lines
+            .FirstOrDefaultAsync(x => x.SrvID == serviceLineId && x.FacilityId == fid);
         if (s == null || !s.SrvClaFID.HasValue) return;
 
         // Determine claim-level primary/secondary payers from insured sequence.
         var insureds = await _context.Claim_Insureds.AsNoTracking()
-            .Where(ci => ci.ClaInsClaFID == s.SrvClaFID.Value && ci.ClaInsSequence.HasValue && (ci.ClaInsSequence == 1 || ci.ClaInsSequence == 2))
+            .Where(ci =>
+                ci.ClaInsClaFID == s.SrvClaFID.Value &&
+                ci.ClaInsSequence.HasValue &&
+                (ci.ClaInsSequence == 1 || ci.ClaInsSequence == 2))
             .Select(ci => new { ci.ClaInsSequence, ci.ClaInsPayFID })
             .ToListAsync();
 

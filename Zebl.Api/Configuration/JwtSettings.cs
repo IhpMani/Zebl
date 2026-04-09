@@ -6,7 +6,6 @@ namespace Zebl.Api.Configuration
         public string Issuer { get; set; } = string.Empty;
         public string Audience { get; set; } = string.Empty;
         public int ExpirationMinutes { get; set; } = 60;
-        public bool RequireAuthentication { get; set; } = true;
     }
 }
 

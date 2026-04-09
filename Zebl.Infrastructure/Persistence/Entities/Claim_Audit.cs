@@ -5,9 +5,13 @@ namespace Zebl.Infrastructure.Persistence.Entities;
 /// Does NOT include interface import logs - those go to Interface_Import_Log.
 /// Activity types: Claim Created, Claim Edited, Payment Applied, Manual Notes
 /// </summary>
-public partial class Claim_Audit
+public partial class Claim_Audit : ITenantEntity, ITenantFacilityEntity
 {
     public int AuditID { get; set; }
+
+    public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public int ClaFID { get; set; }
 

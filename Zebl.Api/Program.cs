@@ -1,4 +1,8 @@
 using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.DependencyInjection;
+using Zebl.Application.Options;
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -10,6 +14,7 @@ using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Zebl.Api.Configuration;
 using Zebl.Api.Middleware;
+using Zebl.Api.Services;
 using Zebl.Infrastructure.Persistence.Context;
 using HealthChecks.UI.Client;
 
@@ -30,15 +35,60 @@ var jwtSettings =
 
 builder.Services.AddSingleton(jwtSettings);
 
+builder.Services.Configure<AuditTrailOptions>(builder.Configuration.GetSection("AuditTrail"));
+builder.Services.PostConfigure<AuditTrailOptions>(opts =>
+{
+    if (string.IsNullOrWhiteSpace(opts.IntegritySecret))
+        opts.IntegritySecret = jwtSettings.SecretKey ?? string.Empty;
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { errorCode = "RATE_LIMIT_EXCEEDED", message = "Too many requests. Try again later." },
+            token);
+    };
+    options.AddPolicy("auth-security", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString();
+        if (string.IsNullOrEmpty(ip))
+        {
+            var fwd = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            ip = string.IsNullOrEmpty(fwd) ? "unknown" : fwd.Split(',')[0].Trim();
+        }
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            ip,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+});
+
 var corsOrigins =
     builder.Configuration.GetSection("CorsSettings:AllowedOrigins")
-    .Get<string[]>() ?? Array.Empty<string>();
+        .Get<string[]>() ?? Array.Empty<string>();
+if (corsOrigins.Length == 0)
+    corsOrigins = new[] { "http://localhost:4200", "https://localhost:4200" };
 
-var requireAuth = jwtSettings.RequireAuthentication;
+if (builder.Environment.IsProduction())
+{
+    if (corsOrigins.Any(o => string.IsNullOrWhiteSpace(o) || o.Contains('*', StringComparison.Ordinal)))
+        throw new InvalidOperationException("Production CORS requires CorsSettings:AllowedOrigins with explicit origins (no wildcards).");
+}
 #endregion
 
 #region Database
-builder.Services.AddDbContext<ZeblDbContext>(options =>
+void ConfigureDbContextOptions(DbContextOptionsBuilder options)
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 
@@ -48,7 +98,13 @@ builder.Services.AddDbContext<ZeblDbContext>(options =>
         options.EnableSensitiveDataLogging();
         options.LogTo(Console.WriteLine, LogLevel.Information);
     }
-});
+}
+
+builder.Services.AddDbContextFactory<ZeblDbContext>(ConfigureDbContextOptions);
+builder.Services.AddDbContext<ZeblDbContext>(
+    ConfigureDbContextOptions,
+    contextLifetime: ServiceLifetime.Scoped,
+    optionsLifetime: ServiceLifetime.Singleton);
 #endregion
 
 #region Health Checks
@@ -99,7 +155,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("cors", policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .WithOrigins(corsOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -132,28 +188,33 @@ if (!string.IsNullOrWhiteSpace(jwtSettings.SecretKey))
 #region Authorization
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("RequireAuth", policy =>
-    {
-        if (requireAuth)
-            policy.RequireAuthenticatedUser();
-        else
-            policy.RequireAssertion(_ => true);
-    });
+    options.AddPolicy("RequireAuth", policy => policy.RequireAuthenticatedUser());
 
     options.AddPolicy("RequireAdmin", policy =>
     {
         policy.RequireAuthenticatedUser();
         policy.RequireClaim("IsAdmin", "true");
     });
+
+    options.AddPolicy("SuperAdminOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("isSuperAdmin", "true");
+    });
 });
 #endregion
 
 #region Services
 builder.Services.AddScoped<Zebl.Application.Abstractions.ICurrentUserContext, Zebl.Api.Services.JwtCurrentUserContext>();
+builder.Services.AddSingleton<Zebl.Api.Services.IJwtTokenIssuer, Zebl.Api.Services.JwtTokenIssuer>();
+builder.Services.AddScoped<Zebl.Application.Abstractions.ITenantContext, Zebl.Api.Services.JwtValidatedTenantContext>();
+builder.Services.AddScoped<Zebl.Application.Abstractions.ICurrentContext, Zebl.Api.Services.HeaderCurrentContext>();
+builder.Services.AddScoped<Zebl.Application.Abstractions.IInboundContext, Zebl.Api.Services.HeaderInboundContext>();
 builder.Services.AddSingleton<Zebl.Api.Services.IAdminUserService, Zebl.Api.Services.AdminUserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ParserService>();
 builder.Services.AddScoped<Zebl.Api.Services.Hl7ImportService>();
 builder.Services.AddScoped<Zebl.Application.Abstractions.IClaimAuditService, Zebl.Infrastructure.Services.ClaimAuditService>();
+builder.Services.AddScoped<Zebl.Application.Abstractions.IAuditTrail, Zebl.Infrastructure.Services.AuditTrailService>();
 builder.Services.AddScoped<Zebl.Api.Services.EntityMetadataService>();
 builder.Services.AddScoped<Zebl.Infrastructure.Services.ProgramSettingsService>();
 builder.Services.AddScoped<Zebl.Infrastructure.Services.ClaimInitialStatusProvider>();
@@ -260,18 +321,24 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-#region Database startup — migrations only in development (production: dotnet ef database update)
-if (app.Environment.IsDevelopment())
+#region Database startup — apply EF migrations only (no ad-hoc schema SQL)
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<ZeblDbContext>();
-    try
+    var csBootstrap = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (!string.IsNullOrWhiteSpace(csBootstrap))
     {
-        db.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        Log.Warning(ex, "Development migration failed. Apply migrations manually if needed.");
+        var bootstrapOptions = new DbContextOptionsBuilder<ZeblDbContext>().UseSqlServer(csBootstrap).Options;
+        try
+        {
+            using var db = new ZeblDbContext(bootstrapOptions);
+            if (app.Environment.IsDevelopment())
+            {
+                db.Database.Migrate();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Database migration at startup failed.");
+        }
     }
 }
 #endregion
@@ -292,6 +359,9 @@ app.UseCors("cors"); // FIXED POLICY NAME
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseRateLimiter();
+// Before authorization so handlers/controllers that use ZeblDbContext always see a validated facility (when required).
+app.UseMiddleware<FacilityContextValidationMiddleware>();
 app.UseAuthorization();
 #endregion
 
@@ -318,6 +388,44 @@ app.MapControllers();
 try
 {
     Log.Information("Zebl API starting");
+
+    if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("DefaultConnection")))
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            try
+            {
+                var db = services.GetRequiredService<ZeblDbContext>();
+                // Intentionally NOT using EnsureCreated(): this app uses Migrate() in Development;
+                // EnsureCreated() conflicts with migrations-based databases.
+                SuperAdminDefaultSeed.EnsureAtStartup(db);
+            }
+            catch (Exception ex)
+            {
+                /* -2 = connection / query timeout; default Connect Timeout is 15s — see ConnectionStrings:DefaultConnection */
+                if (ex is Microsoft.Data.SqlClient.SqlException sqlEx &&
+                    sqlEx.Number == -2 &&
+                    app.Environment.IsDevelopment())
+                {
+                    Log.Warning(sqlEx,
+                        "Super admin seed skipped: SQL connection timed out. " +
+                        "Confirm SQL Server is running and DefaultConnection is correct; Connect Timeout can be increased in appsettings.");
+                    Console.WriteLine(
+                        "⚠️ Super admin seed skipped (SQL timeout, Development). " +
+                        "Start SQL Server (e.g. IHPOFFICE\\SQLEXPRESS) and restart the API.");
+                }
+                else
+                {
+                    Console.WriteLine("❌ SUPER ADMIN SEED ERROR:");
+                    Console.WriteLine(ex.ToString());
+                    Log.Fatal(ex, "Super admin startup seed failed.");
+                    throw;
+                }
+            }
+        }
+    }
+
     app.Run();
 }
 catch (Exception ex)

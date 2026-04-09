@@ -6,6 +6,8 @@ namespace Zebl.Application.Domain;
 public class EdiReport
 {
     public Guid Id { get; set; }
+
+    public int TenantId { get; set; }
     public Guid? ReceiverLibraryId { get; set; }
     public Guid? ConnectionLibraryId { get; set; }
     public string FileName { get; set; } = null!;
