@@ -2038,14 +2038,21 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK_Diagnosis_Code_Id");
 
-                    b.HasIndex("Code")
-                        .HasDatabaseName("IX_Diagnosis_Code_Code");
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_Diagnosis_Code_TenantId");
+
+                    b.HasIndex("TenantId", "Code", "CodeType")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Diagnosis_Code_Tenant_Code_Type");
 
                     b.ToTable("Diagnosis_Code", (string)null);
                 });
@@ -2490,14 +2497,21 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK_Modifier_Code_Id");
 
-                    b.HasIndex("Code")
-                        .HasDatabaseName("IX_Modifier_Code_Code");
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_Modifier_Code_TenantId");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Modifier_Code_Tenant_Code");
 
                     b.ToTable("Modifier_Code", (string)null);
                 });
@@ -3514,6 +3528,11 @@ namespace Zebl.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PhyID"));
 
+                    b.Property<string>("ExternalProviderId")
+                        .HasMaxLength(80)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(80)");
+
                     b.Property<int>("FacilityId")
                         .HasColumnType("int");
 
@@ -3698,6 +3717,11 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasKey("PhyID")
                         .HasName("PK__Physicia__5FEDBF914E56D8C8");
 
+                    b.HasIndex("TenantId", "FacilityId", "ExternalProviderId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Physician_ExternalProvider")
+                        .HasFilter("[ExternalProviderId] IS NOT NULL");
+
                     b.ToTable("Physician", (string)null);
                 });
 
@@ -3726,14 +3750,21 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK_Place_of_Service_Id");
 
-                    b.HasIndex("Code")
-                        .HasDatabaseName("IX_Place_of_Service_Code");
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_Place_of_Service_TenantId");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Place_of_Service_Tenant_Code");
 
                     b.ToTable("Place_of_Service", (string)null);
                 });
@@ -3902,6 +3933,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<float>("ProcUnits")
                         .HasColumnType("real");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.HasKey("ProcID")
                         .HasName("PK__Procedur__07C21CFE69FC361F");
 
@@ -3909,9 +3943,12 @@ namespace Zebl.Infrastructure.Migrations
 
                     b.HasIndex("ProcPayFID");
 
-                    b.HasIndex("ProcCode", "ProcProductCode")
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_Procedure_Code_TenantId");
+
+                    b.HasIndex("TenantId", "ProcCode", "ProcProductCode")
                         .IsUnique()
-                        .HasDatabaseName("IX_Procedure_Code_ProcCode_ProcProductCode")
+                        .HasDatabaseName("UX_Procedure_Code_Tenant_ProcCode_Product")
                         .HasFilter("[ProcProductCode] IS NOT NULL");
 
                     b.ToTable("Procedure_Code", (string)null);
@@ -3978,14 +4015,21 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK_Reason_Code_Id");
 
-                    b.HasIndex("Code")
-                        .HasDatabaseName("IX_Reason_Code_Code");
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_Reason_Code_TenantId");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Reason_Code_Tenant_Code");
 
                     b.ToTable("Reason_Code", (string)null);
                 });
@@ -4015,14 +4059,21 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK_Remark_Code_Id");
 
-                    b.HasIndex("Code")
-                        .HasDatabaseName("IX_Remark_Code_Code");
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_Remark_Code_TenantId");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Remark_Code_Tenant_Code");
 
                     b.ToTable("Remark_Code", (string)null);
                 });
@@ -4579,6 +4630,16 @@ namespace Zebl.Infrastructure.Migrations
                     b.Navigation("ClaInsPayF");
                 });
 
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Diagnosis_Code", b =>
+                {
+                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Diagnosis_Code_Tenant");
+                });
+
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Disbursement", b =>
                 {
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Payment", "DisbPmtF")
@@ -4607,6 +4668,16 @@ namespace Zebl.Infrastructure.Migrations
                         .HasConstraintName("FK_Insured_Payer");
 
                     b.Navigation("InsPay");
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Modifier_Code", b =>
+                {
+                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Modifier_Code_Tenant");
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Patient", b =>
@@ -4713,6 +4784,16 @@ namespace Zebl.Infrastructure.Migrations
                     b.Navigation("PmtPayF");
                 });
 
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Place_of_Service", b =>
+                {
+                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Place_of_Service_Tenant");
+                });
+
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Procedure_Code", b =>
                 {
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ProcBillingPhyF")
@@ -4727,9 +4808,36 @@ namespace Zebl.Infrastructure.Migrations
                         .HasForeignKey("ProcPayFID")
                         .HasConstraintName("FK_ProcedureCode_Payer");
 
+                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Procedure_Code_Tenant");
+
                     b.Navigation("ProcBillingPhyF");
 
                     b.Navigation("ProcPayF");
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Reason_Code", b =>
+                {
+                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Reason_Code_Tenant");
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Remark_Code", b =>
+                {
+                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Remark_Code_Tenant");
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Service_Line", b =>

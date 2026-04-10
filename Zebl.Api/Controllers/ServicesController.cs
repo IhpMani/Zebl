@@ -575,6 +575,7 @@ namespace Zebl.Api.Controllers
             if (!request.ApplyProcedureLookup && !missingCharge) return;
 
             var lookup = await _procedureLookupService.LookupAsync(
+                entity.TenantId,
                 entity.SrvProcedureCode,
                 null,
                 null,

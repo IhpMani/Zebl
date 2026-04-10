@@ -12,6 +12,7 @@ public interface IProcedureCodeLookupService
     /// then Payer + Rate Class, then Rate Class only, then generic.
     /// </summary>
     Task<IProcedureCode?> LookupAsync(
+        int tenantId,
         string procedureCode,
         int? payerId,
         int? billingPhysicianId,

@@ -36,6 +36,70 @@ public class PaymentServiceTests
     }
 
     [Fact]
+    public async Task CreatePayment_BlankReference_SkipsDuplicateCheck()
+    {
+        var serviceLineRepo = new Mock<IServiceLineRepository>();
+        var claimRepo = new Mock<IClaimRepository>();
+        var paymentRepo = new Mock<IPaymentRepository>();
+        var adjustmentRepo = new Mock<IAdjustmentRepository>();
+        var disbursementRepo = new Mock<IDisbursementRepository>();
+        var payerRepo = new Mock<IPayerRepository>();
+        var claimTotalsService = new ClaimTotalsService();
+        var claimAuditService = new Mock<Zebl.Application.Abstractions.IClaimAuditService>();
+        var transactionScope = new Mock<ITransactionScope>();
+        var reconciliationService = new Mock<IReconciliationService>();
+        var logger = new Mock<ILogger<PaymentService>>();
+
+        int claimId = 1;
+        int srvId = 10;
+        serviceLineRepo.Setup(x => x.GetTotalsByIdAsync(srvId)).ReturnsAsync(Line(srvId, claimId, 100m));
+        serviceLineRepo.Setup(x => x.GetTotalsByClaimIdAsync(claimId)).ReturnsAsync(new List<ServiceLineTotals> { Line(srvId, claimId, 100m, 100m, 0, 0, 0) });
+        paymentRepo.Setup(x => x.CreatePaymentAsync(It.IsAny<int?>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<decimal>(), It.IsAny<DateOnly>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>())).ReturnsAsync(1);
+        paymentRepo.Setup(x => x.SetDisbursedAsync(1, It.IsAny<decimal>())).Returns(Task.CompletedTask);
+        claimRepo.Setup(x => x.GetBillingPhysicianIdAsync(claimId)).ReturnsAsync(1);
+        claimRepo.Setup(x => x.UpdateTotalsAsync(claimId, It.IsAny<ClaimTotals>())).Returns(Task.CompletedTask);
+        payerRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Payer?)null);
+        serviceLineRepo.Setup(x => x.RecalculateServiceLineAsync(srvId)).ReturnsAsync(claimId);
+        var transaction = new Mock<IPaymentTransaction>();
+        transaction.Setup(x => x.CommitAsync(CancellationToken.None)).Returns(Task.CompletedTask);
+        transaction.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        transactionScope.Setup(x => x.BeginTransactionAsync(CancellationToken.None)).ReturnsAsync(transaction.Object);
+        reconciliationService.Setup(x => x.VerifyClaimAsync(claimId, CancellationToken.None)).ReturnsAsync(new ReconciliationResult { Success = true });
+        disbursementRepo.Setup(x => x.AddAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string?>())).Returns(Task.CompletedTask);
+
+        var sut = new PaymentService(
+            paymentRepo.Object,
+            adjustmentRepo.Object,
+            serviceLineRepo.Object,
+            disbursementRepo.Object,
+            claimRepo.Object,
+            payerRepo.Object,
+            claimTotalsService,
+            claimAuditService.Object,
+            transactionScope.Object,
+            reconciliationService.Object,
+            logger.Object);
+
+        var command = new CreatePaymentCommand
+        {
+            PaymentSource = PaymentSourceKind.Payer,
+            PayerId = 1,
+            PatientId = 1,
+            Amount = 100m,
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            Reference1 = "   ",
+            ServiceLineApplications = new List<ServiceLineApplicationDto>
+            {
+                new() { ServiceLineId = srvId, PaymentAmount = 100m, Adjustments = new List<AdjustmentInputDto>() }
+            }
+        };
+
+        var paymentId = await sut.CreatePaymentAsync(command);
+        Assert.Equal(1, paymentId);
+        paymentRepo.Verify(x => x.ExistsDuplicateAsync(It.IsAny<decimal>(), It.IsAny<string?>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Scenario_A_Charge1000_Paid700_CO200_PR100_FinalBalanceZero()
     {
         var serviceLineRepo = new Mock<IServiceLineRepository>();

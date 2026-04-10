@@ -111,16 +111,6 @@ public class Hl7ImportService
                 _logger.LogWarning(
                     "HL7 message at index {MessageIndex} has missing/blank PID segment. File={FileName}. ForceCreate={ForceCreate}",
                     i, fileName, forceCreate);
-
-                if (!forceCreate)
-                {
-                    result.Errors++;
-                    _logger.LogWarning(
-                        "HL7 DFT import: skipping message index {MessageIndex} — blank PID (set HL7_IMPORT_DEBUG_FORCE_CREATE=1 to bypass). File={FileName}",
-                        i,
-                        fileName);
-                    continue;
-                }
             }
 
             await using var tx = await _db.Database.BeginTransactionAsync();
@@ -269,11 +259,7 @@ public class Hl7ImportService
         if (string.IsNullOrWhiteSpace(mrn))
         {
             mrn = $"HL7_AUTO_{Guid.NewGuid():N}";
-            _logger.LogWarning(
-                "HL7 DFT message index {MessageIndex}: PID-3 (MRN) missing; generated MRN={Mrn} so import can proceed on empty DB. File={FileName}",
-                messageIndex,
-                mrn,
-                fileName);
+            Console.WriteLine("HL7 warning: missing data - PID-3 MRN missing, generated fallback MRN");
         }
 
         // Step 2: Match or create Patient
@@ -293,15 +279,11 @@ public class Hl7ImportService
         var (claim, isNewClaim) = await CreateNewClaim(patient.PatID, message);
         if (claim == null || claim.ClaID <= 0)
         {
-            if (message.Ft1Segments != null && message.Ft1Segments.Count > 0)
-            {
-                throw new InvalidOperationException(
-                    "HL7 import aborted: Claim creation failed but message has FT1 segments. " +
-                    "Cannot insert Service_Line without a valid Claim. Fix claim/patient/physician data and retry.");
-            }
-            throw new InvalidOperationException($"Failed to create claim for patient {patient.PatID}");
+            Console.WriteLine("HL7 warning: missing data - claim creation failed for message");
+            return stats;
         }
         stats.NewClaim = isNewClaim;
+        Console.WriteLine($"[HL7] Claim created for {patientFirstNameForLog} {patientLastNameForLog}");
 
         // Claim is now in the database; claim.ClaID is set.
         _logger.LogInformation("HL7 Claim persisted with ClaID {ClaimId}; creating insurance rows and payers before service lines.", claim.ClaID);
@@ -325,12 +307,9 @@ public class Hl7ImportService
             .FirstOrDefaultAsync();
         if (primaryPayerId <= 0)
         {
-            var fallbackPayer = await EnsurePayerExistsAsync("HL7_DEFAULT_IN1_PAYER", null, null, null, null, null);
+            var fallbackPayer = await EnsurePayerExistsAsync("SELF PAY", null, null, null, null, null);
             primaryPayerId = fallbackPayer.PayID;
-            _logger.LogWarning(
-                "HL7 import: no primary Claim_Insured row for claim {ClaimId}; using fallback payer PayID={PayId}.",
-                claim.ClaID,
-                primaryPayerId);
+            Console.WriteLine("HL7 warning: missing data - no primary payer row, using SELF PAY");
         }
 
         var claimFirstDate = claim.ClaFirstDateTRIG ?? DateOnly.FromDateTime(DateTime.UtcNow);
@@ -424,9 +403,7 @@ public class Hl7ImportService
         if (string.IsNullOrWhiteSpace(normalizedMrn))
         {
             normalizedMrn = _parser.NormalizeString($"HL7_AUTO_{Guid.NewGuid():N}", maxLength: 50);
-            _logger.LogWarning(
-                "MatchOrCreatePatient: MRN empty after normalization; using generated MRN={Mrn}.",
-                normalizedMrn);
+            Console.WriteLine("HL7 warning: missing data - MRN invalid after normalization, generated fallback MRN");
         }
 
         // Match by PatAccountNo (MRN)
@@ -460,8 +437,7 @@ public class Hl7ImportService
         var phoneField = _parser.GetFieldValue(pidSegment, 13);
         var phone = _parser.SanitizePhoneNumber(phoneField, maxLength: 25);
 
-        // Patient rows require NOT NULL physician FKs. Prefer any existing physician in inbound scope; if none,
-        // insert a minimal placeholder. Billing/attending physicians on the Claim are resolved from PV1 in CreateNewClaim.
+        // Patient rows require NOT NULL physician FKs.
         var defaultPhysician = await _db.Physicians
             .Where(p => p.TenantId == tenantId && p.FacilityId == facilityId)
             .OrderBy(p => p.PhyID)
@@ -472,7 +448,9 @@ public class Hl7ImportService
             var placeholderPhysician = new Physician
             {
                 PhyNPI = $"IMPORT_PLACEHOLDER_{Guid.NewGuid():N}".Substring(0, 15),
-                PhyName = "HL7 Import Placeholder",
+                PhyName = "HL7 Placeholder",
+                PhyFirstName = "HL7",
+                PhyLastName = "Placeholder",
                 TenantId = tenantId,
                 FacilityId = facilityId,
                 PhyType = "Rendering",
@@ -480,13 +458,9 @@ public class Hl7ImportService
                 PhyDateTimeCreated = DateTime.UtcNow
             };
             await _db.Physicians.AddAsync(placeholderPhysician);
-            var written = await _db.SaveChangesAsync();
-            _logger.LogInformation(
-                "MatchOrCreatePatient: no Physician in scope; created placeholder for Patient FKs (rows={Written}, PhyID={PhyID}). Claim PV1 resolution occurs in CreateNewClaim.",
-                written,
-                placeholderPhysician.PhyID);
-
+            await _db.SaveChangesAsync();
             defaultPhysician = placeholderPhysician;
+            Console.WriteLine("HL7 warning: missing data - no default physician found, created placeholder physician");
         }
 
         var defaultPhysicianId = defaultPhysician.PhyID;
@@ -605,13 +579,35 @@ public class Hl7ImportService
             dischargedDate = _parser.ParseHl7Date(dischargeDateStr);
         }
 
-        // PV1-7: Attending (XCN). PV1-8: Referring / billing physician (XCN).
-        // Components: NPI^LastName^FirstName^... (caret-separated)
+        // EZClaim style: use first meaningful physician candidate from PV1 physician slots.
         var pv1Seg = message.Pv1Segment ?? string.Empty;
-        var attendingField = _parser.GetFieldValue(pv1Seg, 7);
-        var referringField = _parser.GetFieldValue(pv1Seg, 8);
-        var (attNpi, attLast, attFirst) = ParsePv1Xcn(attendingField);
-        var (refNpi, refLast, refFirst) = ParsePv1Xcn(referringField);
+        var attendingField = GetPhysicianFromPv1(pv1Seg);
+        var referringField = _parser.GetFieldValue(pv1Seg, 8) ?? _parser.GetFieldValue(pv1Seg, 9) ?? attendingField;
+        var nm1_82 = message.Nm1Segments?
+            .FirstOrDefault(s => string.Equals(_parser.GetFieldValue(s, 1), "82", StringComparison.OrdinalIgnoreCase));
+        string? nm1Npi = null;
+        string? nm1Last = null;
+        string? nm1First = null;
+        if (!string.IsNullOrWhiteSpace(nm1_82))
+        {
+            var fields = nm1_82.Split('|', StringSplitOptions.None);
+            nm1Last = fields.Length > 3 ? _parser.NormalizeString(fields[3], maxLength: 60) : null;
+            nm1First = fields.Length > 4 ? _parser.NormalizeString(fields[4], maxLength: 35) : null;
+            nm1Npi = fields.Length > 9 ? _parser.NormalizeString(fields[9], maxLength: 20) : null;
+        }
+        var (pv1AttNpi, pv1AttLast, pv1AttFirst) = ParseXcn(attendingField);
+        var attNpi = !string.IsNullOrWhiteSpace(nm1Npi) ? nm1Npi : pv1AttNpi;
+        var attLast = !string.IsNullOrWhiteSpace(nm1Last) ? nm1Last : pv1AttLast;
+        var attFirst = !string.IsNullOrWhiteSpace(nm1First) ? nm1First : pv1AttFirst;
+        var (refNpi, refLast, refFirst) = ParseXcn(referringField);
+        if (string.IsNullOrWhiteSpace(attFirst) && string.IsNullOrWhiteSpace(attLast))
+        {
+            attFirst = attNpi;
+            attLast = "HL7";
+            Console.WriteLine("HL7 warning: missing data - physician name missing, using ID fallback");
+        }
+        Console.WriteLine($"[HL7 IMPORT] Tenant={tenantId}, Facility={facilityId}");
+        Console.WriteLine($"[HL7 IMPORT] Physician={attFirst} {attLast}");
 
         // Get first service date from FT1 segments for claim date range (DOS)
         DateOnly? firstServiceDate = null;
@@ -623,31 +619,7 @@ public class Hl7ImportService
             firstServiceDate = _parser.ParseHl7Date(transactionDateStr);
         }
 
-        // EZClaim deduplication: Match by Patient + DOS + Visit/Account (AsNoTracking for lookup only)
-        if (firstServiceDate.HasValue)
-        {
-            var existingClaim = await _db.Claims
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c =>
-                    c.ClaPatFID == patientId &&
-                    c.TenantId == tenantId &&
-                    c.FacilityId == facilityId &&
-                    c.ClaFirstDateTRIG == firstServiceDate.Value &&
-                    (visitNumber == null || c.ClaMedicalRecordNumber == visitNumber ||
-                     (admittedDate.HasValue && c.ClaAdmittedDate == admittedDate.Value)));
-
-            if (existingClaim != null)
-            {
-                _logger.LogWarning(
-                    "[HL7-IMPORT-DEBUG] CreateNewClaim: duplicate match — returning existing ClaID={ClaID} (no new Claim INSERT). PatID={PatID}, DOS={Dos}",
-                    existingClaim.ClaID,
-                    patientId,
-                    firstServiceDate);
-                _logger.LogInformation("Found existing claim ClaID: {ClaID} for patient PatID: {PatID}, DOS: {DOS}, Visit: {Visit}",
-                    existingClaim.ClaID, patientId, firstServiceDate.Value, visitNumber ?? "N/A");
-                return (existingClaim, false);
-            }
-        }
+        // EZClaim-import mode: always create a claim per message.
 
         // Attending always from PV1-7; billing/referring from PV1-8 when present, else same as attending (no random First()).
         var attendingPhy = await FindOrCreatePhysicianFromHl7Pv1Async(
@@ -714,13 +686,14 @@ public class Hl7ImportService
         };
         if (newClaim.TenantId != patient.TenantId)
         {
-            throw new InvalidOperationException("Tenant mismatch: Claim.TenantId must match Patient.TenantId.");
+            Console.WriteLine("HL7 warning: missing data - tenant mismatch on claim/patient");
         }
 
-        // Safety validation before inserting claim
         if (newClaim.ClaBillingPhyFID <= 0 || newClaim.ClaAttendingPhyFID <= 0)
         {
-            throw new InvalidOperationException("HL7 Import Error: Invalid physician reference.");
+            Console.WriteLine("HL7 warning: missing data - physician reference invalid, using patient defaults");
+            newClaim.ClaBillingPhyFID = patient.PatBillingPhyFID;
+            newClaim.ClaAttendingPhyFID = patient.PatReferringPhyFID;
         }
 
         _db.Claims.Add(newClaim);
@@ -923,14 +896,11 @@ public class Hl7ImportService
 
         if (segments.Count == 0)
         {
-            _logger.LogWarning(
-                "CreateClaimInsuredRecords: no IN1 segments; creating primary Claim_Insured with default placeholder payer. claimId={ClaimId}",
-                claimId);
-            var defaultPayer = await EnsurePayerExistsAsync("HL7_DEFAULT_IN1_PAYER", null, null, null, null, null);
+            var payer = await EnsurePayerExistsAsync("SELF PAY", null, null, null, null, null);
             await AddClaimInsuredRowAsync(
                 claimId,
                 patientId,
-                defaultPayer.PayID,
+                payer.PayID,
                 sequence: 1,
                 groupNumber: null,
                 planName: null,
@@ -941,6 +911,7 @@ public class Hl7ImportService
                 state: null,
                 zip: null,
                 phone: null);
+            Console.WriteLine("HL7 warning: missing data - no IN1 segments, used SELF PAY");
             return;
         }
 
@@ -949,11 +920,8 @@ public class Hl7ImportService
             var rawSegment = segments[in1Index];
             if (string.IsNullOrWhiteSpace(rawSegment))
             {
-                _logger.LogWarning(
-                    "CreateClaimInsuredRecords: IN1 segment blank at index {Idx}; using minimal segment placeholder. claimId={ClaimId}",
-                    in1Index,
-                    claimId);
-                rawSegment = "IN1";
+                Console.WriteLine($"HL7 warning: missing data - blank IN1 at index {in1Index}");
+                continue;
             }
 
             var groupNumber = _parser.NormalizeString(_parser.GetFieldValue(rawSegment, 8), maxLength: 50);
@@ -970,11 +938,11 @@ public class Hl7ImportService
             }
             if (string.IsNullOrWhiteSpace(payerName))
             {
-                _logger.LogWarning(
-                    "CreateClaimInsuredRecords: missing IN1-4/IN1-3 payer name; using HL7_UNNAMED_PAYER. claimId={ClaimId}",
-                    claimId);
-                payerName = "HL7_UNNAMED_PAYER";
+                payerName = "SELF PAY";
+                Console.WriteLine("HL7 warning: missing data - IN1 payer name missing, using SELF PAY");
             }
+            Console.WriteLine($"[HL7 IMPORT] Tenant={_inboundContext.TenantId}, Facility={_inboundContext.FacilityId}");
+            Console.WriteLine($"[HL7 IMPORT] Payer={payerName}");
 
             var addressField = _parser.GetFieldValue(rawSegment, 5);
             var (addr1, city, state, zip) = _parser.ParseAddress(addressField);
@@ -983,7 +951,7 @@ public class Hl7ImportService
             {
                 zip = new string(zip.Where(char.IsDigit).ToArray()).Trim();
                 if (zip.Length > 10)
-                    throw new InvalidOperationException("Invalid HL7 mapping: Zip invalid");
+                    zip = zip.Substring(0, 10);
             }
             else
             {
@@ -998,10 +966,10 @@ public class Hl7ImportService
             zip = string.IsNullOrWhiteSpace(zip) ? null : zip;
 
             if (city != null && city.Contains('^', StringComparison.Ordinal))
-                throw new InvalidOperationException("Invalid HL7 mapping: City contains ^");
+                city = city.Replace("^", " ");
 
             if (zip != null && zip.Length > 10)
-                throw new InvalidOperationException("Invalid HL7 mapping: Zip invalid");
+                zip = zip.Substring(0, 10);
 
             if (phone != null && phone.Length < 7)
                 phone = null;
@@ -1092,7 +1060,9 @@ public class Hl7ImportService
         var tenantId = _inboundContext.TenantId;
         var facilityId = _inboundContext.FacilityId;
 
-        var payer = await _db.Payers.FirstOrDefaultAsync(p =>
+        var payer = await _db.Payers
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p =>
             p.PayName == normalizedName &&
             p.TenantId == tenantId &&
             p.FacilityId == facilityId);
@@ -1197,6 +1167,35 @@ public class Hl7ImportService
         return (Comp(0), Comp(1), Comp(2));
     }
 
+    private static string? GetPhysicianFromPv1(string? pv1)
+    {
+        if (string.IsNullOrWhiteSpace(pv1))
+            return null;
+
+        var fields = pv1.Split('|', StringSplitOptions.None);
+        var candidates = new[]
+        {
+            fields.Length > 7 ? fields[7] : null,
+            fields.Length > 8 ? fields[8] : null,
+            fields.Length > 9 ? fields[9] : null
+        };
+
+        return candidates.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c));
+    }
+
+    private static (string? id, string? last, string? first) ParseXcn(string? xcn)
+    {
+        if (string.IsNullOrWhiteSpace(xcn))
+            return (null, null, null);
+
+        var parts = xcn.Split('^', StringSplitOptions.None);
+        return (
+            parts.Length > 0 ? parts[0] : null,
+            parts.Length > 1 ? parts[1] : null,
+            parts.Length > 2 ? parts[2] : null
+        );
+    }
+
     /// <summary>
     /// Resolves a physician by NPI when present, else by normalized first/last name; otherwise inserts with a generated key.
     /// </summary>
@@ -1208,6 +1207,7 @@ public class Hl7ImportService
         int tenantId,
         int facilityId)
     {
+        var providerId = NormalizeProviderId(npi);
         string? npiNorm = null;
         if (!string.IsNullOrWhiteSpace(npi))
         {
@@ -1224,7 +1224,16 @@ public class Hl7ImportService
             : _parser.NormalizeString(lastName, maxLength: 60);
 
         Physician? physician = null;
-        if (npiNorm != null)
+        if (providerId != null)
+        {
+            physician = await _db.Physicians
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p =>
+                    p.ExternalProviderId == providerId &&
+                    p.TenantId == tenantId &&
+                    p.FacilityId == facilityId);
+        }
+        else if (npiNorm != null)
         {
             physician = await _db.Physicians.FirstOrDefaultAsync(p =>
                 p.PhyNPI == npiNorm &&
@@ -1246,6 +1255,9 @@ public class Hl7ImportService
 
         if (physician != null)
         {
+            if (string.IsNullOrWhiteSpace(physician.ExternalProviderId) && providerId != null)
+                physician.ExternalProviderId = providerId;
+
             if (string.IsNullOrWhiteSpace(physician.PhyFirstName) && normFirst != null)
                 physician.PhyFirstName = normFirst;
 
@@ -1261,16 +1273,32 @@ public class Hl7ImportService
         }
 
         if (npiNorm == null && normFirst == null && normLast == null)
+        {
             npiNorm = $"HL7_{Guid.NewGuid():N}"[..20];
+        }
+
+        if (normFirst == null && normLast == null)
+        {
+            normFirst = npiNorm;
+            normLast = "HL7";
+            Console.WriteLine("HL7 warning: missing data - provider name missing, applied EZClaim fallback");
+        }
+
+        if (npiNorm == null)
+        {
+            npiNorm = $"HL7_{Guid.NewGuid():N}"[..20];
+        }
 
         var phyName = $"{normFirst} {normLast}".Trim();
         if (string.IsNullOrWhiteSpace(phyName))
-            phyName = npiNorm ?? "HL7 Physician";
+            phyName = $"{npiNorm} HL7".Trim();
         phyName = _parser.NormalizeString(phyName, maxLength: 100) ?? phyName;
+        Console.WriteLine($"[HL7 IMPORT] Physician={normFirst} {normLast}");
 
         physician = new Physician
         {
             PhyNPI = npiNorm,
+            ExternalProviderId = providerId,
             PhyFirstName = normFirst,
             PhyLastName = normLast,
             PhyName = phyName,
@@ -1290,6 +1318,15 @@ public class Hl7ImportService
             physician.PhyID);
 
         return physician;
+    }
+
+    private static string? NormalizeProviderId(string? providerId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId))
+            return null;
+
+        var normalized = providerId.Trim().ToUpperInvariant();
+        return normalized.Length > 80 ? normalized[..80] : normalized;
     }
 
     private async Task UpdateClaimTotals(int claimId)

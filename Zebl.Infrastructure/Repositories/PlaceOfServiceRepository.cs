@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Zebl.Application.Abstractions;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
 
@@ -7,12 +8,19 @@ namespace Zebl.Infrastructure.Repositories;
 public class PlaceOfServiceRepository
 {
     private readonly ZeblDbContext _context;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public PlaceOfServiceRepository(ZeblDbContext context) => _context = context;
+    public PlaceOfServiceRepository(ZeblDbContext context, ICurrentUserContext currentUserContext)
+    {
+        _context = context;
+        _currentUserContext = currentUserContext;
+    }
+
+    private int TenantId => _currentUserContext.TenantId;
 
     public async Task<(List<Place_of_Service> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string? search, bool activeOnly = true)
     {
-        var query = _context.Place_of_Services.AsNoTracking();
+        var query = _context.Place_of_Services.AsNoTracking().Where(e => e.TenantId == TenantId);
         if (activeOnly)
             query = query.Where(e => e.IsActive);
         if (!string.IsNullOrWhiteSpace(search))
@@ -34,20 +42,21 @@ public class PlaceOfServiceRepository
             return new List<Place_of_Service>();
         var s = keyword.Trim();
         return await _context.Place_of_Services.AsNoTracking()
-            .Where(e => e.IsActive && (e.Code.Contains(s) || (e.Description != null && e.Description.Contains(s))))
+            .Where(e => e.TenantId == TenantId && e.IsActive && (e.Code.Contains(s) || (e.Description != null && e.Description.Contains(s))))
             .OrderBy(e => e.Code)
             .Take(limit)
             .ToListAsync();
     }
 
     public async Task<Place_of_Service?> GetByIdAsync(int id) =>
-        await _context.Place_of_Services.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+        await _context.Place_of_Services.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id && e.TenantId == TenantId);
 
     public async Task<Place_of_Service?> GetByCodeAsync(string code) =>
-        await _context.Place_of_Services.FirstOrDefaultAsync(e => e.Code == code.Trim());
+        await _context.Place_of_Services.FirstOrDefaultAsync(e => e.TenantId == TenantId && e.Code == code.Trim());
 
     public async Task<Place_of_Service> AddAsync(Place_of_Service entity)
     {
+        entity.TenantId = TenantId;
         entity.CreatedAt = DateTime.UtcNow;
         entity.UpdatedAt = DateTime.UtcNow;
         _context.Place_of_Services.Add(entity);
@@ -58,13 +67,14 @@ public class PlaceOfServiceRepository
     public async Task UpdateAsync(Place_of_Service entity)
     {
         entity.UpdatedAt = DateTime.UtcNow;
+        entity.TenantId = TenantId;
         _context.Place_of_Services.Update(entity);
         await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id)
     {
-        var e = await _context.Place_of_Services.FindAsync(id);
+        var e = await _context.Place_of_Services.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == TenantId);
         if (e != null)
         {
             _context.Place_of_Services.Remove(e);

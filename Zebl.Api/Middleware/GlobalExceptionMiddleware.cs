@@ -61,8 +61,25 @@ namespace Zebl.Api.Middleware
             }
         }
 
-        private static string GetErrorCode(Exception ex) =>
-            ex switch
+        private static SqlException? FindSqlException(Exception ex)
+        {
+            for (var e = ex; e != null; e = e.InnerException)
+            {
+                if (e is SqlException se) return se;
+            }
+            return null;
+        }
+
+        private static string GetErrorCode(Exception ex)
+        {
+            var sql = FindSqlException(ex);
+            if (sql != null)
+            {
+                if (sql.Number == -2 || sql.Number == 2) return "QUERY_TIMEOUT";
+                if (sql.Number == 207) return "DATABASE_SCHEMA_MISMATCH";
+            }
+
+            return ex switch
             {
                 TenantSecurityException t => t.ErrorCode,
                 ArgumentNullException => "NULL_ARGUMENT",
@@ -70,24 +87,39 @@ namespace Zebl.Api.Middleware
                 UnauthorizedAccessException => "UNAUTHORIZED",
                 KeyNotFoundException => "NOT_FOUND",
                 DbUpdateException => "DATABASE_ERROR",
-                SqlException sqlEx when sqlEx.Number == -2 || sqlEx.Number == 2 => "QUERY_TIMEOUT",
                 _ => "INTERNAL_ERROR"
             };
+        }
 
-        private static string GetErrorMessage(Exception ex) =>
-            ex switch
+        private static string GetErrorMessage(Exception ex)
+        {
+            var sql = FindSqlException(ex);
+            if (sql != null)
+            {
+                if (sql.Number == -2 || sql.Number == 2)
+                    return "The query took too long to execute. Please try with filters to narrow down the results.";
+                if (sql.Number == 207)
+                    return "The database schema is out of date. Apply EF migrations (e.g. dotnet ef database update) and restart the API.";
+            }
+
+            return ex switch
             {
                 TenantSecurityException t => t.Message,
                 ArgumentNullException => "Required argument is missing",
                 ArgumentException => "Invalid argument",
                 UnauthorizedAccessException => "Unauthorized",
                 KeyNotFoundException => "Resource not found",
-                SqlException sqlEx when sqlEx.Number == -2 || sqlEx.Number == 2 => "The query took too long to execute. Please try with filters to narrow down the results.",
                 _ => "Unexpected error"
             };
+        }
 
-        private static int GetStatusCode(Exception ex) =>
-            ex switch
+        private static int GetStatusCode(Exception ex)
+        {
+            var sql = FindSqlException(ex);
+            if (sql != null && (sql.Number == -2 || sql.Number == 2 || sql.Number == 207))
+                return (int)HttpStatusCode.ServiceUnavailable;
+
+            return ex switch
             {
                 TenantSecurityException => (int)HttpStatusCode.Forbidden,
                 ArgumentNullException => (int)HttpStatusCode.BadRequest,
@@ -95,8 +127,8 @@ namespace Zebl.Api.Middleware
                 UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
                 KeyNotFoundException => (int)HttpStatusCode.NotFound,
                 DbUpdateException => (int)HttpStatusCode.InternalServerError,
-                SqlException sqlEx when sqlEx.Number == -2 || sqlEx.Number == 2 => (int)HttpStatusCode.ServiceUnavailable,
                 _ => (int)HttpStatusCode.InternalServerError
             };
+        }
     }
 }

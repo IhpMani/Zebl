@@ -330,14 +330,13 @@ var app = builder.Build();
         try
         {
             using var db = new ZeblDbContext(bootstrapOptions);
-            if (app.Environment.IsDevelopment())
-            {
-                db.Database.Migrate();
-            }
+            db.Database.Migrate();
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Database migration at startup failed.");
+            Log.Error(ex, "Database migration at startup failed.");
+            if (app.Environment.IsDevelopment())
+                throw;
         }
     }
 }
@@ -367,7 +366,11 @@ app.UseAuthorization();
 
 #region Swagger UI
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Zebl API v1");
+    options.RoutePrefix = "swagger";
+});
 
 #endregion
 

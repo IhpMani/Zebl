@@ -58,8 +58,13 @@ public class PaymentService : IPaymentService
     public async Task<int> CreatePaymentAsync(CreatePaymentCommand command)
     {
         ValidateSource(command);
-        if (await _paymentRepo.ExistsDuplicateAsync(command.Amount, command.Reference1))
-            throw new DuplicatePaymentException($"Duplicate payment: same amount ({command.Amount}) and reference1 ({command.Reference1}).");
+        var normalizedReference1 = string.IsNullOrWhiteSpace(command.Reference1)
+            ? null
+            : command.Reference1.Trim();
+        // Do not block common manual-entry flows with blank ref numbers.
+        // Duplicate check is only meaningful when a real reference is provided.
+        if (normalizedReference1 != null && await _paymentRepo.ExistsDuplicateAsync(command.Amount, normalizedReference1))
+            throw new DuplicatePaymentException($"Duplicate payment: same amount ({command.Amount}) and reference1 ({normalizedReference1}).");
 
         int payerId = command.PaymentSource == PaymentSourceKind.Payer ? (command.PayerId ?? 0) : 0;
         if (command.PaymentSource == PaymentSourceKind.Payer && payerId <= 0)

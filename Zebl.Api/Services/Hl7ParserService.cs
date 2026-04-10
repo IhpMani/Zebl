@@ -156,6 +156,10 @@ public class Hl7ParserService
             {
                 current.In1Segments.Add(cleanSegment);
             }
+            else if (cleanSegment.StartsWith("NM1", StringComparison.OrdinalIgnoreCase))
+            {
+                current.Nm1Segments.Add(cleanSegment);
+            }
             else if (cleanSegment.StartsWith("GT1", StringComparison.OrdinalIgnoreCase))
             {
                 current.Gt1Segments.Add(cleanSegment);
@@ -445,5 +449,6 @@ public class Hl7DftMessage
     public string? Pv1Segment { get; set; }
     public List<string> Ft1Segments { get; set; } = new List<string>();
     public List<string> In1Segments { get; set; } = new List<string>();
+    public List<string> Nm1Segments { get; set; } = new List<string>();
     public List<string> Gt1Segments { get; set; } = new List<string>();
 }

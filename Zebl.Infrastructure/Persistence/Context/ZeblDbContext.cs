@@ -1266,6 +1266,13 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.PhyEMail)
                 .HasMaxLength(80)
                 .IsUnicode(false);
+            entity.Property(e => e.ExternalProviderId)
+                .HasMaxLength(80)
+                .IsUnicode(false);
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId, e.ExternalProviderId })
+                .IsUnique()
+                .HasFilter("[ExternalProviderId] IS NOT NULL")
+                .HasDatabaseName("IX_Physician_ExternalProvider");
             entity.Property(e => e.PhyEntityType)
                 .HasMaxLength(1)
                 .IsUnicode(false);
@@ -1341,9 +1348,12 @@ public partial class ZeblDbContext : DbContext
 
             entity.ToTable("Procedure_Code");
 
-            entity.HasIndex(e => new { e.ProcCode, e.ProcProductCode })
+            entity.HasIndex(e => new { e.TenantId, e.ProcCode, e.ProcProductCode })
                 .IsUnique()
-                .HasDatabaseName("IX_Procedure_Code_ProcCode_ProcProductCode");
+                .HasDatabaseName("UX_Procedure_Code_Tenant_ProcCode_Product")
+                .HasFilter("[ProcProductCode] IS NOT NULL");
+
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("IX_Procedure_Code_TenantId");
 
             entity.Property(e => e.ProcAdjust).HasColumnType("money");
             entity.Property(e => e.ProcAllowed).HasColumnType("money");
@@ -1418,6 +1428,11 @@ public partial class ZeblDbContext : DbContext
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ProcedureCode_Payer");
+
+            entity.HasOne<Tenant>().WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_Procedure_Code_Tenant");
         });
 
         modelBuilder.Entity<Service_Line>(entity =>
@@ -1702,61 +1717,96 @@ public partial class ZeblDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK_Diagnosis_Code_Id");
             entity.ToTable("Diagnosis_Code");
-            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Diagnosis_Code_Code");
+            entity.HasIndex(e => new { e.TenantId, e.Code, e.CodeType })
+                .IsUnique()
+                .HasDatabaseName("UX_Diagnosis_Code_Tenant_Code_Type");
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("IX_Diagnosis_Code_TenantId");
             entity.Property(e => e.Code).HasMaxLength(20).IsUnicode(false).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
             entity.Property(e => e.CodeType).HasMaxLength(10).IsUnicode(false).IsRequired();
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+            entity.HasOne<Tenant>().WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_Diagnosis_Code_Tenant");
         });
 
         modelBuilder.Entity<Modifier_Code>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Modifier_Code_Id");
             entity.ToTable("Modifier_Code");
-            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Modifier_Code_Code");
+            entity.HasIndex(e => new { e.TenantId, e.Code })
+                .IsUnique()
+                .HasDatabaseName("UX_Modifier_Code_Tenant_Code");
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("IX_Modifier_Code_TenantId");
             entity.Property(e => e.Code).HasMaxLength(10).IsUnicode(false).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+            entity.HasOne<Tenant>().WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_Modifier_Code_Tenant");
         });
 
         modelBuilder.Entity<Place_of_Service>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Place_of_Service_Id");
             entity.ToTable("Place_of_Service");
-            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Place_of_Service_Code");
+            entity.HasIndex(e => new { e.TenantId, e.Code })
+                .IsUnique()
+                .HasDatabaseName("UX_Place_of_Service_Tenant_Code");
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("IX_Place_of_Service_TenantId");
             entity.Property(e => e.Code).HasMaxLength(10).IsUnicode(false).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+            entity.HasOne<Tenant>().WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_Place_of_Service_Tenant");
         });
 
         modelBuilder.Entity<Reason_Code>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Reason_Code_Id");
             entity.ToTable("Reason_Code");
-            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Reason_Code_Code");
+            entity.HasIndex(e => new { e.TenantId, e.Code })
+                .IsUnique()
+                .HasDatabaseName("UX_Reason_Code_Tenant_Code");
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("IX_Reason_Code_TenantId");
             entity.Property(e => e.Code).HasMaxLength(10).IsUnicode(false).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+            entity.HasOne<Tenant>().WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_Reason_Code_Tenant");
         });
 
         modelBuilder.Entity<Remark_Code>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Remark_Code_Id");
             entity.ToTable("Remark_Code");
-            entity.HasIndex(e => e.Code).HasDatabaseName("IX_Remark_Code_Code");
+            entity.HasIndex(e => new { e.TenantId, e.Code })
+                .IsUnique()
+                .HasDatabaseName("UX_Remark_Code_Tenant_Code");
+            entity.HasIndex(e => e.TenantId).HasDatabaseName("IX_Remark_Code_TenantId");
             entity.Property(e => e.Code).HasMaxLength(20).IsUnicode(false).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(255).IsUnicode(false);
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime2").IsRequired();
+            entity.HasOne<Tenant>().WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_Remark_Code_Tenant");
         });
     }
 

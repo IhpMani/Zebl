@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Zebl.Api.Models;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Services;
 using Zebl.Infrastructure.Persistence.Entities;
 using Context = Zebl.Infrastructure.Persistence.Context;
@@ -20,17 +21,27 @@ public class ProcedureCodesController : ControllerBase
     private readonly IProcedureCodeLookupService _lookupService;
     private readonly IClaimChargeCalculator _chargeCalculator;
     private readonly INOC837Formatter _nocFormatter;
+    private readonly ICurrentUserContext _userContext;
 
     public ProcedureCodesController(
         Context.ZeblDbContext context,
         IProcedureCodeLookupService lookupService,
         IClaimChargeCalculator chargeCalculator,
-        INOC837Formatter nocFormatter)
+        INOC837Formatter nocFormatter,
+        ICurrentUserContext userContext)
     {
         _context = context;
         _lookupService = lookupService;
         _chargeCalculator = chargeCalculator;
         _nocFormatter = nocFormatter;
+        _userContext = userContext;
+    }
+
+    private IActionResult? RequireTenant()
+    {
+        if (_userContext.TenantId <= 0)
+            return BadRequest(new { message = "A valid tenant is required for procedure codes." });
+        return null;
     }
 
     /// <summary>
@@ -44,7 +55,11 @@ public class ProcedureCodesController : ControllerBase
         [FromQuery] string? category = null,
         [FromQuery] string? subCategory = null)
     {
-        var query = _context.Procedure_Codes.AsNoTracking();
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
+        var tid = _userContext.TenantId;
+        var query = _context.Procedure_Codes.AsNoTracking().Where(p => p.TenantId == tid);
 
         if (!string.IsNullOrWhiteSpace(code))
             query = query.Where(p => p.ProcCode.Contains(code.Trim()));
@@ -68,7 +83,7 @@ public class ProcedureCodesController : ControllerBase
     /// Lookup best-matching procedure code for claim entry. Uses ProcedureCodeLookupService, then NOC837Formatter for description.
     /// </summary>
     [HttpGet("lookup")]
-    public async Task<ActionResult<ProcedureCodeLookupResult>> Lookup(
+    public async Task<IActionResult> Lookup(
         [FromQuery] string? procedureCode,
         [FromQuery] int? payerId,
         [FromQuery] int? billingPhysicianId,
@@ -76,11 +91,15 @@ public class ProcedureCodesController : ControllerBase
         [FromQuery] System.DateTime? serviceDate,
         [FromQuery] string? productCode)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (string.IsNullOrWhiteSpace(procedureCode))
             return BadRequest(new { message = "procedureCode is required." });
 
         var serviceDateValue = serviceDate ?? System.DateTime.UtcNow.Date;
         var best = await _lookupService.LookupAsync(
+            _userContext.TenantId,
             procedureCode.Trim(),
             payerId,
             billingPhysicianId,
@@ -121,14 +140,20 @@ public class ProcedureCodesController : ControllerBase
     /// GET single procedure code by code (EZClaim service-line lookup).
     /// </summary>
     [HttpGet("{code}")]
-    public async Task<ActionResult<object>> GetByCode(string code)
+    public async Task<IActionResult> GetByCode(string code)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (string.IsNullOrWhiteSpace(code))
             return BadRequest(new { message = "Procedure code is required." });
 
+        var tid = _userContext.TenantId;
         var entity = await _context.Procedure_Codes
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.ProcCode == code.Trim());
+            .Where(p => p.TenantId == tid && p.ProcCode == code.Trim())
+            .OrderBy(p => p.ProcProductCode)
+            .FirstOrDefaultAsync();
 
         if (entity == null)
             return NotFound();
@@ -151,11 +176,15 @@ public class ProcedureCodesController : ControllerBase
     /// GET single procedure code by ID.
     /// </summary>
     [HttpGet("id/{id:int}")]
-    public async Task<ActionResult<Procedure_Code>> GetById(int id)
+    public async Task<IActionResult> GetById(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
+        var tid = _userContext.TenantId;
         var entity = await _context.Procedure_Codes
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.ProcID == id);
+            .FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid);
 
         if (entity == null)
             return NotFound();
@@ -167,8 +196,11 @@ public class ProcedureCodesController : ControllerBase
     /// POST create a new procedure code.
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<Procedure_Code>> Create([FromBody] Procedure_Code model)
+    public async Task<IActionResult> Create([FromBody] Procedure_Code model)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (model == null)
             return BadRequest(new { message = "Request body is required." });
         if (string.IsNullOrWhiteSpace(model.ProcCode))
@@ -177,6 +209,7 @@ public class ProcedureCodesController : ControllerBase
             return BadRequest(new { message = "ProcUnits must be greater than or equal to 1." });
 
         model.ProcID = 0;
+        model.TenantId = _userContext.TenantId;
         _context.Procedure_Codes.Add(model);
         await _context.SaveChangesAsync();
         return StatusCode(201, model);
@@ -188,6 +221,9 @@ public class ProcedureCodesController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] Procedure_Code model)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (model == null)
             return BadRequest(new { message = "Request body is required." });
         if (id != model.ProcID)
@@ -197,13 +233,19 @@ public class ProcedureCodesController : ControllerBase
         if (model.ProcUnits < 1)
             return BadRequest(new { message = "ProcUnits must be greater than or equal to 1." });
 
-        var exists = await _context.Procedure_Codes.AsNoTracking().AnyAsync(p => p.ProcID == id);
-        if (!exists)
+        var tid = _userContext.TenantId;
+        var existing = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid);
+        if (existing == null)
             return NotFound();
 
-        _context.Entry(model).State = EntityState.Modified;
+        var keepProcId = existing.ProcID;
+        var keepTenant = existing.TenantId;
+        _context.Entry(existing).CurrentValues.SetValues(model);
+        existing.ProcID = keepProcId;
+        existing.TenantId = keepTenant;
+
         await _context.SaveChangesAsync();
-        return Ok(model);
+        return Ok(existing);
     }
 
     /// <summary>
@@ -212,7 +254,11 @@ public class ProcedureCodesController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var entity = await _context.Procedure_Codes.FindAsync(id);
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
+        var tid = _userContext.TenantId;
+        var entity = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid);
         if (entity == null)
             return NotFound();
 
@@ -227,30 +273,44 @@ public class ProcedureCodesController : ControllerBase
     [HttpPost("bulk-save")]
     public async Task<IActionResult> BulkSave([FromBody] List<Procedure_Code> items)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
+        var tid = _userContext.TenantId;
+
         if (items == null)
             return BadRequest(new { message = "Request body is required." });
 
-        // Keep existing ProcCode validation logic (do not change)
         foreach (var item in items)
         {
             if (string.IsNullOrWhiteSpace(item.ProcCode))
                 return BadRequest(new { message = "ProcCode is required for all items." });
         }
 
-        // Normalize required / NOT NULL fields before insert/update
+        var physicianIds = await _context.Physicians
+            .AsNoTracking()
+            .Where(p => p.TenantId == tid)
+            .OrderBy(p => p.PhyID)
+            .Select(p => p.PhyID)
+            .ToListAsync();
+        var validPhysicianIds = new HashSet<int>(physicianIds);
+        var defaultBillingPhyId = physicianIds.Count > 0 ? physicianIds[0] : 0;
+
+        var payerIds = await _context.Payers
+            .AsNoTracking()
+            .Where(p => p.TenantId == tid)
+            .Select(p => p.PayID)
+            .ToListAsync();
+        var validPayerIds = new HashSet<int>(payerIds);
+
         var now = System.DateTime.UtcNow;
         foreach (var item in items)
         {
-            // New row: set created timestamp
             if (item.ProcID == 0)
-            {
                 item.ProcDateTimeCreated = now;
-            }
 
-            // All rows: set modified timestamp
             item.ProcDateTimeModified = now;
 
-            // Numeric defaults (safe even when CLR types are non-nullable)
             item.ProcAdjust = item.ProcAdjust;
             item.ProcAllowed = item.ProcAllowed;
             item.ProcCharge = item.ProcCharge;
@@ -259,34 +319,31 @@ public class ProcedureCodesController : ControllerBase
             item.ProcRVUMalpractice = item.ProcRVUMalpractice;
             item.ProcRVUWork = item.ProcRVUWork;
 
-            // Ensure units >= 1 (fallback to 1)
             if (item.ProcUnits < 1)
                 item.ProcUnits = 1;
 
-            // Default foreign keys when not supplied
+            // Column is non-null FK — never use a hardcoded PhyID from another tenant/environment.
             if (item.ProcBillingPhyFID == 0)
-                item.ProcBillingPhyFID = 4;
-            // Treat 0 as unspecified payer → not restricted to a payer (NULL), not a real PayID.
+            {
+                if (defaultBillingPhyId == 0)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "No physicians exist for your tenant. Import or add physicians first, or select a billing physician on each procedure row.",
+                        code = "NoPhysiciansForBillingDefault"
+                    });
+                }
+
+                item.ProcBillingPhyFID = defaultBillingPhyId;
+            }
+
             if (item.ProcPayFID == 0)
                 item.ProcPayFID = null;
         }
 
-        // Validate foreign keys (Physician / Payer) up-front to avoid SQL FK violations
-        var physicianIds = await _context.Physicians
-            .AsNoTracking()
-            .Select(p => p.PhyID)
-            .ToListAsync();
-        var validPhysicianIds = new HashSet<int>(physicianIds);
-
-        var payerIds = await _context.Payers
-            .AsNoTracking()
-            .Select(p => p.PayID)
-            .ToListAsync();
-        var validPayerIds = new HashSet<int>(payerIds);
-
         foreach (var item in items)
         {
-            // If a non-zero billing physician is supplied, ensure it exists
             if (item.ProcBillingPhyFID != 0 && !validPhysicianIds.Contains(item.ProcBillingPhyFID))
             {
                 return BadRequest(new
@@ -309,9 +366,28 @@ public class ProcedureCodesController : ControllerBase
         foreach (var item in items)
         {
             if (item.ProcID == 0)
+            {
+                item.TenantId = tid;
                 _context.Procedure_Codes.Add(item);
+            }
             else
-                _context.Entry(item).State = EntityState.Modified;
+            {
+                var existing = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == item.ProcID && p.TenantId == tid);
+                if (existing == null)
+                {
+                    return BadRequest(new
+                    {
+                        message = $"Procedure ProcID {item.ProcID} was not found for your tenant.",
+                        code = "ProcedureNotFound"
+                    });
+                }
+
+                var keepProcId = existing.ProcID;
+                var keepTenant = existing.TenantId;
+                _context.Entry(existing).CurrentValues.SetValues(item);
+                existing.ProcID = keepProcId;
+                existing.TenantId = keepTenant;
+            }
         }
 
         try
@@ -320,7 +396,6 @@ public class ProcedureCodesController : ControllerBase
         }
         catch (DbUpdateException ex)
         {
-            // Surface FK / constraint details as a 400 so the UI can show a friendly message
             return BadRequest(new
             {
                 message = "Bulk save failed due to database constraint violation.",

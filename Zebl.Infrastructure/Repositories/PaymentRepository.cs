@@ -90,9 +90,14 @@ public class PaymentRepository : IPaymentRepository
         if (!physicianId.HasValue)
             return null;
 
+        var tenantId = _currentContext.TenantId;
+        var facilityId = _currentContext.FacilityId;
         var exists = await _context.Physicians
             .AsNoTracking()
-            .AnyAsync(p => p.PhyID == physicianId.Value);
+            .AnyAsync(p =>
+                p.PhyID == physicianId.Value &&
+                p.TenantId == tenantId &&
+                p.FacilityId == facilityId);
         if (!exists)
             throw new ValidationException("Invalid billing physician.");
 

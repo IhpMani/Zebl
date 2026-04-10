@@ -53,6 +53,8 @@ public partial class Physician : ITenantEntity, ITenantFacilityEntity
 
     public string? PhyNPI { get; set; }
 
+    public string? ExternalProviderId { get; set; }
+
     public string? PhyPrimaryCodeType { get; set; }
 
     public string? PhyPrimaryIDCode { get; set; }

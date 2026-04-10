@@ -20,6 +20,7 @@ public class ProcedureCodeLookupService : IProcedureCodeLookupService
 
     /// <inheritdoc />
     public async Task<IProcedureCode?> LookupAsync(
+        int tenantId,
         string procedureCode,
         int? payerId,
         int? billingPhysicianId,
@@ -36,6 +37,7 @@ public class ProcedureCodeLookupService : IProcedureCodeLookupService
 
         var query = _context.Procedure_Codes
             .AsNoTracking()
+            .Where(p => p.TenantId == tenantId)
             .Where(p => p.ProcCode == code)
             .Where(p =>
                 (p.ProcStart == null || p.ProcStart <= sd) &&

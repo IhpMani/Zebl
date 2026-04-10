@@ -285,7 +285,7 @@ public class CodeLibraryService : ICodeLibraryService
         {
             if (string.IsNullOrWhiteSpace(code)) { skipped++; continue; }
             if (code.Length > 20) { skipped++; continue; } // Diagnosis_Code.Code is varchar(20)
-            var existing = await _diagnosisRepo.GetByCodeAsync(code);
+            var existing = await _diagnosisRepo.GetByCodeAsync(code, codeType);
             if (existing != null) { skipped++; continue; }
             await _diagnosisRepo.AddAsync(new Diagnosis_Code
             {

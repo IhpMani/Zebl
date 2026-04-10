@@ -18,12 +18,18 @@ public sealed class SuperAdminController : ControllerBase
     private readonly ZeblDbContext _db;
     private readonly ICurrentUserContext _currentUser;
     private readonly IAuditTrail _auditTrail;
+    private readonly ILogger<SuperAdminController> _logger;
 
-    public SuperAdminController(ZeblDbContext db, ICurrentUserContext currentUser, IAuditTrail auditTrail)
+    public SuperAdminController(
+        ZeblDbContext db,
+        ICurrentUserContext currentUser,
+        IAuditTrail auditTrail,
+        ILogger<SuperAdminController> logger)
     {
         _db = db;
         _currentUser = currentUser;
         _auditTrail = auditTrail;
+        _logger = logger;
     }
 
     /// <summary>Active tenants for super-admin UI dropdowns. Returns <c>[]</c> when none match (never 405).</summary>
@@ -108,10 +114,11 @@ public sealed class SuperAdminController : ControllerBase
             .FirstAsync(cancellationToken);
 
         var rows = await _db.AppUsers.AsNoTracking()
-            .Where(u => u.TenantId == tenantId)
+            .Where(u => u.TenantId == tenantId && u.IsActive)
             .OrderBy(u => u.UserName)
             .Select(u => new
             {
+                u.UserGuid,
                 u.UserName,
                 u.TenantId,
                 TenantName = tenantName,
@@ -123,7 +130,86 @@ public sealed class SuperAdminController : ControllerBase
         return Ok(rows);
     }
 
-    /// <summary>Soft-deactivate a tenant, its active facilities, and inbound integrations for that tenant.</summary>
+    [HttpGet("tenants/{tenantId:int}/users/{userId:guid}/facilities")]
+    public async Task<IActionResult> GetUserFacilityAccess(int tenantId, Guid userId, CancellationToken cancellationToken)
+    {
+        if (tenantId <= 0)
+            return BadRequest(new { error = "tenantId is required." });
+
+        var user = await _db.AppUsers.AsNoTracking()
+            .FirstOrDefaultAsync(
+                u => u.UserGuid == userId && u.TenantId == tenantId && u.IsActive,
+                cancellationToken);
+        if (user == null)
+            return NotFound(new { error = "User not found in tenant." });
+
+        var facilityRows = await _db.FacilityScopes.AsNoTracking()
+            .Where(f => f.TenantId == tenantId && f.IsActive)
+            .OrderBy(f => f.FacilityId)
+            .Select(f => new { f.FacilityId, f.Name })
+            .ToListAsync(cancellationToken);
+
+        var assignedIds = await _db.UserFacilities.AsNoTracking()
+            .Where(uf => uf.UserId == userId)
+            .Select(uf => uf.FacilityId)
+            .ToListAsync(cancellationToken);
+
+        var assigned = new HashSet<int>(assignedIds);
+        return Ok(facilityRows.Select(f => new
+        {
+            f.FacilityId,
+            f.Name,
+            HasAccess = assigned.Contains(f.FacilityId)
+        }));
+    }
+
+    [HttpPut("tenants/{tenantId:int}/users/{userId:guid}/facilities")]
+    public async Task<IActionResult> UpdateUserFacilityAccess(
+        int tenantId,
+        Guid userId,
+        [FromBody] UpdateUserFacilityAccessRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (tenantId <= 0)
+            return BadRequest(new { error = "tenantId is required." });
+
+        if (request == null)
+            return BadRequest(new { error = "Request body is required." });
+
+        var user = await _db.AppUsers
+            .FirstOrDefaultAsync(
+                u => u.UserGuid == userId && u.TenantId == tenantId && u.IsActive,
+                cancellationToken);
+        if (user == null)
+            return NotFound(new { error = "User not found in tenant." });
+
+        var requestedIds = (request.FacilityIds ?? Array.Empty<int>())
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        var validFacilityIds = await _db.FacilityScopes.AsNoTracking()
+            .Where(f => f.TenantId == tenantId && f.IsActive && requestedIds.Contains(f.FacilityId))
+            .Select(f => f.FacilityId)
+            .ToListAsync(cancellationToken);
+
+        if (requestedIds.Count != validFacilityIds.Count)
+            return BadRequest(new { error = "One or more facilities are invalid for this tenant." });
+
+        var existing = await _db.UserFacilities
+            .Where(uf => uf.UserId == userId)
+            .ToListAsync(cancellationToken);
+        if (existing.Count > 0)
+            _db.UserFacilities.RemoveRange(existing);
+
+        foreach (var facilityId in requestedIds)
+            _db.UserFacilities.Add(new UserFacility { UserId = userId, FacilityId = facilityId });
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return Ok(new { userId, assignedFacilityCount = requestedIds.Count });
+    }
+
+    /// <summary>Deactivate a tenant: sets IsActive false on tenant, its facilities, tenant users, and inbound integrations. No rows removed.</summary>
     [HttpDelete("tenants/{tenantId:int}")]
     public async Task<IActionResult> DeactivateTenant(int tenantId, CancellationToken cancellationToken)
     {
@@ -132,24 +218,36 @@ public sealed class SuperAdminController : ControllerBase
             return NotFound();
 
         if (!tenant.IsActive)
-        {
-            return Ok();
-        }
+            return Conflict(new { error = "Tenant already inactive." });
 
-        var facilities = await _db.FacilityScopes
-            .Where(f => f.TenantId == tenantId && f.IsActive)
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+        var facilityRows = await _db.FacilityScopes
+            .Where(f => f.TenantId == tenantId)
             .ToListAsync(cancellationToken);
-        foreach (var f in facilities)
-            f.IsActive = false;
+        foreach (var facility in facilityRows)
+            facility.IsActive = false;
+
+        var users = await _db.AppUsers
+            .Where(u => u.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+        foreach (var user in users)
+            user.IsActive = false;
 
         var integrations = await _db.InboundIntegrations
-            .Where(i => i.TenantId == tenantId && i.IsActive)
+            .Where(i => i.TenantId == tenantId)
             .ToListAsync(cancellationToken);
-        foreach (var i in integrations)
-            i.IsActive = false;
+        foreach (var integration in integrations)
+            integration.IsActive = false;
 
         tenant.IsActive = false;
+
         await _db.SaveChangesAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
+
+        _logger.LogInformation("Tenant {TenantId} deactivated (facilities={FacilityCount}, users={UserCount}, integrations={IntegrationCount})",
+            tenantId, facilityRows.Count, users.Count, integrations.Count);
+
         return Ok();
     }
 
@@ -309,4 +407,9 @@ public sealed class CreateTenantAdminRequest
 
     /// <summary>Required: single facility the user may access.</summary>
     public int FacilityId { get; set; }
+}
+
+public sealed class UpdateUserFacilityAccessRequest
+{
+    public int[] FacilityIds { get; set; } = Array.Empty<int>();
 }

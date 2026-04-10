@@ -14,6 +14,8 @@ public partial class Procedure_Code : IProcedureCode
 
     public int ProcID { get; set; }
 
+    public int TenantId { get; set; }
+
     public DateTime ProcDateTimeCreated { get; set; }
 
     public DateTime ProcDateTimeModified { get; set; }

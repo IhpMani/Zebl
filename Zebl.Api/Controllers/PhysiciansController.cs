@@ -508,42 +508,61 @@ namespace Zebl.Api.Controllers
 
             using var stream = file.OpenReadStream();
             using var reader = new StreamReader(stream);
-            var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                PrepareHeaderForMatch = args => args.Header?.Trim() ?? string.Empty,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            };
+            var csv = new CsvReader(reader, config);
             var records = csv.GetRecords<dynamic>().ToList();
 
             int inserted = 0;
             int skipped = 0;
+            var pendingByProviderId = new Dictionary<string, Physician>(StringComparer.OrdinalIgnoreCase);
+            var pendingByName = new Dictionary<string, Physician>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var row in records)
             {
                 var dict = row as IDictionary<string, object>;
-                if (dict == null)
+                if (dict == null || dict.Count == 0)
                 {
                     skipped++;
                     continue;
                 }
 
-                string displayName = dict.ContainsKey("Display Name") ? dict["Display Name"]?.ToString() : "";
-                string firstName = dict.ContainsKey("First Name") ? dict["First Name"]?.ToString() : "";
-                string lastName = dict.ContainsKey("Last Name") ? dict["Last Name"]?.ToString() : "";
-                string middleName = dict.ContainsKey("Middle Name") ? dict["Middle Name"]?.ToString() : "";
-                string npi = dict.ContainsKey("NPI") ? dict["NPI"]?.ToString() : "";
-                string type = dict.ContainsKey("Type") ? dict["Type"]?.ToString() : "Rendering";
-                string taxonomy = dict.ContainsKey("Taxonomy Code") ? dict["Taxonomy Code"]?.ToString() : "";
-                string phone = dict.ContainsKey("Phone #") ? dict["Phone #"]?.ToString() : "";
-                string addr1 = dict.ContainsKey("Address 1") ? dict["Address 1"]?.ToString() : "";
-                string addr2 = dict.ContainsKey("Address 2") ? dict["Address 2"]?.ToString() : "";
-                string city = dict.ContainsKey("City") ? dict["City"]?.ToString() : "";
-                string state = dict.ContainsKey("State") ? dict["State"]?.ToString() : "";
-                string zip = dict.ContainsKey("Zip") ? dict["Zip"]?.ToString() : "";
-                string email = dict.ContainsKey("Email") ? dict["Email"]?.ToString() : "";
-                string fax = dict.ContainsKey("Fax") ? dict["Fax"]?.ToString() : "";
+                var normalizedRow = dict
+                    .Where(kv => !string.IsNullOrWhiteSpace(kv.Key))
+                    .ToDictionary(
+                        kv => kv.Key.Trim(),
+                        kv => kv.Value?.ToString(),
+                        StringComparer.OrdinalIgnoreCase);
 
-                if (string.IsNullOrWhiteSpace(npi))
-                {
-                    skipped++;
-                    continue;
-                }
+                string displayName = normalizedRow.TryGetValue("Display Name", out var displayNameValue) ? displayNameValue ?? "" : "";
+                string firstName = normalizedRow.TryGetValue("First Name", out var firstNameValue) ? firstNameValue ?? "" : "";
+                string lastName = normalizedRow.TryGetValue("Last Name", out var lastNameValue) ? lastNameValue ?? "" : "";
+                string middleName = normalizedRow.TryGetValue("Middle Name", out var middleNameValue) ? middleNameValue ?? "" : "";
+                string npi = normalizedRow.TryGetValue("NPI", out var npiValue) ? npiValue ?? "" : "";
+                string providerCode = normalizedRow.TryGetValue("ProviderCode", out var providerCodeValue)
+                    ? providerCodeValue ?? ""
+                    : (normalizedRow.TryGetValue("Provider Code", out var providerCodeSpacedValue) ? providerCodeSpacedValue ?? "" : "");
+                string type = normalizedRow.TryGetValue("Type", out var typeValue) ? typeValue ?? "Rendering" : "Rendering";
+                string taxonomy = normalizedRow.TryGetValue("Taxonomy Code", out var taxonomyValue) ? taxonomyValue ?? "" : "";
+                string phone = normalizedRow.TryGetValue("Phone #", out var phoneValue) ? phoneValue ?? "" : "";
+                string addr1 = normalizedRow.TryGetValue("Address 1", out var addr1Value) ? addr1Value ?? "" : "";
+                string addr2 = normalizedRow.TryGetValue("Address 2", out var addr2Value) ? addr2Value ?? "" : "";
+                string city = normalizedRow.TryGetValue("City", out var cityValue) ? cityValue ?? "" : "";
+                string state = normalizedRow.TryGetValue("State", out var stateValue) ? stateValue ?? "" : "";
+                string zip = normalizedRow.TryGetValue("Zip", out var zipValue) ? zipValue ?? "" : "";
+                string email = normalizedRow.TryGetValue("Email", out var emailValue) ? emailValue ?? "" : "";
+                string fax = normalizedRow.TryGetValue("Fax", out var faxValue) ? faxValue ?? "" : "";
+                var normalizedExternalProviderId = NormalizeProviderId(
+                    !string.IsNullOrWhiteSpace(providerCode) ? providerCode : npi);
+                var normalizedFirst = NormalizeString(firstName, 35);
+                var normalizedLast = NormalizeString(lastName, 60);
+                var normalizedNameKey = !string.IsNullOrWhiteSpace(normalizedFirst) && !string.IsNullOrWhiteSpace(normalizedLast)
+                    ? $"{normalizedFirst}|{normalizedLast}"
+                    : null;
 
                 var utc = DateTime.UtcNow;
                 var physician = new Physician
@@ -555,6 +574,7 @@ namespace Zebl.Api.Controllers
                     PhyLastName = lastName,
                     PhyMiddleName = middleName,
                     PhyNPI = npi,
+                    ExternalProviderId = normalizedExternalProviderId,
                     PhyType = type,
                     PhySpecialtyCode = taxonomy,
                     PhyTelephone = phone,
@@ -574,8 +594,35 @@ namespace Zebl.Api.Controllers
                     PhyCityStateZipCC = string.Empty
                 };
 
-                var existing = await _db.Physicians
-                    .FirstOrDefaultAsync(p => p.PhyNPI == physician.PhyNPI);
+                Physician? existing = null;
+                if (!string.IsNullOrWhiteSpace(normalizedExternalProviderId))
+                {
+                    if (pendingByProviderId.TryGetValue(normalizedExternalProviderId, out var pendingById))
+                    {
+                        existing = pendingById;
+                    }
+                }
+                if (existing == null && !string.IsNullOrWhiteSpace(normalizedExternalProviderId))
+                {
+                    existing = await _db.Physicians
+                        .FirstOrDefaultAsync(p =>
+                            p.ExternalProviderId == normalizedExternalProviderId &&
+                            p.TenantId == _currentContext.TenantId &&
+                            p.FacilityId == _currentContext.FacilityId);
+                }
+                if (existing == null && normalizedNameKey != null && pendingByName.TryGetValue(normalizedNameKey, out var pendingByFullName))
+                {
+                    existing = pendingByFullName;
+                }
+                if (existing == null && normalizedNameKey != null)
+                {
+                    existing = await _db.Physicians
+                        .FirstOrDefaultAsync(p =>
+                            p.TenantId == _currentContext.TenantId &&
+                            p.FacilityId == _currentContext.FacilityId &&
+                            p.PhyFirstName == normalizedFirst &&
+                            p.PhyLastName == normalizedLast);
+                }
 
                 if (existing != null)
                 {
@@ -593,23 +640,49 @@ namespace Zebl.Api.Controllers
                     existing.PhyZip = physician.PhyZip;
                     existing.PhyEMail = physician.PhyEMail;
                     existing.PhyFax = physician.PhyFax;
+                    existing.ExternalProviderId = normalizedExternalProviderId ?? existing.ExternalProviderId;
                     existing.PhyInactive = false;
                     existing.PhyDateTimeModified = DateTime.UtcNow;
                 }
                 else
                 {
                     _db.Physicians.Add(physician);
+                    if (!string.IsNullOrWhiteSpace(normalizedExternalProviderId))
+                        pendingByProviderId[normalizedExternalProviderId] = physician;
+                    if (normalizedNameKey != null)
+                        pendingByName[normalizedNameKey] = physician;
                     inserted++;
                 }
             }
 
-            await _db.SaveChangesAsync();
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Physician CSV import failed. Tenant={TenantId}, Facility={FacilityId}", _currentContext.TenantId, _currentContext.FacilityId);
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "CSV_IMPORT_FAILED",
+                    Message = ex.InnerException?.Message ?? ex.Message
+                });
+            }
 
             return Ok(new
             {
                 inserted,
                 skipped
             });
+        }
+
+        private static string? NormalizeProviderId(string? providerId)
+        {
+            if (string.IsNullOrWhiteSpace(providerId))
+                return null;
+
+            var normalized = providerId.Trim().ToUpperInvariant();
+            return normalized.Length > 80 ? normalized.Substring(0, 80) : normalized;
         }
 
         private string? NormalizeString(string? value, int maxLength)

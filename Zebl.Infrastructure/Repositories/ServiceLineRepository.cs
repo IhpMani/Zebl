@@ -146,8 +146,13 @@ public class ServiceLineRepository : IServiceLineRepository
         var payerNames = new Dictionary<int, string?>();
         if (responsiblePartyIds.Any())
         {
+            var tenantId = _currentContext.TenantId;
+            var facilityId = _currentContext.FacilityId;
             var payers = await _context.Payers.AsNoTracking()
-                .Where(pay => responsiblePartyIds.Contains(pay.PayID))
+                .Where(pay =>
+                    responsiblePartyIds.Contains(pay.PayID) &&
+                    pay.TenantId == tenantId &&
+                    pay.FacilityId == facilityId)
                 .Select(pay => new { pay.PayID, pay.PayName })
                 .ToListAsync();
             foreach (var pay in payers)
@@ -243,8 +248,11 @@ public class ServiceLineRepository : IServiceLineRepository
 
         var totalAdj = s.SrvTotalCOAdjTRIG + s.SrvTotalCRAdjTRIG + s.SrvTotalOAAdjTRIG + s.SrvTotalPIAdjTRIG + s.SrvTotalPRAdjTRIG;
         var balance = s.SrvCharges - s.SrvTotalInsAmtPaidTRIG - s.SrvTotalPatAmtPaidTRIG - totalAdj;
-        var patBalance = s.SrvTotalPatAmtPaidTRIG > 0 ? 0m : balance;
-        var insBalance = Math.Max(balance - patBalance, 0m);
+        // Split remaining balance by current responsible party:
+        // - Patient-responsible line => patient balance
+        // - Payer-responsible line   => insurance balance
+        var patBalance = s.SrvResponsibleParty == 0 ? Math.Max(balance, 0m) : 0m;
+        var insBalance = s.SrvResponsibleParty > 0 ? Math.Max(balance, 0m) : 0m;
 
         // Centralized financial totals: never leave these as NULL.
         s.SrvTotalAdjCC = totalAdj;

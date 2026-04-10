@@ -84,9 +84,17 @@ public class AuthController : ControllerBase
         int? jwtFacilityId = null;
         if (!user.IsSuperAdmin)
         {
+            var operationalTenantId = user.TenantId ?? 0;
             var allowedFacilityIds = await _db.UserFacilities.AsNoTracking()
                 .Where(uf => uf.UserId == user.UserGuid)
-                .Select(uf => uf.FacilityId)
+                .Join(
+                    _db.FacilityScopes.AsNoTracking(),
+                    uf => uf.FacilityId,
+                    f => f.FacilityId,
+                    (uf, f) => f)
+                .Where(f => operationalTenantId > 0 && f.TenantId == operationalTenantId && f.IsActive)
+                .Select(f => f.FacilityId)
+                .Distinct()
                 .OrderBy(fid => fid)
                 .ToListAsync(cancellationToken);
 

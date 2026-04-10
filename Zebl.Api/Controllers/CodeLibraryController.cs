@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.CodeLibrary;
 using Zebl.Application.Services;
 using Zebl.Infrastructure.Persistence.Context;
@@ -15,12 +16,24 @@ public class CodeLibraryController : ControllerBase
 {
     private readonly ZeblDbContext _context;
     private readonly ICodeLibraryService _codeLibraryService;
+    private readonly ICurrentUserContext _userContext;
     private const int MaxLookupRows = 100;
 
-    public CodeLibraryController(ZeblDbContext context, ICodeLibraryService codeLibraryService)
+    public CodeLibraryController(
+        ZeblDbContext context,
+        ICodeLibraryService codeLibraryService,
+        ICurrentUserContext userContext)
     {
         _context = context;
         _codeLibraryService = codeLibraryService;
+        _userContext = userContext;
+    }
+
+    private IActionResult? RequireTenant()
+    {
+        if (_userContext.TenantId <= 0)
+            return BadRequest(new { message = "A valid tenant is required for the code library." });
+        return null;
     }
 
     /// <summary>GET procedure codes from existing Procedure_Code table. Supports page, pageSize, search. Search limited to 100 rows.</summary>
@@ -30,7 +43,11 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] int pageSize = 50,
         [FromQuery] string? search = null)
     {
-        var query = _context.Procedure_Codes.AsNoTracking();
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
+        var tid = _userContext.TenantId;
+        var query = _context.Procedure_Codes.AsNoTracking().Where(p => p.TenantId == tid);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var s = search.Trim();
@@ -54,6 +71,9 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] bool activeOnly = true,
         [FromQuery] string? codeType = null)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var result = await _codeLibraryService.GetDiagnosisPagedAsync(page, pageSize, search, activeOnly, codeType);
         return Ok(new { items = result.Items, totalCount = result.TotalCount });
     }
@@ -65,6 +85,9 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] bool activeOnly = true)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var result = await _codeLibraryService.GetModifiersPagedAsync(page, pageSize, search, activeOnly);
         return Ok(new { items = result.Items, totalCount = result.TotalCount });
     }
@@ -76,6 +99,9 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] bool activeOnly = true)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var result = await _codeLibraryService.GetPlaceOfServicePagedAsync(page, pageSize, search, activeOnly);
         return Ok(new { items = result.Items, totalCount = result.TotalCount });
     }
@@ -87,6 +113,9 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] bool activeOnly = true)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var result = await _codeLibraryService.GetReasonsPagedAsync(page, pageSize, search, activeOnly);
         return Ok(new { items = result.Items, totalCount = result.TotalCount });
     }
@@ -98,6 +127,9 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] bool activeOnly = true)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var result = await _codeLibraryService.GetRemarksPagedAsync(page, pageSize, search, activeOnly);
         return Ok(new { items = result.Items, totalCount = result.TotalCount });
     }
@@ -109,6 +141,9 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] string? q = null,
         [FromQuery] string? keyword = null)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var term = (q ?? keyword ?? "").Trim();
         var t = (type ?? "").Trim().ToLowerInvariant();
         if (string.IsNullOrEmpty(t))
@@ -140,8 +175,9 @@ public class CodeLibraryController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(keyword))
             return new List<CodeLibraryItemDto>();
+        var tid = _userContext.TenantId;
         var list = await _context.Procedure_Codes.AsNoTracking()
-            .Where(p => p.ProcCode.Contains(keyword) || (p.ProcDescription != null && p.ProcDescription.Contains(keyword)))
+            .Where(p => p.TenantId == tid && (p.ProcCode.Contains(keyword) || (p.ProcDescription != null && p.ProcDescription.Contains(keyword))))
             .OrderBy(p => p.ProcCode)
             .Take(limit)
             .Select(p => new CodeLibraryItemDto { Code = p.ProcCode, Description = p.ProcDescription })
@@ -155,6 +191,9 @@ public class CodeLibraryController : ControllerBase
     [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> Import([FromForm] string type, [FromForm] IFormFile? file)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (string.IsNullOrWhiteSpace(type))
             return BadRequest(new { message = "type is required (diagnosis, modifier, pos, reason, remark)." });
         if (file == null || file.Length == 0)
@@ -193,6 +232,9 @@ public class CodeLibraryController : ControllerBase
     [HttpGet("diagnosis/{id:int}")]
     public async Task<IActionResult> GetDiagnosisById(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var item = await _codeLibraryService.GetDiagnosisByIdAsync(id);
         if (item == null) return NotFound();
         return Ok(item);
@@ -201,6 +243,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPost("diagnosis")]
     public async Task<IActionResult> CreateDiagnosis([FromBody] DiagnosisCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || string.IsNullOrWhiteSpace(dto.Code))
             return BadRequest(new { message = "Code is required." });
         var created = await _codeLibraryService.CreateDiagnosisAsync(dto);
@@ -210,6 +255,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPut("diagnosis/{id:int}")]
     public async Task<IActionResult> UpdateDiagnosis(int id, [FromBody] DiagnosisCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || id != dto.Id) return BadRequest();
         await _codeLibraryService.UpdateDiagnosisAsync(dto);
         return Ok();
@@ -218,6 +266,9 @@ public class CodeLibraryController : ControllerBase
     [HttpDelete("diagnosis/{id:int}")]
     public async Task<IActionResult> DeleteDiagnosis(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         await _codeLibraryService.DeleteDiagnosisAsync(id);
         return Ok(new { success = true });
     }
@@ -226,6 +277,9 @@ public class CodeLibraryController : ControllerBase
     [HttpGet("modifiers/{id:int}")]
     public async Task<IActionResult> GetModifierById(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var item = await _codeLibraryService.GetModifierByIdAsync(id);
         if (item == null) return NotFound();
         return Ok(item);
@@ -234,6 +288,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPost("modifiers")]
     public async Task<IActionResult> CreateModifier([FromBody] SimpleCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || string.IsNullOrWhiteSpace(dto.Code))
             return BadRequest(new { message = "Code is required." });
         var created = await _codeLibraryService.CreateModifierAsync(dto);
@@ -243,6 +300,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPut("modifiers/{id:int}")]
     public async Task<IActionResult> UpdateModifier(int id, [FromBody] SimpleCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || id != dto.Id) return BadRequest();
         await _codeLibraryService.UpdateModifierAsync(dto);
         return Ok();
@@ -251,6 +311,9 @@ public class CodeLibraryController : ControllerBase
     [HttpDelete("modifiers/{id:int}")]
     public async Task<IActionResult> DeleteModifier(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         await _codeLibraryService.DeleteModifierAsync(id);
         return Ok(new { success = true });
     }
@@ -258,6 +321,9 @@ public class CodeLibraryController : ControllerBase
     [HttpGet("pos/{id:int}")]
     public async Task<IActionResult> GetPlaceOfServiceById(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var item = await _codeLibraryService.GetPlaceOfServiceByIdAsync(id);
         if (item == null) return NotFound();
         return Ok(item);
@@ -266,6 +332,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPost("pos")]
     public async Task<IActionResult> CreatePlaceOfService([FromBody] SimpleCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || string.IsNullOrWhiteSpace(dto.Code))
             return BadRequest(new { message = "Code is required." });
         var created = await _codeLibraryService.CreatePlaceOfServiceAsync(dto);
@@ -275,6 +344,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPut("pos/{id:int}")]
     public async Task<IActionResult> UpdatePlaceOfService(int id, [FromBody] SimpleCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || id != dto.Id) return BadRequest();
         await _codeLibraryService.UpdatePlaceOfServiceAsync(dto);
         return Ok();
@@ -283,6 +355,9 @@ public class CodeLibraryController : ControllerBase
     [HttpDelete("pos/{id:int}")]
     public async Task<IActionResult> DeletePlaceOfService(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         await _codeLibraryService.DeletePlaceOfServiceAsync(id);
         return Ok(new { success = true });
     }
@@ -290,6 +365,9 @@ public class CodeLibraryController : ControllerBase
     [HttpGet("reasons/{id:int}")]
     public async Task<IActionResult> GetReasonById(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var item = await _codeLibraryService.GetReasonByIdAsync(id);
         if (item == null) return NotFound();
         return Ok(item);
@@ -298,6 +376,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPost("reasons")]
     public async Task<IActionResult> CreateReason([FromBody] SimpleCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || string.IsNullOrWhiteSpace(dto.Code))
             return BadRequest(new { message = "Code is required." });
         var created = await _codeLibraryService.CreateReasonAsync(dto);
@@ -307,6 +388,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPut("reasons/{id:int}")]
     public async Task<IActionResult> UpdateReason(int id, [FromBody] SimpleCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || id != dto.Id) return BadRequest();
         await _codeLibraryService.UpdateReasonAsync(dto);
         return Ok();
@@ -315,6 +399,9 @@ public class CodeLibraryController : ControllerBase
     [HttpDelete("reasons/{id:int}")]
     public async Task<IActionResult> DeleteReason(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         await _codeLibraryService.DeleteReasonAsync(id);
         return Ok(new { success = true });
     }
@@ -322,6 +409,9 @@ public class CodeLibraryController : ControllerBase
     [HttpGet("remarks/{id:int}")]
     public async Task<IActionResult> GetRemarkById(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         var item = await _codeLibraryService.GetRemarkByIdAsync(id);
         if (item == null) return NotFound();
         return Ok(item);
@@ -330,6 +420,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPost("remarks")]
     public async Task<IActionResult> CreateRemark([FromBody] SimpleCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || string.IsNullOrWhiteSpace(dto.Code))
             return BadRequest(new { message = "Code is required." });
         var created = await _codeLibraryService.CreateRemarkAsync(dto);
@@ -339,6 +432,9 @@ public class CodeLibraryController : ControllerBase
     [HttpPut("remarks/{id:int}")]
     public async Task<IActionResult> UpdateRemark(int id, [FromBody] SimpleCodeDto dto)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         if (dto == null || id != dto.Id) return BadRequest();
         await _codeLibraryService.UpdateRemarkAsync(dto);
         return Ok();
@@ -347,6 +443,9 @@ public class CodeLibraryController : ControllerBase
     [HttpDelete("remarks/{id:int}")]
     public async Task<IActionResult> DeleteRemark(int id)
     {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+
         await _codeLibraryService.DeleteRemarkAsync(id);
         return Ok(new { success = true });
     }

@@ -77,6 +77,17 @@ public class ClaimRepository : IClaimRepository
         var fid = _currentContext.FacilityId;
         var claim = await _context.Claims.FirstOrDefaultAsync(c => c.ClaID == claimId && c.FacilityId == fid);
         if (claim == null) return;
+        var lineRollups = await _context.Service_Lines
+            .AsNoTracking()
+            .Where(s => s.SrvClaFID == claimId && s.FacilityId == fid)
+            .Select(s => new
+            {
+                s.SrvTotalBalanceCC,
+                s.SrvTotalInsBalanceCC,
+                s.SrvTotalPatBalanceCC
+            })
+            .ToListAsync();
+
         claim.ClaTotalChargeTRIG = totals.TotalCharge;
         claim.ClaTotalInsAmtPaidTRIG = totals.TotalInsAmtPaid;
         claim.ClaTotalPatAmtPaidTRIG = totals.TotalPatAmtPaid;
@@ -86,7 +97,16 @@ public class ClaimRepository : IClaimRepository
         claim.ClaTotalPIAdjTRIG = totals.TotalPIAdj;
         claim.ClaTotalPRAdjTRIG = totals.TotalPRAdj;
         decimal totalAdj = totals.TotalCOAdj + totals.TotalCRAdj + totals.TotalOAAdj + totals.TotalPIAdj + totals.TotalPRAdj;
-        claim.ClaTotalBalanceCC = totals.TotalCharge - totals.TotalInsAmtPaid - totals.TotalPatAmtPaid - totalAdj;
+        var computedTotalBalance = totals.TotalCharge - totals.TotalInsAmtPaid - totals.TotalPatAmtPaid - totalAdj;
+        claim.ClaTotalBalanceCC = lineRollups.Count > 0
+            ? lineRollups.Sum(x => x.SrvTotalBalanceCC ?? 0m)
+            : computedTotalBalance;
+        claim.ClaTotalInsBalanceTRIG = lineRollups.Count > 0
+            ? lineRollups.Sum(x => x.SrvTotalInsBalanceCC ?? 0m)
+            : (claim.ClaTotalBalanceCC ?? 0m);
+        claim.ClaTotalPatBalanceTRIG = lineRollups.Count > 0
+            ? lineRollups.Sum(x => x.SrvTotalPatBalanceCC ?? 0m)
+            : 0m;
         await _context.SaveChangesAsync();
     }
 
