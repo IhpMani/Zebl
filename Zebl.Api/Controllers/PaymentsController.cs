@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Zebl.Application.Dtos.Common;
 using Zebl.Application.Dtos.Payments;
@@ -27,14 +28,19 @@ namespace Zebl.Api.Controllers
             _logger = logger;
         }
 
-        /// <summary>Get service lines for payment entry grid by patient (and optional payer).</summary>
+        /// <summary>Get service lines for payment entry grid by claim (preferred) or patient (optional payer filter).</summary>
         [HttpGet("entry/service-lines"), ActionName(nameof(GetServiceLinesForEntry))]
-        public async Task<IActionResult> GetServiceLinesForEntry([FromQuery] int patientId, [FromQuery] int? payerId = null)
+        public async Task<IActionResult> GetServiceLinesForEntry([FromQuery] int? claimId = null, [FromQuery] int? patientId = null, [FromQuery] int? payerId = null)
         {
-            if (patientId <= 0)
-                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "patientId is required and must be greater than 0." });
             var isPayerSource = payerId.HasValue && payerId.Value > 0;
-            var lines = await _serviceLineRepo.GetPaymentEntryLinesAsync(patientId, payerId, isPayerSource);
+            List<PaymentEntryServiceLineDto> lines;
+            if (claimId.HasValue && claimId.Value > 0)
+                lines = await _serviceLineRepo.GetPaymentEntryLinesByClaimIdAsync(claimId.Value, payerId, isPayerSource);
+            else if (patientId.HasValue && patientId.Value > 0)
+                lines = await _serviceLineRepo.GetPaymentEntryLinesAsync(patientId.Value, payerId, isPayerSource);
+            else
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "claimId or patientId is required and must be greater than 0." });
+
             return Ok(new ApiResponse<List<PaymentEntryServiceLineDto>> { Data = lines });
         }
 

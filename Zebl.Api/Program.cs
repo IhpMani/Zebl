@@ -1,5 +1,6 @@
 using System.Text;
 using System.Threading.RateLimiting;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Zebl.Application.Options;
@@ -322,15 +323,36 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 #region Database startup — apply EF migrations only (no ad-hoc schema SQL)
+if (builder.Configuration.GetValue("Database:ApplyMigrationsAtStartup", true))
 {
     var csBootstrap = builder.Configuration.GetConnectionString("DefaultConnection");
     if (!string.IsNullOrWhiteSpace(csBootstrap))
     {
-        var bootstrapOptions = new DbContextOptionsBuilder<ZeblDbContext>().UseSqlServer(csBootstrap).Options;
+        // Pooling=false avoids connection-pool session swaps that can break EF's __EFMigrationsLock
+        // (sp_getapplock / sp_releaseapplock are per-session; SQL error 1223 on release otherwise).
+        var csb = new SqlConnectionStringBuilder(csBootstrap) { Pooling = false };
+        var bootstrapOptions = new DbContextOptionsBuilder<ZeblDbContext>()
+            .UseSqlServer(csb.ConnectionString)
+            .Options;
         try
         {
             using var db = new ZeblDbContext(bootstrapOptions);
             db.Database.Migrate();
+        }
+        catch (SqlException ex) when (ex.Number == 1223)
+        {
+            using var verifyDb = new ZeblDbContext(bootstrapOptions);
+            if (verifyDb.Database.GetPendingMigrations().Any())
+            {
+                Log.Error(ex, "Database migration lock release failed (1223) and migrations are still pending.");
+                if (app.Environment.IsDevelopment())
+                    throw;
+            }
+            else
+            {
+                Log.Warning(ex,
+                    "EF migration lock release failed (SQL 1223) but the database has no pending migrations; continuing startup.");
+            }
         }
         catch (Exception ex)
         {

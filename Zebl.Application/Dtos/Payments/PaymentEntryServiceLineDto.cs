@@ -5,6 +5,12 @@ namespace Zebl.Application.Dtos.Payments;
 /// </summary>
 public class PaymentEntryServiceLineDto
 {
+    /// <summary>Claim this line belongs to (same on every row for a claim-scoped query).</summary>
+    public int ClaimId { get; set; }
+
+    /// <summary>Patient on the claim (for create-payment command).</summary>
+    public int PatientId { get; set; }
+
     public int ServiceLineId { get; set; }
     public string? Name { get; set; }
     public string? Dos { get; set; }

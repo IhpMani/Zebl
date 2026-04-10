@@ -14,6 +14,9 @@ public interface IServiceLineRepository
     Task<List<ServiceLineTotals>> GetForAutoApplyAsync(int patientId, int? payerId, bool isPayerSource);
     /// <summary>Service lines for payment entry grid: patient name, DOS, proc, charge, responsible, applied, balance.</summary>
     Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesAsync(int patientId, int? payerId, bool isPayerSource);
+
+    /// <summary>Payment entry lines for one claim only (patient may have many claims).</summary>
+    Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesByClaimIdAsync(int claimId, int? payerId, bool isPayerSource);
     /// <summary>Add amount to SrvTotalInsAmtPaidTRIG. Returns claim id for recalc.</summary>
     Task<int?> AddInsPaidAsync(int serviceLineId, decimal amount);
     /// <summary>Add amount to SrvTotalPatAmtPaidTRIG. Returns claim id for recalc.</summary>

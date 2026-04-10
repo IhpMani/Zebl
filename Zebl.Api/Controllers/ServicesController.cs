@@ -475,11 +475,18 @@ namespace Zebl.Api.Controllers
                 var newUnits = (int)Math.Round(request.SrvUnits!.Value);
                 entity.SrvUnits = request.SrvUnits;
 
-                // EZClaim units change rule: ONLY charge/allowed recalc from old unit price.
+                // EZClaim units change rule: scale from prior totals unless the client sent explicit amounts.
                 if (newUnits > 0 && oldUnits > 0 && newUnits != oldUnits)
                 {
-                    entity.SrvCharges = _claimChargeCalculator.RecalculateCharge(oldCharge, oldUnits, newUnits);
-                    entity.SrvAllowedAmt = _claimChargeCalculator.RecalculateCharge(oldAllowed, oldUnits, newUnits);
+                    if (request.SrvCharges.HasValue && request.SrvCharges.Value > 0m)
+                        entity.SrvCharges = request.SrvCharges.Value;
+                    else
+                        entity.SrvCharges = _claimChargeCalculator.RecalculateCharge(oldCharge, oldUnits, newUnits);
+
+                    if (request.SrvAllowedAmt.HasValue)
+                        entity.SrvAllowedAmt = request.SrvAllowedAmt.Value;
+                    else
+                        entity.SrvAllowedAmt = _claimChargeCalculator.RecalculateCharge(oldAllowed, oldUnits, newUnits);
                 }
                 else
                 {
@@ -570,9 +577,10 @@ namespace Zebl.Api.Controllers
         {
             if (string.IsNullOrWhiteSpace(entity.SrvProcedureCode)) return;
 
-            // Backfill fee/description when frontend sends a pasted procedure code with zero charge.
-            var missingCharge = entity.SrvCharges <= 0m;
-            if (!request.ApplyProcedureLookup && !missingCharge) return;
+            // Use incoming request amounts when present — UpdateServiceLine has not merged SrvCharges yet,
+            // so entity.SrvCharges alone wrongly triggers lookup and overwrites user-entered fees.
+            var effectiveCharge = request.SrvCharges ?? entity.SrvCharges;
+            if (!request.ApplyProcedureLookup && effectiveCharge > 0m) return;
 
             var lookup = await _procedureLookupService.LookupAsync(
                 entity.TenantId,
@@ -585,11 +593,16 @@ namespace Zebl.Api.Controllers
 
             if (lookup == null) return;
 
-            var units = entity.SrvUnits.HasValue && entity.SrvUnits.Value > 0 ? (int)Math.Round(entity.SrvUnits.Value) : 1;
+            var units = request.SrvUnits.HasValue && request.SrvUnits.Value > 0
+                ? (int)Math.Round(request.SrvUnits.Value)
+                : (entity.SrvUnits.HasValue && entity.SrvUnits.Value > 0 ? (int)Math.Round(entity.SrvUnits.Value) : 1);
             var calc = _claimChargeCalculator.Calculate(lookup, units, entity.SrvCharges, entity.SrvAllowedAmt, false);
 
             entity.SrvProcedureCode = lookup.ProcCode;
-            entity.SrvUnits = lookup.ProcUnits > 0 ? lookup.ProcUnits : entity.SrvUnits;
+            if (request.SrvUnits.HasValue && request.SrvUnits.Value > 0)
+                entity.SrvUnits = request.SrvUnits;
+            else if (lookup.ProcUnits > 0)
+                entity.SrvUnits = lookup.ProcUnits;
             entity.SrvCharges = calc.Charge;
             entity.SrvAllowedAmt = calc.Allowed;
             entity.SrvDesc = lookup.ProcDescription;

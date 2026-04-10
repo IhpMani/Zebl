@@ -97,14 +97,27 @@ public class ServiceLineRepository : IServiceLineRepository
         return list;
     }
 
-    public async Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesAsync(int patientId, int? payerId, bool isPayerSource)
+    public Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesAsync(int patientId, int? payerId, bool isPayerSource) =>
+        GetPaymentEntryLinesCoreAsync(patientId: patientId, claimId: null, payerId: payerId, isPayerSource: isPayerSource);
+
+    public Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesByClaimIdAsync(int claimId, int? payerId, bool isPayerSource) =>
+        GetPaymentEntryLinesCoreAsync(patientId: null, claimId: claimId, payerId: payerId, isPayerSource: isPayerSource);
+
+    private async Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesCoreAsync(int? patientId, int? claimId, int? payerId, bool isPayerSource)
     {
         var fid = _currentContext.FacilityId;
         var query = from s in _context.Service_Lines.AsNoTracking()
                     join c in _context.Claims.AsNoTracking() on s.SrvClaFID equals c.ClaID
                     join p in _context.Patients.AsNoTracking() on c.ClaPatFID equals p.PatID
-                    where c.ClaPatFID == patientId && s.FacilityId == fid
+                    where s.FacilityId == fid && c.FacilityId == fid
                     select new { s, c, p };
+
+        if (claimId.HasValue && claimId.Value > 0)
+            query = query.Where(x => x.c.ClaID == claimId.Value);
+        else if (patientId.HasValue && patientId.Value > 0)
+            query = query.Where(x => x.c.ClaPatFID == patientId.Value);
+        else
+            return new List<PaymentEntryServiceLineDto>();
 
         if (isPayerSource && payerId.HasValue && payerId.Value > 0)
             query = query.Where(x => x.s.SrvResponsibleParty == payerId.Value);
@@ -114,6 +127,8 @@ public class ServiceLineRepository : IServiceLineRepository
             .ThenBy(x => x.s.SrvID)
             .Select(x => new
             {
+                x.c.ClaID,
+                x.c.ClaPatFID,
                 x.s.SrvID,
                 x.s.SrvFromDate,
                 x.s.SrvProcedureCode,
@@ -167,6 +182,8 @@ public class ServiceLineRepository : IServiceLineRepository
             var responsible = x.SrvResponsibleParty == 0 ? "Patient" : (payerNames.TryGetValue(x.SrvResponsibleParty, out var name) ? name : null);
             return new PaymentEntryServiceLineDto
             {
+                ClaimId = x.ClaID,
+                PatientId = x.ClaPatFID,
                 ServiceLineId = x.SrvID,
                 Name = x.PatName?.Trim(),
                 Dos = x.SrvFromDate != default ? x.SrvFromDate.ToString("MM/dd/yyyy") : null,

@@ -8,6 +8,10 @@ public class PaymentForEditDto
     public int PaymentId { get; set; }
     public PaymentSourceKind PaymentSource { get; set; }
     public int? PayerId { get; set; }
+
+    /// <summary>First claim found on payment disbursements (for payment entry grid by claim).</summary>
+    public int? ClaimId { get; set; }
+
     public int PatientId { get; set; }
     public decimal Amount { get; set; }
     public DateOnly Date { get; set; }

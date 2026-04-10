@@ -172,6 +172,16 @@ public class PaymentRepository : IPaymentRepository
                 Remaining = x.PmtRemainingCC
             })
             .FirstOrDefaultAsync();
+        if (p == null)
+            return null;
+
+        p.ClaimId = await (
+            from d in _context.Disbursements.AsNoTracking()
+            join s in _context.Service_Lines.AsNoTracking() on d.DisbSrvFID equals s.SrvID
+            where d.DisbPmtFID == paymentId && s.FacilityId == fid
+            select (int?)s.SrvClaFID
+        ).FirstOrDefaultAsync();
+
         return p;
     }
 
