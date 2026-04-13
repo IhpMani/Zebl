@@ -4,7 +4,7 @@ using Zebl.Application.Domain;
 
 namespace Zebl.Infrastructure.Persistence.Entities;
 
-public partial class Procedure_Code : IProcedureCode
+public partial class Procedure_Code : IProcedureCode, ITenantEntity, ITenantFacilityEntity
 {
     DateTime? IProcedureCode.ProcStart => ProcStart.HasValue ? ProcStart.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null;
     DateTime? IProcedureCode.ProcEnd => ProcEnd.HasValue ? ProcEnd.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null;
@@ -15,6 +15,8 @@ public partial class Procedure_Code : IProcedureCode
     public int ProcID { get; set; }
 
     public int TenantId { get; set; }
+
+    public int FacilityId { get; set; }
 
     public DateTime ProcDateTimeCreated { get; set; }
 

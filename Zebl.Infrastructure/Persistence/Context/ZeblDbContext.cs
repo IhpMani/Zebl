@@ -1348,12 +1348,13 @@ public partial class ZeblDbContext : DbContext
 
             entity.ToTable("Procedure_Code");
 
-            entity.HasIndex(e => new { e.TenantId, e.ProcCode, e.ProcProductCode })
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId, e.ProcCode, e.ProcProductCode })
                 .IsUnique()
-                .HasDatabaseName("UX_Procedure_Code_Tenant_ProcCode_Product")
+                .HasDatabaseName("UX_Procedure_Code_Tenant_Facility_ProcCode_Product")
                 .HasFilter("[ProcProductCode] IS NOT NULL");
 
-            entity.HasIndex(e => e.TenantId).HasDatabaseName("IX_Procedure_Code_TenantId");
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId })
+                .HasDatabaseName("IX_Procedure_Code_Tenant_Facility");
 
             entity.Property(e => e.ProcAdjust).HasColumnType("money");
             entity.Property(e => e.ProcAllowed).HasColumnType("money");
@@ -1433,6 +1434,11 @@ public partial class ZeblDbContext : DbContext
                 .HasForeignKey(e => e.TenantId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_Procedure_Code_Tenant");
+
+            entity.HasOne<FacilityScope>().WithMany()
+                .HasForeignKey(e => e.FacilityId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_Procedure_Code_FacilityScope");
         });
 
         modelBuilder.Entity<Service_Line>(entity =>
@@ -1689,6 +1695,7 @@ public partial class ZeblDbContext : DbContext
         modelBuilder.Entity<CustomFieldValue>().HasQueryFilter(x => x.TenantId == ScopedTenantIdForQuery);
         modelBuilder.Entity<ClaimTemplate>().HasQueryFilter(x => x.TenantId == ScopedTenantIdForQuery);
         modelBuilder.Entity<EdiReport>().HasQueryFilter(r => r.TenantId == ScopedTenantIdForQuery);
+        modelBuilder.Entity<Procedure_Code>().HasQueryFilter(p => p.TenantId == ScopedTenantIdForQuery && p.FacilityId == ScopedFacilityIdForQuery);
     }
 
     public override int SaveChanges()

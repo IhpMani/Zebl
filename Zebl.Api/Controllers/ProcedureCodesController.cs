@@ -22,25 +22,30 @@ public class ProcedureCodesController : ControllerBase
     private readonly IClaimChargeCalculator _chargeCalculator;
     private readonly INOC837Formatter _nocFormatter;
     private readonly ICurrentUserContext _userContext;
+    private readonly ICurrentContext _currentContext;
 
     public ProcedureCodesController(
         Context.ZeblDbContext context,
         IProcedureCodeLookupService lookupService,
         IClaimChargeCalculator chargeCalculator,
         INOC837Formatter nocFormatter,
-        ICurrentUserContext userContext)
+        ICurrentUserContext userContext,
+        ICurrentContext currentContext)
     {
         _context = context;
         _lookupService = lookupService;
         _chargeCalculator = chargeCalculator;
         _nocFormatter = nocFormatter;
         _userContext = userContext;
+        _currentContext = currentContext;
     }
 
-    private IActionResult? RequireTenant()
+    private IActionResult? RequireTenantAndFacility()
     {
         if (_userContext.TenantId <= 0)
             return BadRequest(new { message = "A valid tenant is required for procedure codes." });
+        if (_currentContext.FacilityId <= 0)
+            return BadRequest(new { message = "A valid facility is required for procedure codes." });
         return null;
     }
 
@@ -55,11 +60,12 @@ public class ProcedureCodesController : ControllerBase
         [FromQuery] string? category = null,
         [FromQuery] string? subCategory = null)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         var tid = _userContext.TenantId;
-        var query = _context.Procedure_Codes.AsNoTracking().Where(p => p.TenantId == tid);
+        var fid = _currentContext.FacilityId;
+        var query = _context.Procedure_Codes.AsNoTracking().Where(p => p.TenantId == tid && p.FacilityId == fid);
 
         if (!string.IsNullOrWhiteSpace(code))
             query = query.Where(p => p.ProcCode.Contains(code.Trim()));
@@ -91,7 +97,7 @@ public class ProcedureCodesController : ControllerBase
         [FromQuery] System.DateTime? serviceDate,
         [FromQuery] string? productCode)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         if (string.IsNullOrWhiteSpace(procedureCode))
@@ -100,6 +106,7 @@ public class ProcedureCodesController : ControllerBase
         var serviceDateValue = serviceDate ?? System.DateTime.UtcNow.Date;
         var best = await _lookupService.LookupAsync(
             _userContext.TenantId,
+            _currentContext.FacilityId,
             procedureCode.Trim(),
             payerId,
             billingPhysicianId,
@@ -142,16 +149,17 @@ public class ProcedureCodesController : ControllerBase
     [HttpGet("{code}")]
     public async Task<IActionResult> GetByCode(string code)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         if (string.IsNullOrWhiteSpace(code))
             return BadRequest(new { message = "Procedure code is required." });
 
         var tid = _userContext.TenantId;
+        var fid = _currentContext.FacilityId;
         var entity = await _context.Procedure_Codes
             .AsNoTracking()
-            .Where(p => p.TenantId == tid && p.ProcCode == code.Trim())
+            .Where(p => p.TenantId == tid && p.FacilityId == fid && p.ProcCode == code.Trim())
             .OrderBy(p => p.ProcProductCode)
             .FirstOrDefaultAsync();
 
@@ -178,13 +186,14 @@ public class ProcedureCodesController : ControllerBase
     [HttpGet("id/{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         var tid = _userContext.TenantId;
+        var fid = _currentContext.FacilityId;
         var entity = await _context.Procedure_Codes
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid);
+            .FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid && p.FacilityId == fid);
 
         if (entity == null)
             return NotFound();
@@ -198,7 +207,7 @@ public class ProcedureCodesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] Procedure_Code model)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         if (model == null)
@@ -210,6 +219,7 @@ public class ProcedureCodesController : ControllerBase
 
         model.ProcID = 0;
         model.TenantId = _userContext.TenantId;
+        model.FacilityId = _currentContext.FacilityId;
         _context.Procedure_Codes.Add(model);
         await _context.SaveChangesAsync();
         return StatusCode(201, model);
@@ -221,7 +231,7 @@ public class ProcedureCodesController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] Procedure_Code model)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         if (model == null)
@@ -234,15 +244,18 @@ public class ProcedureCodesController : ControllerBase
             return BadRequest(new { message = "ProcUnits must be greater than or equal to 1." });
 
         var tid = _userContext.TenantId;
-        var existing = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid);
+        var fid = _currentContext.FacilityId;
+        var existing = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid && p.FacilityId == fid);
         if (existing == null)
             return NotFound();
 
         var keepProcId = existing.ProcID;
         var keepTenant = existing.TenantId;
+        var keepFacility = existing.FacilityId;
         _context.Entry(existing).CurrentValues.SetValues(model);
         existing.ProcID = keepProcId;
         existing.TenantId = keepTenant;
+        existing.FacilityId = keepFacility;
 
         await _context.SaveChangesAsync();
         return Ok(existing);
@@ -254,11 +267,12 @@ public class ProcedureCodesController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         var tid = _userContext.TenantId;
-        var entity = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid);
+        var fid = _currentContext.FacilityId;
+        var entity = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == id && p.TenantId == tid && p.FacilityId == fid);
         if (entity == null)
             return NotFound();
 
@@ -273,10 +287,11 @@ public class ProcedureCodesController : ControllerBase
     [HttpPost("bulk-save")]
     public async Task<IActionResult> BulkSave([FromBody] List<Procedure_Code> items)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         var tid = _userContext.TenantId;
+        var fid = _currentContext.FacilityId;
 
         if (items == null)
             return BadRequest(new { message = "Request body is required." });
@@ -368,25 +383,28 @@ public class ProcedureCodesController : ControllerBase
             if (item.ProcID == 0)
             {
                 item.TenantId = tid;
+                item.FacilityId = fid;
                 _context.Procedure_Codes.Add(item);
             }
             else
             {
-                var existing = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == item.ProcID && p.TenantId == tid);
+                var existing = await _context.Procedure_Codes.FirstOrDefaultAsync(p => p.ProcID == item.ProcID && p.TenantId == tid && p.FacilityId == fid);
                 if (existing == null)
                 {
                     return BadRequest(new
                     {
-                        message = $"Procedure ProcID {item.ProcID} was not found for your tenant.",
+                        message = $"Procedure ProcID {item.ProcID} was not found for your facility.",
                         code = "ProcedureNotFound"
                     });
                 }
 
                 var keepProcId = existing.ProcID;
                 var keepTenant = existing.TenantId;
+                var keepFacility = existing.FacilityId;
                 _context.Entry(existing).CurrentValues.SetValues(item);
                 existing.ProcID = keepProcId;
                 existing.TenantId = keepTenant;
+                existing.FacilityId = keepFacility;
             }
         }
 

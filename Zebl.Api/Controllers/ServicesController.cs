@@ -584,6 +584,7 @@ namespace Zebl.Api.Controllers
 
             var lookup = await _procedureLookupService.LookupAsync(
                 entity.TenantId,
+                entity.FacilityId,
                 entity.SrvProcedureCode,
                 null,
                 null,

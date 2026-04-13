@@ -13,6 +13,7 @@ public interface IProcedureCodeLookupService
     /// </summary>
     Task<IProcedureCode?> LookupAsync(
         int tenantId,
+        int facilityId,
         string procedureCode,
         int? payerId,
         int? billingPhysicianId,

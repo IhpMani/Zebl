@@ -17,22 +17,34 @@ public class CodeLibraryController : ControllerBase
     private readonly ZeblDbContext _context;
     private readonly ICodeLibraryService _codeLibraryService;
     private readonly ICurrentUserContext _userContext;
+    private readonly ICurrentContext _currentContext;
     private const int MaxLookupRows = 100;
 
     public CodeLibraryController(
         ZeblDbContext context,
         ICodeLibraryService codeLibraryService,
-        ICurrentUserContext userContext)
+        ICurrentUserContext userContext,
+        ICurrentContext currentContext)
     {
         _context = context;
         _codeLibraryService = codeLibraryService;
         _userContext = userContext;
+        _currentContext = currentContext;
     }
 
     private IActionResult? RequireTenant()
     {
         if (_userContext.TenantId <= 0)
             return BadRequest(new { message = "A valid tenant is required for the code library." });
+        return null;
+    }
+
+    private IActionResult? RequireTenantAndFacility()
+    {
+        var bad = RequireTenant();
+        if (bad != null) return bad;
+        if (_currentContext.FacilityId <= 0)
+            return BadRequest(new { message = "A valid facility is required for procedure code lookups." });
         return null;
     }
 
@@ -43,11 +55,12 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] int pageSize = 50,
         [FromQuery] string? search = null)
     {
-        var bad = RequireTenant();
+        var bad = RequireTenantAndFacility();
         if (bad != null) return bad;
 
         var tid = _userContext.TenantId;
-        var query = _context.Procedure_Codes.AsNoTracking().Where(p => p.TenantId == tid);
+        var fid = _currentContext.FacilityId;
+        var query = _context.Procedure_Codes.AsNoTracking().Where(p => p.TenantId == tid && p.FacilityId == fid);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var s = search.Trim();
@@ -141,13 +154,21 @@ public class CodeLibraryController : ControllerBase
         [FromQuery] string? q = null,
         [FromQuery] string? keyword = null)
     {
-        var bad = RequireTenant();
-        if (bad != null) return bad;
-
         var term = (q ?? keyword ?? "").Trim();
         var t = (type ?? "").Trim().ToLowerInvariant();
         if (string.IsNullOrEmpty(t))
             return BadRequest(new { message = "type is required (diagnosis, modifier, pos, procedure)." });
+
+        if (t == "procedure")
+        {
+            var procBad = RequireTenantAndFacility();
+            if (procBad != null) return procBad;
+        }
+        else
+        {
+            var bad = RequireTenant();
+            if (bad != null) return bad;
+        }
 
         List<CodeLibraryItemDto> list;
         switch (t)
@@ -176,8 +197,9 @@ public class CodeLibraryController : ControllerBase
         if (string.IsNullOrWhiteSpace(keyword))
             return new List<CodeLibraryItemDto>();
         var tid = _userContext.TenantId;
+        var fid = _currentContext.FacilityId;
         var list = await _context.Procedure_Codes.AsNoTracking()
-            .Where(p => p.TenantId == tid && (p.ProcCode.Contains(keyword) || (p.ProcDescription != null && p.ProcDescription.Contains(keyword))))
+            .Where(p => p.TenantId == tid && p.FacilityId == fid && (p.ProcCode.Contains(keyword) || (p.ProcDescription != null && p.ProcDescription.Contains(keyword))))
             .OrderBy(p => p.ProcCode)
             .Take(limit)
             .Select(p => new CodeLibraryItemDto { Code = p.ProcCode, Description = p.ProcDescription })
