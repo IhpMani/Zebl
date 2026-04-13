@@ -91,7 +91,10 @@ if (builder.Environment.IsProduction())
 #region Database
 void ConfigureDbContextOptions(DbContextOptionsBuilder options)
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseSqlServer(
+        conn,
+        sql => sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null));
 
     if (builder.Environment.IsDevelopment())
     {
@@ -332,7 +335,9 @@ if (builder.Configuration.GetValue("Database:ApplyMigrationsAtStartup", true))
         // (sp_getapplock / sp_releaseapplock are per-session; SQL error 1223 on release otherwise).
         var csb = new SqlConnectionStringBuilder(csBootstrap) { Pooling = false };
         var bootstrapOptions = new DbContextOptionsBuilder<ZeblDbContext>()
-            .UseSqlServer(csb.ConnectionString)
+            .UseSqlServer(
+                csb.ConnectionString,
+                sql => sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null))
             .Options;
         try
         {
@@ -356,7 +361,19 @@ if (builder.Configuration.GetValue("Database:ApplyMigrationsAtStartup", true))
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Database migration at startup failed.");
+            var sql = ex as SqlException ?? ex.InnerException as SqlException;
+            if (sql != null)
+            {
+                Log.Error(
+                    ex,
+                    "Database migration at startup failed (SQL {SqlNumber}). The server in ConnectionStrings:DefaultConnection is unreachable or the name is wrong. For local dev, use appsettings.Development.json with a reachable SQL instance (e.g. LocalDB), or set Database:ApplyMigrationsAtStartup to false.",
+                    sql.Number);
+            }
+            else
+            {
+                Log.Error(ex, "Database migration at startup failed.");
+            }
+
             if (app.Environment.IsDevelopment())
                 throw;
         }
@@ -381,6 +398,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseRateLimiter();
+app.UseMiddleware<SessionValidationMiddleware>();
 // Before authorization so handlers/controllers that use ZeblDbContext always see a validated facility (when required).
 app.UseMiddleware<FacilityContextValidationMiddleware>();
 app.UseAuthorization();

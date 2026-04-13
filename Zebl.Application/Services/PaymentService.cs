@@ -80,7 +80,7 @@ public class PaymentService : IPaymentService
             var srv = await _serviceLineRepo.GetTotalsByIdAsync(app.ServiceLineId);
             if (srv == null)
                 throw new InvalidOperationException($"Service line {app.ServiceLineId} not found.");
-            decimal remaining = GetServiceLineBalance(srv, isPayer);
+            decimal remaining = GetServiceLineBalance(srv);
             decimal adjSum = GetTotalAdjustmentAmountForLine(app, remaining, trackPrAdjs);
             decimal totalApply = app.PaymentAmount + adjSum;
             if (totalApply < -Tolerance)
@@ -129,7 +129,7 @@ public class PaymentService : IPaymentService
                 if (srv == null) continue;
                 var currentResponsiblePayerId = await _serviceLineRepo.GetPayerIdForLineAsync(app.ServiceLineId);
 
-                decimal balance = GetServiceLineBalance(srv, isPayer);
+                decimal balance = GetServiceLineBalance(srv);
                 decimal toApply = command.AllowOverApply ? app.PaymentAmount : Math.Min(app.PaymentAmount, balance);
                 _logger.LogInformation(
                     "Applying payment line ServiceLineId={ServiceLineId}, PaymentAmount={PaymentAmount}, ToApply={ToApply}, Adjustments={AdjustmentCount}, Source={Source}",
@@ -261,7 +261,7 @@ public class PaymentService : IPaymentService
         foreach (var srv in lines)
         {
             if (applied >= remaining) break;
-            decimal balance = isPayer ? (srv.Charges - srv.TotalInsAmtPaid - srv.TotalCOAdj - srv.TotalCRAdj - srv.TotalOAAdj - srv.TotalPIAdj - srv.TotalPRAdj) : (srv.Charges - srv.TotalPatAmtPaid - srv.TotalCOAdj - srv.TotalCRAdj - srv.TotalOAAdj - srv.TotalPIAdj - srv.TotalPRAdj);
+            decimal balance = GetServiceLineBalance(srv);
             if (balance <= 0) continue;
             decimal toApply = Math.Min(remaining - applied, balance);
             await _disbursementRepo.AddAsync(paymentId, srv.SrvID, srv.SrvGUID, toApply);
@@ -289,7 +289,7 @@ public class PaymentService : IPaymentService
             var info = await _serviceLineRepo.GetBalanceInfoAsync(app.ServiceLineId);
             if (info == null) continue;
             var currentResponsiblePayerId = await _serviceLineRepo.GetPayerIdForLineAsync(app.ServiceLineId);
-            decimal balance = isPayer ? (info.Value.Charges - info.Value.InsPaid - info.Value.TotalAdj) : (info.Value.Charges - info.Value.PatPaid - info.Value.TotalAdj);
+            decimal balance = info.Value.Charges - info.Value.InsPaid - info.Value.PatPaid - info.Value.TotalAdj;
             if (balance <= 0) continue;
             decimal toApply = Math.Min(app.PaymentAmount, Math.Min(remaining - totalApply, balance));
             if (toApply <= 0) continue;
@@ -375,11 +375,11 @@ public class PaymentService : IPaymentService
         return null;
     }
 
-    private static decimal GetServiceLineBalance(ServiceLineTotals srv, bool isPayer)
+    /// <summary>Remaining dollars on the line before this payment (both payer and patient payments reduce capacity).</summary>
+    private static decimal GetServiceLineBalance(ServiceLineTotals srv)
     {
-        decimal paid = isPayer ? srv.TotalInsAmtPaid : srv.TotalPatAmtPaid;
         decimal totalAdj = srv.TotalCOAdj + srv.TotalCRAdj + srv.TotalOAAdj + srv.TotalPIAdj + srv.TotalPRAdj;
-        return srv.Charges - paid - totalAdj;
+        return srv.Charges - srv.TotalInsAmtPaid - srv.TotalPatAmtPaid - totalAdj;
     }
 
     private async Task RecalculateAffectedClaimsAsync(IEnumerable<int> claimIds)

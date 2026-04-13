@@ -306,4 +306,60 @@ public class PaymentServiceTests
         adjustmentRepo.Verify(x => x.AddAsync(1, 1, srvId, It.IsAny<Guid>(), "PR", null, null, 0m, 70m), Times.Once);
         serviceLineRepo.Verify(x => x.RecalculateServiceLineAsync(srvId), Times.Once);
     }
+
+    /// <summary>
+    /// Payer balance must subtract patient payments already on the line; otherwise auto-apply over-allocates insurance and corrupts recalc.
+    /// </summary>
+    [Fact]
+    public async Task PayerPayment_WhenPatientAlreadyPaid_CannotApplyMoreThanInsuranceShare()
+    {
+        var serviceLineRepo = new Mock<IServiceLineRepository>();
+        var claimRepo = new Mock<IClaimRepository>();
+        var paymentRepo = new Mock<IPaymentRepository>();
+        var adjustmentRepo = new Mock<IAdjustmentRepository>();
+        var disbursementRepo = new Mock<IDisbursementRepository>();
+        var payerRepo = new Mock<IPayerRepository>();
+        var claimTotalsService = new ClaimTotalsService();
+        var claimAuditService = new Mock<Zebl.Application.Abstractions.IClaimAuditService>();
+        var transactionScope = new Mock<ITransactionScope>();
+        var reconciliationService = new Mock<IReconciliationService>();
+        var logger = new Mock<ILogger<PaymentService>>();
+
+        int claimId = 50;
+        int srvId = 500;
+        // Charge 824, patient copay 24 already posted, nothing from insurance yet → at most 800 for payer.
+        serviceLineRepo.Setup(x => x.GetTotalsByIdAsync(srvId)).ReturnsAsync(Line(srvId, claimId, 824m, 0, 24m));
+        paymentRepo.Setup(x => x.ExistsDuplicateAsync(It.IsAny<decimal>(), It.IsAny<string?>())).ReturnsAsync(false);
+        payerRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Payer?)null);
+
+        var sut = new PaymentService(
+            paymentRepo.Object,
+            adjustmentRepo.Object,
+            serviceLineRepo.Object,
+            disbursementRepo.Object,
+            claimRepo.Object,
+            payerRepo.Object,
+            claimTotalsService,
+            claimAuditService.Object,
+            transactionScope.Object,
+            reconciliationService.Object,
+            logger.Object);
+
+        var command = new CreatePaymentCommand
+        {
+            PaymentSource = PaymentSourceKind.Payer,
+            PayerId = 1,
+            PatientId = 1,
+            Amount = 824m,
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            AllowOverApply = false,
+            ServiceLineApplications = new List<ServiceLineApplicationDto>
+            {
+                new() { ServiceLineId = srvId, PaymentAmount = 824m, Adjustments = new List<AdjustmentInputDto>() }
+            }
+        };
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.CreatePaymentAsync(command));
+        disbursementRepo.Verify(x => x.AddAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string?>()), Times.Never);
+    }
 }

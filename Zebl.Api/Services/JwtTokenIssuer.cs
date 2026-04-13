@@ -9,7 +9,7 @@ namespace Zebl.Api.Services;
 
 public interface IJwtTokenIssuer
 {
-    string IssueSuperAdminToken(Guid userGuid, string userName, bool isAdmin);
+    string IssueSuperAdminToken(Guid userGuid, string userName, bool isAdmin, string sessionStamp);
 
     string IssueOperationalToken(
         Guid userGuid,
@@ -18,7 +18,8 @@ public interface IJwtTokenIssuer
         int tenantId,
         int? facilityId,
         string tenantKey,
-        bool impersonation);
+        bool impersonation,
+        string sessionStamp);
 
     DateTime GetUtcExpiry();
 }
@@ -35,7 +36,7 @@ public sealed class JwtTokenIssuer : IJwtTokenIssuer
     public DateTime GetUtcExpiry() =>
         DateTime.UtcNow.AddMinutes(_jwt.ExpirationMinutes);
 
-    public string IssueSuperAdminToken(Guid userGuid, string userName, bool isAdmin) =>
+    public string IssueSuperAdminToken(Guid userGuid, string userName, bool isAdmin, string sessionStamp) =>
         Issue(
             userGuid,
             userName,
@@ -44,7 +45,8 @@ public sealed class JwtTokenIssuer : IJwtTokenIssuer
             tenantId: null,
             facilityId: null,
             tenantKey: null,
-            impersonation: false);
+            impersonation: false,
+            sessionStamp);
 
     public string IssueOperationalToken(
         Guid userGuid,
@@ -53,7 +55,8 @@ public sealed class JwtTokenIssuer : IJwtTokenIssuer
         int tenantId,
         int? facilityId,
         string tenantKey,
-        bool impersonation)
+        bool impersonation,
+        string sessionStamp)
     {
         var tk = string.IsNullOrWhiteSpace(tenantKey) ? null : tenantKey.Trim().ToLowerInvariant();
         return Issue(
@@ -64,7 +67,8 @@ public sealed class JwtTokenIssuer : IJwtTokenIssuer
             tenantId,
             facilityId,
             tk,
-            impersonation);
+            impersonation,
+            sessionStamp);
     }
 
     private string Issue(
@@ -75,7 +79,8 @@ public sealed class JwtTokenIssuer : IJwtTokenIssuer
         int? tenantId,
         int? facilityId,
         string? tenantKey,
-        bool impersonation)
+        bool impersonation,
+        string sessionStamp)
     {
         if (string.IsNullOrWhiteSpace(_jwt.SecretKey))
             throw new InvalidOperationException("JWT SecretKey is not configured.");
@@ -91,7 +96,8 @@ public sealed class JwtTokenIssuer : IJwtTokenIssuer
             new("UserGuid", userGuid.ToString()),
             new("UserName", userName),
             new("isSuperAdmin", isSuperAdmin ? "true" : "false"),
-            new("IsAdmin", isAdmin ? "true" : "false")
+            new("IsAdmin", isAdmin ? "true" : "false"),
+            new("sessionStamp", sessionStamp)
         };
 
         if (impersonation)

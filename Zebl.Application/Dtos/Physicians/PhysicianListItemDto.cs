@@ -7,6 +7,8 @@ namespace Zebl.Application.Dtos.Physicians
     {
         [Required]
         public int PhyID { get; set; }
+
+        public int FacilityId { get; set; }
         
         public DateTime PhyDateTimeCreated { get; set; }
         

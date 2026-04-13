@@ -55,19 +55,7 @@ public class AuthController : ControllerBase
         }
 
         var user = await _db.AppUsers
-            .AsNoTracking()
-            .Where(u => u.UserName == request.UserName.Trim() && u.IsActive)
-            .Select(u => new
-            {
-                u.UserGuid,
-                u.UserName,
-                u.TenantId,
-                u.FacilityId,
-                u.IsSuperAdmin,
-                u.PasswordHash,
-                u.PasswordSalt
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(u => u.UserName == request.UserName.Trim() && u.IsActive, cancellationToken);
 
         if (user == null)
         {
@@ -133,12 +121,16 @@ public class AuthController : ControllerBase
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
+        var sessionStamp = Guid.NewGuid().ToString("N");
+        user.SessionStamp = sessionStamp;
+        await _db.SaveChangesAsync(cancellationToken);
+
         var isAdmin = _adminUserService.IsAdminUser(user.UserName);
         string token;
         try
         {
             token = user.IsSuperAdmin
-                ? _jwtIssuer.IssueSuperAdminToken(user.UserGuid, user.UserName, isAdmin)
+                ? _jwtIssuer.IssueSuperAdminToken(user.UserGuid, user.UserName, isAdmin, sessionStamp)
                 : _jwtIssuer.IssueOperationalToken(
                     user.UserGuid,
                     user.UserName,
@@ -146,7 +138,8 @@ public class AuthController : ControllerBase
                     user.TenantId ?? 0,
                     jwtFacilityId,
                     tenantKey ?? string.Empty,
-                    impersonation: false);
+                    impersonation: false,
+                    sessionStamp);
         }
         catch (InvalidOperationException ex)
         {

@@ -604,6 +604,156 @@ namespace Zebl.Api.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CreatePatient([FromBody] UpdatePatientRequest request)
+        {
+            if (request == null)
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Request body is required." });
+
+            if (_currentContext.TenantId <= 0 || _currentContext.FacilityId <= 0)
+                throw new UnauthorizedAccessException("Tenant/facility context is required.");
+
+            try
+            {
+                var tenantId = _currentContext.TenantId;
+                var facilityId = _currentContext.FacilityId;
+
+                var requestedPhysicianIds = new[]
+                {
+                    request.PatBillingPhyFID,
+                    request.PatRenderingPhyFID,
+                    request.PatFacilityPhyFID,
+                    request.PatReferringPhyFID,
+                    request.PatOrderingPhyFID,
+                    request.PatSupervisingPhyFID
+                };
+                var defaultPhysicianId = requestedPhysicianIds
+                    .Where(v => v.HasValue && v.Value > 0)
+                    .Select(v => v!.Value)
+                    .FirstOrDefault();
+
+                if (defaultPhysicianId <= 0)
+                {
+                    defaultPhysicianId = (await _db.Physicians.AsNoTracking()
+                        .Where(p => p.TenantId == tenantId && p.FacilityId == facilityId)
+                        .OrderBy(p => p.PhyID)
+                        .Select(p => (int?)p.PhyID)
+                        .FirstOrDefaultAsync()) ?? 0;
+                }
+
+                if (defaultPhysicianId <= 0)
+                {
+                    return BadRequest(new ErrorResponseDto
+                    {
+                        ErrorCode = "PHYSICIAN_REQUIRED",
+                        Message = "At least one physician/facility entry is required before creating a patient."
+                    });
+                }
+
+                var now = DateTime.UtcNow;
+                int ResolvePhysician(int? requested) =>
+                    requested.HasValue && requested.Value > 0 ? requested.Value : defaultPhysicianId;
+                var aptReminderPref = string.IsNullOrWhiteSpace(request.PatAptReminderPref) ? "No Reminders" : request.PatAptReminderPref;
+                var reminderNoteEvent = string.IsNullOrWhiteSpace(request.PatReminderNoteEvent) ? "Don't Prompt" : request.PatReminderNoteEvent;
+                var patient = new Patient
+                {
+                    TenantId = tenantId,
+                    FacilityId = facilityId,
+                    PatFirstName = request.PatFirstName,
+                    PatLastName = request.PatLastName,
+                    PatMI = request.PatMI,
+                    PatAccountNo = request.PatAccountNo,
+                    PatActive = request.PatActive ?? true,
+                    PatBirthDate = request.PatBirthDate.HasValue ? DateOnly.FromDateTime(request.PatBirthDate.Value) : null,
+                    PatSSN = request.PatSSN,
+                    PatSex = request.PatSex,
+                    PatAddress = request.PatAddress,
+                    PatAddress2 = request.PatAddress2,
+                    PatCity = request.PatCity,
+                    PatState = request.PatState,
+                    PatZip = request.PatZip,
+                    PatPhoneNo = request.PatPhoneNo,
+                    PatCellPhoneNo = request.PatCellPhoneNo,
+                    PatHomePhoneNo = request.PatHomePhoneNo,
+                    PatWorkPhoneNo = request.PatWorkPhoneNo,
+                    PatFaxNo = request.PatFaxNo,
+                    PatPriEmail = request.PatPriEmail,
+                    PatSecEmail = request.PatSecEmail,
+                    PatClassification = request.PatClassification,
+                    PatClaLibFID = request.PatClaLibFID ?? 0,
+                    PatCoPayAmount = request.PatCoPayAmount ?? 0m,
+                    PatDiagnosis1 = request.PatDiagnosis1,
+                    PatDiagnosis2 = request.PatDiagnosis2,
+                    PatDiagnosis3 = request.PatDiagnosis3,
+                    PatDiagnosis4 = request.PatDiagnosis4,
+                    PatEmployed = request.PatEmployed,
+                    PatMarried = request.PatMarried,
+                    PatRenderingPhyFID = ResolvePhysician(request.PatRenderingPhyFID),
+                    PatBillingPhyFID = ResolvePhysician(request.PatBillingPhyFID),
+                    PatFacilityPhyFID = ResolvePhysician(request.PatFacilityPhyFID),
+                    PatReferringPhyFID = ResolvePhysician(request.PatReferringPhyFID),
+                    PatOrderingPhyFID = ResolvePhysician(request.PatOrderingPhyFID),
+                    PatSupervisingPhyFID = ResolvePhysician(request.PatSupervisingPhyFID),
+                    PatStatementName = request.PatStatementName,
+                    PatStatementAddressLine1 = request.PatStatementAddressLine1,
+                    PatStatementAddressLine2 = request.PatStatementAddressLine2,
+                    PatStatementCity = request.PatStatementCity,
+                    PatStatementState = request.PatStatementState,
+                    PatStatementZipCode = request.PatStatementZipCode,
+                    PatStatementMessage = request.PatStatementMessage,
+                    PatReminderNote = request.PatReminderNote,
+                    PatEmergencyContactName = request.PatEmergencyContactName,
+                    PatEmergencyContactPhoneNo = request.PatEmergencyContactPhoneNo,
+                    PatEmergencyContactRelation = request.PatEmergencyContactRelation,
+                    PatWeight = request.PatWeight,
+                    PatHeight = request.PatHeight,
+                    PatMemberID = request.PatMemberID,
+                    PatSigOnFile = request.PatSigOnFile ?? false,
+                    PatInsuredSigOnFile = request.PatInsuredSigOnFile ?? false,
+                    PatPrintSigDate = request.PatPrintSigDate ?? false,
+                    PatPhyPrintDate = request.PatPhyPrintDate ?? false,
+                    PatDontSendPromotions = request.PatDontSendPromotions ?? false,
+                    PatDontSendStatements = request.PatDontSendStatements ?? false,
+                    PatAuthTracking = request.PatAuthTracking ?? false,
+                    PatAptReminderPref = aptReminderPref,
+                    PatReminderNoteEvent = reminderNoteEvent,
+                    PatSigSource = request.PatSigSource,
+                    PatCoPayPercent = request.PatCoPayPercent,
+                    PatCustomField1 = request.PatCustomField1,
+                    PatCustomField2 = request.PatCustomField2,
+                    PatCustomField3 = request.PatCustomField3,
+                    PatCustomField4 = request.PatCustomField4,
+                    PatCustomField5 = request.PatCustomField5,
+                    PatExternalFID = request.PatExternalFID,
+                    PatPaymentMatchingKey = request.PatPaymentMatchingKey,
+                    PatLastStatementDateTRIG = request.PatLastStatementDateTRIG,
+                    PatDateTimeCreated = now,
+                    PatDateTimeModified = now
+                };
+
+                _db.Patients.Add(patient);
+                await _db.SaveChangesAsync();
+
+                if (request.InsuranceList != null && request.InsuranceList.Count > 0)
+                {
+                    patient = await _db.Patients
+                        .Include(p => p.Patient_Insureds)
+                        .ThenInclude(pi => pi.PatInsIns)
+                        .FirstAsync(p => p.PatID == patient.PatID);
+                    await ApplyInsuranceUpdates(patient, request.InsuranceList);
+                    await _db.SaveChangesAsync();
+                }
+
+                _logger.LogInformation("Created patient {PatId}", patient.PatID);
+                return CreatedAtAction(nameof(GetPatientById), new { id = patient.PatID }, new { patID = patient.PatID });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating patient");
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = "INTERNAL_ERROR", Message = "Failed to create patient." });
+            }
+        }
+
         /// <summary>
         /// PUT update patient. Inserts Claim_Audit for all active claims of this patient when any property changed.
         /// </summary>

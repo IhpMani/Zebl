@@ -1593,6 +1593,7 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.IsSuperAdmin).HasDefaultValue(false);
             entity.Property(e => e.PasswordHash).HasMaxLength(64);
             entity.Property(e => e.PasswordSalt).HasMaxLength(32);
+            entity.Property(e => e.SessionStamp).HasMaxLength(64);
             entity.Property(e => e.TenantId).IsRequired(false);
             entity.Property(e => e.FacilityId).IsRequired(false);
             entity.Property(e => e.UserName).HasMaxLength(100);

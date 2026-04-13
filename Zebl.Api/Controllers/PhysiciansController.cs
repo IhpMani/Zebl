@@ -71,7 +71,15 @@ namespace Zebl.Api.Controllers
                     .ToHashSet();
             }
 
+            var tenantId = _currentContext.TenantId;
+            var facilityId = _currentContext.FacilityId;
             var query = _db.Physicians.AsNoTracking();
+
+            // Enforce tenant/facility scope for operational users.
+            if (tenantId > 0 && facilityId > 0)
+            {
+                query = query.Where(p => p.TenantId == tenantId && p.FacilityId == facilityId);
+            }
 
             // Inactive filter
             if (inactive.HasValue)
@@ -184,6 +192,7 @@ namespace Zebl.Api.Controllers
                 .Select(p => new PhysicianListItemDto
                 {
                     PhyID = p.PhyID,
+                    FacilityId = p.FacilityId,
                     PhyDateTimeCreated = p.PhyDateTimeCreated,
                     PhyFirstName = p.PhyFirstName,
                     PhyLastName = p.PhyLastName,

@@ -57,6 +57,9 @@ public class Hl7ImportService
         // Additional aggregate stats for debugging/monitoring
         public int ClaimsCreated { get; set; }
         public int Errors { get; set; }
+
+        /// <summary>First N failure reasons (for API/UI); not every error if many messages fail.</summary>
+        public List<string> ErrorMessages { get; } = new();
     }
 
     /// <summary>
@@ -92,6 +95,9 @@ public class Hl7ImportService
             messages.Count,
             fileName);
 
+        // EnableRetryOnFailure requires user transactions to run inside CreateExecutionStrategy (per EF Core).
+        var executionStrategy = _db.Database.CreateExecutionStrategy();
+
         for (var i = 0; i < messages.Count; i++)
         {
             var message = messages[i];
@@ -99,6 +105,7 @@ public class Hl7ImportService
             if (message == null)
             {
                 result.Errors++;
+                AddImportError(result, i, "Message reference is null.");
                 _logger.LogWarning(
                     "HL7 DFT import: skipping message index {MessageIndex} — message reference is null. File={FileName}",
                     i,
@@ -113,70 +120,75 @@ public class Hl7ImportService
                     i, fileName, forceCreate);
             }
 
-            await using var tx = await _db.Database.BeginTransactionAsync();
-            var trackedBefore = _db.ChangeTracker.Entries().Count();
-
-            try
+            var messageIndex = i;
+            await executionStrategy.ExecuteAsync(async () =>
             {
-                _logger.LogWarning(
-                    "[HL7-IMPORT-DEBUG] Message index {MessageIndex}: begin transaction. ChangeTracker.Entries (before ProcessDftMessage)={Tracked}. File={FileName}",
-                    i,
-                    trackedBefore,
-                    fileName);
-
-                var messageStats = await ProcessDftMessage(message, fileName, i);
-
-                _logger.LogInformation(
-                    "HL7 DFT import: message index {MessageIndex} ProcessDftMessage finished. NewPatient={NewPatient}, NewClaim={NewClaim}, ServiceLines={Sl}, Amount={Amt}. File={FileName}",
-                    i,
-                    messageStats.NewPatient,
-                    messageStats.NewClaim,
-                    messageStats.ServiceLinesCreated,
-                    messageStats.Amount,
-                    fileName);
-
-                var flushed = await _db.SaveChangesAsync();
-                _logger.LogInformation(
-                    "HL7 DFT import: pre-commit SaveChangesAsync wrote {Written} rows for message index {MessageIndex}. File={FileName}",
-                    flushed,
-                    i,
-                    fileName);
-
-                await tx.CommitAsync();
-
-                result.SuccessCount++;
-                result.NewPatientsCount += messageStats.NewPatient ? 1 : 0;
-                result.NewClaimsCount += messageStats.NewClaim ? 1 : 0;
-                result.NewServiceLinesCount += messageStats.ServiceLinesCreated;
-                result.TotalAmount += messageStats.Amount;
-
-                _logger.LogInformation(
-                    "HL7 DFT import: message index {MessageIndex} committed. Success so far={Ok}, new claims so far={Claims}. File={FileName}",
-                    i,
-                    result.SuccessCount,
-                    result.NewClaimsCount,
-                    fileName);
-            }
-            catch (Exception ex)
-            {
-                result.Errors++;
-                _logger.LogError(
-                    ex,
-                    "HL7 DFT import failed for message index {MessageIndex}; rolling back this message only and continuing file. File={FileName}",
-                    i,
-                    fileName);
+                await using var tx = await _db.Database.BeginTransactionAsync();
+                var trackedBefore = _db.ChangeTracker.Entries().Count();
 
                 try
                 {
-                    await tx.RollbackAsync();
-                }
-                catch (Exception rbEx)
-                {
-                    _logger.LogWarning(rbEx, "HL7 DFT import: rollback after message failure also threw. MessageIndex={MessageIndex}", i);
-                }
+                    _logger.LogWarning(
+                        "[HL7-IMPORT-DEBUG] Message index {MessageIndex}: begin transaction. ChangeTracker.Entries (before ProcessDftMessage)={Tracked}. File={FileName}",
+                        messageIndex,
+                        trackedBefore,
+                        fileName);
 
-                _db.ChangeTracker.Clear();
-            }
+                    var messageStats = await ProcessDftMessage(message, fileName, messageIndex);
+
+                    _logger.LogInformation(
+                        "HL7 DFT import: message index {MessageIndex} ProcessDftMessage finished. NewPatient={NewPatient}, NewClaim={NewClaim}, ServiceLines={Sl}, Amount={Amt}. File={FileName}",
+                        messageIndex,
+                        messageStats.NewPatient,
+                        messageStats.NewClaim,
+                        messageStats.ServiceLinesCreated,
+                        messageStats.Amount,
+                        fileName);
+
+                    var flushed = await _db.SaveChangesAsync();
+                    _logger.LogInformation(
+                        "HL7 DFT import: pre-commit SaveChangesAsync wrote {Written} rows for message index {MessageIndex}. File={FileName}",
+                        flushed,
+                        messageIndex,
+                        fileName);
+
+                    await tx.CommitAsync();
+
+                    result.SuccessCount++;
+                    result.NewPatientsCount += messageStats.NewPatient ? 1 : 0;
+                    result.NewClaimsCount += messageStats.NewClaim ? 1 : 0;
+                    result.NewServiceLinesCount += messageStats.ServiceLinesCreated;
+                    result.TotalAmount += messageStats.Amount;
+
+                    _logger.LogInformation(
+                        "HL7 DFT import: message index {MessageIndex} committed. Success so far={Ok}, new claims so far={Claims}. File={FileName}",
+                        messageIndex,
+                        result.SuccessCount,
+                        result.NewClaimsCount,
+                        fileName);
+                }
+                catch (Exception ex)
+                {
+                    result.Errors++;
+                    AddImportError(result, messageIndex, $"{ex.GetType().Name}: {ex.Message}");
+                    _logger.LogError(
+                        ex,
+                        "HL7 DFT import failed for message index {MessageIndex}; rolling back this message only and continuing file. File={FileName}",
+                        messageIndex,
+                        fileName);
+
+                    try
+                    {
+                        await tx.RollbackAsync();
+                    }
+                    catch (Exception rbEx)
+                    {
+                        _logger.LogWarning(rbEx, "HL7 DFT import: rollback after message failure also threw. MessageIndex={MessageIndex}", messageIndex);
+                    }
+
+                    _db.ChangeTracker.Clear();
+                }
+            });
         }
 
         _logger.LogWarning(
@@ -188,6 +200,17 @@ public class Hl7ImportService
             fileName);
 
         return result;
+    }
+
+    private static void AddImportError(Hl7ImportResult result, int messageIndex, string detail)
+    {
+        const int maxMessages = 20;
+        if (result.ErrorMessages.Count >= maxMessages)
+            return;
+        var text = $"Message {messageIndex + 1}: {detail}";
+        if (text.Length > 500)
+            text = text[..497] + "...";
+        result.ErrorMessages.Add(text);
     }
 
     /// <summary>

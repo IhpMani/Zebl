@@ -68,6 +68,7 @@ public sealed class SuperAdminSessionController : ControllerBase
         }
 
         var isAdmin = _adminUserService.IsAdminUser(appUser.UserName);
+        var sessionStamp = appUser.SessionStamp ?? string.Empty;
         var token = _jwtIssuer.IssueOperationalToken(
             appUser.UserGuid,
             appUser.UserName,
@@ -75,7 +76,8 @@ public sealed class SuperAdminSessionController : ControllerBase
             tenant.TenantId,
             facilityId,
             tenant.TenantKey,
-            impersonation: true);
+            impersonation: true,
+            sessionStamp);
 
         await _auditTrail.WriteAsync(
             uid,
@@ -115,7 +117,8 @@ public sealed class SuperAdminSessionController : ControllerBase
             return StatusCode(StatusCodes.Status403Forbidden, new { error = "Only platform super admins may exit to a super-admin session." });
 
         var isAdmin = _adminUserService.IsAdminUser(appUser.UserName);
-        var token = _jwtIssuer.IssueSuperAdminToken(appUser.UserGuid, appUser.UserName, isAdmin);
+        var sessionStamp = appUser.SessionStamp ?? string.Empty;
+        var token = _jwtIssuer.IssueSuperAdminToken(appUser.UserGuid, appUser.UserName, isAdmin, sessionStamp);
 
         await _auditTrail.WriteAsync(
             uid,

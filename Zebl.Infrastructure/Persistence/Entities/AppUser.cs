@@ -29,4 +29,7 @@ public partial class AppUser
     public byte[]? PasswordHash { get; set; }
 
     public byte[]? PasswordSalt { get; set; }
+
+    /// <summary>Rotated on password login only; embedded in JWT for single active session enforcement.</summary>
+    public string? SessionStamp { get; set; }
 }

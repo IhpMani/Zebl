@@ -154,6 +154,7 @@ public class Hl7ImportController : ControllerBase
                 successfulMessages = importResult.SuccessCount,
                 failedMessages = messages.Count - importResult.SuccessCount,
                 errors = importResult.Errors,
+                errorMessages = importResult.ErrorMessages,
                 newPatients = importResult.NewPatientsCount,
                 updatedPatients = importResult.UpdatedPatientsCount,
                 newClaims = importResult.NewClaimsCount,
