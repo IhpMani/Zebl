@@ -7,12 +7,15 @@ namespace Zebl.Application.Dtos.Claims
         public string? ClaClassification { get; set; }
         public string? ClaStatus { get; set; }
         public string? ClaSubmissionMethod { get; set; }
+        public int? ClaBillTo { get; set; }
+        public int? PrimaryPayerId { get; set; }
         public int? ClaRenderingPhyFID { get; set; }
         public int? ClaFacilityPhyFID { get; set; }
         public string? ClaInvoiceNumber { get; set; }
         public DateTime? ClaAdmittedDate { get; set; }
         public DateTime? ClaDischargedDate { get; set; }
         public DateTime? ClaDateLastSeen { get; set; }
+        public DateTime? ClaBillDate { get; set; }
         public string? ClaEDINotes { get; set; }
         public string? ClaRemarks { get; set; }
         public int? ClaRelatedTo { get; set; }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,53 +11,71 @@ namespace Zebl.Application.Services;
 /// </summary>
 public interface IEligibilityService
 {
-    /// <summary>
-    /// Check eligibility for a patient. Loads patientEligibility settings, builds ANSI 270,
-    /// sends to clearinghouse, returns parsed 271. Never logs credentials.
-    /// </summary>
-    Task<EligibilityCheckResultDto> CheckEligibilityAsync(int patientId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get eligibility history for a patient (requests and latest responses).
-    /// </summary>
-    Task<EligibilityHistoryItemDto[]> GetHistoryAsync(int patientId, CancellationToken cancellationToken = default);
+    Task<EligibilityRequestResultDto> RequestEligibilityAsync(EligibilityRequestCreateDto request, CancellationToken cancellationToken = default);
+    Task<EligibilityRequestStatusDto?> GetEligibilityStatusAsync(int requestId, CancellationToken cancellationToken = default);
+    Task<string> Generate270Async(EligibilityRequestCreateDto request, CancellationToken cancellationToken = default);
+    Task<EligibilityPreflightResultDto> PreflightAsync(EligibilityPreflightRequestDto request, CancellationToken cancellationToken = default);
 }
 
-public sealed class EligibilityCheckResultDto
+public sealed class EligibilityRequestCreateDto
 {
-    public bool Success { get; set; }
-    public string? Raw271 { get; set; }
-    public string? Message { get; set; }
-    public string? PayerName { get; set; }
-    public string? Status { get; set; }
-
-    public decimal? DeductibleAmount { get; set; }
-    public decimal? CopayAmount { get; set; }
-    public decimal? CoinsurancePercent { get; set; }
-    public DateTime? CoverageStartDate { get; set; }
-    public DateTime? CoverageEndDate { get; set; }
-
-    // Insured/Patient fields shown in the Eligibility Response popup.
-    public string? PatientName { get; set; }
-    public string? PatientAddress { get; set; }
-    public string? Identification { get; set; }
-    public DateOnly? DateOfBirth { get; set; }
-    public string? Gender { get; set; }
-    public DateOnly? EligibilityDate { get; set; }
-    public DateOnly? InquiryDate { get; set; }
+    public int PatientId { get; set; }
 }
 
-public sealed class EligibilityHistoryItemDto
+public sealed class EligibilityRequestResultDto
 {
-    public int RequestId { get; set; }
-    public DateTime CheckDate { get; set; }
+    public int Id { get; set; }
     public string Status { get; set; } = string.Empty;
-    public string? CoverageStatus { get; set; }
+    public string? BatchFileName { get; set; }
+    public string ControlNumber { get; set; } = string.Empty;
+    public string? ProviderNpi { get; set; }
+    public string? ProviderMode { get; set; }
+    public bool UsedPayerOverride { get; set; }
+}
+
+public sealed class EligibilityRequestStatusDto
+{
+    public int Id { get; set; }
+    public int PatientId { get; set; }
+    public int PayerId { get; set; }
+    public string SubscriberId { get; set; } = string.Empty;
+    public string ControlNumber { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string? BatchFileName { get; set; }
+    public string? EligibilityStatus { get; set; }
+    public string? ErrorMessage { get; set; }
+    public string? Raw271 { get; set; }
+    public string? PayerName { get; set; }
     public string? PlanName { get; set; }
-    public decimal? DeductibleAmount { get; set; }
-    public decimal? CopayAmount { get; set; }
-    public decimal? CoinsurancePercent { get; set; }
-    public DateTime? CoverageStartDate { get; set; }
-    public DateTime? CoverageEndDate { get; set; }
+    public string? PlanDetails { get; set; }
+    public string? EligibilityStartDate { get; set; }
+    public string? EligibilityEndDate { get; set; }
+    public List<EligibilityBenefitDto> Benefits { get; set; } = [];
+    public string? ProviderNpi { get; set; }
+    public string? ProviderMode { get; set; }
+    public bool UsedPayerOverride { get; set; }
+}
+
+public sealed class EligibilityPreflightRequestDto
+{
+    /// <summary>Optional: when set, validates patient insurance and provider resolution.</summary>
+    public int? PatientId { get; set; }
+}
+
+public sealed class EligibilityPreflightResultDto
+{
+    public bool Valid { get; set; }
+    public List<string> Errors { get; set; } = [];
+    public List<string> Warnings { get; set; } = [];
+    public bool? ServerReachable { get; set; }
+}
+
+public sealed class EligibilityBenefitDto
+{
+    public string? ServiceType { get; set; }
+    public string? Benefit { get; set; }
+    public string? Amount { get; set; }
+    public string? Description { get; set; }
 }
 

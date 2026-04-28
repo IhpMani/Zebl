@@ -52,6 +52,9 @@ namespace Zebl.Api.Controllers
                 {
                     AdjID = a.AdjID,
                     AdjDateTimeCreated = a.AdjDateTimeCreated,
+                    AdjDateTimeModified = a.AdjDateTimeModified,
+                    CreatedDate = a.AdjDateTimeCreated,
+                    ModifiedDate = a.AdjDateTimeModified,
                     AdjDate = a.AdjDate,
                     AdjAmount = a.AdjAmount,
                     AdjGroupCode = a.AdjGroupCode,
@@ -134,6 +137,7 @@ namespace Zebl.Api.Controllers
                     {
                         a.AdjID,
                         a.AdjDateTimeCreated,
+                        a.AdjDateTimeModified,
                         a.AdjDate,
                         a.AdjAmount,
                         a.AdjGroupCode,
@@ -163,6 +167,9 @@ namespace Zebl.Api.Controllers
                     {
                         AdjID = r.AdjID,
                         AdjDateTimeCreated = r.AdjDateTimeCreated,
+                        AdjDateTimeModified = r.AdjDateTimeModified,
+                        CreatedDate = r.AdjDateTimeCreated,
+                        ModifiedDate = r.AdjDateTimeModified,
                         AdjDate = r.AdjDate,
                         AdjAmount = r.AdjAmount,
                         AdjGroupCode = r.AdjGroupCode,
@@ -185,6 +192,9 @@ namespace Zebl.Api.Controllers
                     {
                         AdjID = a.AdjID,
                         AdjDateTimeCreated = a.AdjDateTimeCreated,
+                        AdjDateTimeModified = a.AdjDateTimeModified,
+                        CreatedDate = a.AdjDateTimeCreated,
+                        ModifiedDate = a.AdjDateTimeModified,
                         AdjDate = a.AdjDate,
                         AdjAmount = a.AdjAmount,
                         AdjGroupCode = a.AdjGroupCode,

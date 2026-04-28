@@ -1,10 +1,12 @@
 using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Zebl.Application.Abstractions;
 using Zebl.Application.Domain;
+using Zebl.Application.Edi.Parsing;
 using Zebl.Application.Repositories;
 using Zebl.Application.Services;
+using Zebl.Application.Services.Edi;
 using Zebl.Infrastructure.Services;
 
 namespace Zebl.Api.Controllers;
@@ -15,31 +17,40 @@ namespace Zebl.Api.Controllers;
 public class EdiReportsController : ControllerBase
 {
     private readonly EdiReportService _ediReportService;
-    private readonly IEdiExportService _ediExportService;
-    private readonly IClaimExportService _claimExportService;
+    private readonly IEdiGenerator _ediGenerator;
+    private readonly IReceiverLibraryRepository _receiverLibraryRepository;
     private readonly IConnectionLibraryRepository _connectionRepo;
     private readonly SftpTransportService _sftpTransport;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IEncryptionService _encryptionService;
+    private readonly HttpInboundTransportService _httpInboundTransport;
+    private readonly IEdiReportContentReader _contentReader;
+    private readonly IEdiValidationService _ediValidationService;
+    private readonly IEdiAutoPostService _ediAutoPostService;
+    private readonly ICurrentContext _currentContext;
     private readonly ILogger<EdiReportsController> _logger;
 
     public EdiReportsController(
         EdiReportService ediReportService,
-        IEdiExportService ediExportService,
-        IClaimExportService claimExportService,
+        IEdiGenerator ediGenerator,
+        IReceiverLibraryRepository receiverLibraryRepository,
         IConnectionLibraryRepository connectionRepo,
         SftpTransportService sftpTransport,
-        IHttpClientFactory httpClientFactory,
-        IEncryptionService encryptionService,
+        HttpInboundTransportService httpInboundTransport,
+        IEdiReportContentReader contentReader,
+        IEdiValidationService ediValidationService,
+        IEdiAutoPostService ediAutoPostService,
+        ICurrentContext currentContext,
         ILogger<EdiReportsController> logger)
     {
         _ediReportService = ediReportService;
-        _ediExportService = ediExportService;
-        _claimExportService = claimExportService;
+        _ediGenerator = ediGenerator;
+        _receiverLibraryRepository = receiverLibraryRepository;
         _connectionRepo = connectionRepo;
         _sftpTransport = sftpTransport;
-        _httpClientFactory = httpClientFactory;
-        _encryptionService = encryptionService;
+        _httpInboundTransport = httpInboundTransport;
+        _contentReader = contentReader;
+        _ediValidationService = ediValidationService;
+        _ediAutoPostService = ediAutoPostService;
+        _currentContext = currentContext;
         _logger = logger;
     }
 
@@ -49,7 +60,6 @@ public class EdiReportsController : ControllerBase
         try
         {
             var list = await _ediReportService.GetAllAsync(archived);
-            // Don't return FileContent in list - too large
             var dtoList = list.Select(r => new
             {
                 r.Id,
@@ -60,12 +70,14 @@ public class EdiReportsController : ControllerBase
                 r.Direction,
                 r.Status,
                 r.TraceNumber,
+                r.ClaimIdentifier,
                 r.PayerName,
                 r.PaymentAmount,
                 r.Note,
                 r.IsArchived,
                 r.IsRead,
                 r.FileSize,
+                r.CorrelationId,
                 r.CreatedAt,
                 r.SentAt,
                 r.ReceivedAt
@@ -85,7 +97,6 @@ public class EdiReportsController : ControllerBase
         var report = await _ediReportService.GetByIdAsync(id);
         if (report == null)
             return NotFound();
-        // Don't return FileContent in detail - use /content endpoint
         var dto = new
         {
             report.Id,
@@ -96,12 +107,14 @@ public class EdiReportsController : ControllerBase
             report.Direction,
             report.Status,
             report.TraceNumber,
+            report.ClaimIdentifier,
             report.PayerName,
             report.PaymentAmount,
             report.Note,
             report.IsArchived,
             report.IsRead,
             report.FileSize,
+            report.CorrelationId,
             report.CreatedAt,
             report.SentAt,
             report.ReceivedAt
@@ -110,37 +123,37 @@ public class EdiReportsController : ControllerBase
     }
 
     /// <summary>
-    /// Generates 837 for a claim using Payer rules, updates claim status to Submitted, and returns the 837 content.
+    /// Single endpoint: generates outbound EDI (837 or 270) from claim context and persists a report row + file.
     /// </summary>
-    [HttpPost("claim/{claimId:int}/generate-837")]
-    public async Task<IActionResult> Generate837(int claimId)
-    {
-        try
-        {
-            var content = await _claimExportService.Generate837Async(claimId);
-            return Ok(new { content });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating 837 for claim {ClaimId}", claimId);
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
-
     [HttpPost("generate")]
     public async Task<IActionResult> Generate([FromBody] GenerateEdiReportRequest request)
     {
         if (request?.ReceiverLibraryId == null || request.ClaimId == null)
             return BadRequest(new { error = "ReceiverLibraryId and ClaimId are required." });
 
+        var correlationId = HttpContext.TraceIdentifier;
         try
         {
-            var content = await _ediExportService.GenerateAsync(request.ReceiverLibraryId.Value, request.ClaimId.Value);
-            var fileType = request.FileType ?? "837";
+            var receiver = await _receiverLibraryRepository.GetByIdAsync(request.ReceiverLibraryId.Value).ConfigureAwait(false);
+            if (receiver == null)
+                return BadRequest(new { error = "Receiver library not found." });
+
+            var kind = ResolveOutboundKind(request.FileType, receiver.ExportFormat);
+            _logger.LogInformation(
+                "EDI generate requested. CorrelationId={CorrelationId} ReceiverId={ReceiverId} ClaimId={ClaimId} Kind={Kind}",
+                correlationId,
+                request.ReceiverLibraryId,
+                request.ClaimId,
+                kind);
+
+            var content = await _ediGenerator.GenerateAsync(
+                request.ReceiverLibraryId.Value,
+                request.ClaimId.Value,
+                kind,
+                HttpContext.RequestAborted).ConfigureAwait(false);
+            _ediValidationService.Validate(content, kind);
+
+            var fileType = kind == OutboundEdiKind.Eligibility270 ? "270" : "837";
             var fileName = $"report_{fileType}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}.edi";
             var fileContent = Encoding.UTF8.GetBytes(content);
 
@@ -150,27 +163,38 @@ public class EdiReportsController : ControllerBase
                 fileName,
                 fileType,
                 fileContent,
-                "Outbound");
+                correlationId,
+                "Outbound",
+                HttpContext.RequestAborted);
 
             return Ok(new
             {
-                report.Id,
-                report.FileName,
-                report.FileType,
-                report.Status,
-                report.FileSize
+                status = "Generated",
+                correlationId,
+                reportId = report.Report.Id,
+                report.Report.FileName,
+                report.Report.FileType,
+                reportStatus = report.Report.Status,
+                report.Report.FileSize,
+                isDuplicate = report.IsDuplicate
             });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "EDI generate rejected. CorrelationId={CorrelationId}", correlationId);
+            return BadRequest(new { error = ex.Message, correlationId });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating EDI report");
-            return StatusCode(500, new { error = ex.Message });
+            _logger.LogError(ex, "Error generating EDI report. CorrelationId={CorrelationId}", correlationId);
+            return StatusCode(500, new { error = ex.Message, correlationId });
         }
     }
 
     [HttpPost("send/{id:guid}")]
     public async Task<IActionResult> Send(Guid id)
     {
+        var correlationId = HttpContext.TraceIdentifier;
         var report = await _ediReportService.GetByIdAsync(id);
         if (report == null)
             return NotFound();
@@ -182,21 +206,36 @@ public class EdiReportsController : ControllerBase
         if (connection == null)
             return BadRequest(new { error = "Connection library not found." });
 
-        if (report.FileContent == null || report.FileContent.Length == 0)
-            return BadRequest(new { error = "Generated file content not found. Cannot send." });
+        if (connection.ConnectionType != ConnectionType.Sftp)
+            return BadRequest(new { error = "Send currently supports ConnectionType SFTP only." });
 
         try
         {
-            var content = Encoding.UTF8.GetString(report.FileContent);
-            await _sftpTransport.UploadFileAsync(connection, report.FileName, content);
+            await using var validationStream = await _contentReader.OpenReadAsync(report, HttpContext.RequestAborted).ConfigureAwait(false);
+            using var validationReader = new StreamReader(validationStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024 * 64, leaveOpen: true);
+            var content = await validationReader.ReadToEndAsync(HttpContext.RequestAborted).ConfigureAwait(false);
+            var kind = string.Equals(report.FileType, "270", StringComparison.Ordinal) ? OutboundEdiKind.Eligibility270 : OutboundEdiKind.Claim837;
+            _ediValidationService.Validate(content, kind);
+            _logger.LogInformation(
+                "EDI SFTP upload starting. CorrelationId={CorrelationId} ReportId={ReportId} FileName={FileName}",
+                correlationId,
+                id,
+                report.FileName);
+            await using var uploadStream = await _contentReader.OpenReadAsync(report, HttpContext.RequestAborted).ConfigureAwait(false);
+            await _sftpTransport.UploadFileAsync(connection, report.FileName, uploadStream, HttpContext.RequestAborted);
             await _ediReportService.MarkSentAsync(id);
-            return Ok(new { success = true, message = "File sent." });
+            return Ok(new { success = true, message = "File sent.", correlationId });
+        }
+        catch (EdiReportFileNotAvailableException ex)
+        {
+            _logger.LogWarning(ex, "EDI send failed: file missing. CorrelationId={CorrelationId} ReportId={ReportId}", correlationId, id);
+            return BadRequest(new { error = ex.Message, correlationId });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending EDI report {Id}", id);
+            _logger.LogError(ex, "Error sending EDI report {Id}. CorrelationId={CorrelationId}", id, correlationId);
             await _ediReportService.MarkFailedAsync(id);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, new { error = ex.Message, correlationId });
         }
     }
 
@@ -206,212 +245,285 @@ public class EdiReportsController : ControllerBase
         if (request?.ConnectionLibraryId == null || request.ReceiverLibraryId == null)
             return BadRequest(new { error = "ConnectionLibraryId and ReceiverLibraryId are required." });
 
+        var correlationId = HttpContext.TraceIdentifier;
         var connection = await _connectionRepo.GetByIdAsync(request.ConnectionLibraryId.Value);
         if (connection == null)
             return NotFound(new { error = "Connection library not found." });
 
+        var createdReports = new List<object>();
+        var processedCount = 0;
+        var skippedCount = 0;
+        var failedCount = 0;
+
         try
         {
-            var host = (connection.Host ?? "").Trim();
-            string? httpUrl = null;
-            if (host.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || host.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                httpUrl = host;
-            else if (connection.Port == 5001 || connection.Port == 80 || connection.Port == 443)
-                httpUrl = (connection.Port == 443 ? "https" : "http") + "://" + host + ":" + connection.Port;
-            else if (host.Contains(":5001", StringComparison.OrdinalIgnoreCase) && !host.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                httpUrl = "http://" + host;
-
-            if (httpUrl != null)
+            switch (connection.ConnectionType)
             {
-                var createdFromHttp = await DownloadFromHttpMockAsync(httpUrl, connection, request.ReceiverLibraryId.Value, request.ConnectionLibraryId);
-                return Ok(new { count = createdFromHttp.Count, reports = createdFromHttp });
-            }
-
-            var files = await _sftpTransport.DownloadFilesAsync(connection);
-            // "Get Reports" should behave like a refresh: re-fetch the latest inbound batch,
-            // without duplicating existing non-archived rows for the same receiver+connection.
-            await _ediReportService.DeleteNonArchivedByReceiverAndConnectionAsync(
-                request.ReceiverLibraryId.Value,
-                request.ConnectionLibraryId);
-            var createdReports = new List<object>();
-
-            foreach (var (fileName, content) in files)
-            {
-                var fileContentBytes = Encoding.UTF8.GetBytes(content);
-                var fileType = InferFileType(fileName, content);
-
-                var report = await _ediReportService.CreateReceivedAsync(
-                    request.ReceiverLibraryId.Value,
-                    request.ConnectionLibraryId,
-                    fileName,
-                    fileType,
-                    fileContentBytes);
-
-                createdReports.Add(new
+                case ConnectionType.Http:
+                case ConnectionType.Api:
                 {
-                    report.Id,
-                    report.FileName,
-                    report.FileType,
-                    report.Status,
-                    report.PayerName,
-                    report.PaymentAmount,
-                    report.Note
-                });
-            }
+                    _logger.LogInformation(
+                        "EDI inbound fetch via {Type}. CorrelationId={CorrelationId} ConnectionId={ConnectionId} ReceiverId={ReceiverId}",
+                        connection.ConnectionType,
+                        correlationId,
+                        connection.Id,
+                        request.ReceiverLibraryId);
 
-            return Ok(new { count = createdReports.Count, reports = createdReports });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error downloading EDI reports");
-            var message = ex.Message;
-            if (ex.InnerException != null)
-                message += " " + ex.InnerException.Message;
-            return StatusCode(500, new { error = message });
-        }
-    }
+                    var items = await _httpInboundTransport.FetchAsync(connection, HttpContext.RequestAborted).ConfigureAwait(false);
+                    foreach (var item in items)
+                    {
+                        try
+                        {
+                            _logger.LogInformation("Processing file: {FileName}", item.FileName);
+                            EdiReport report;
+                            var hash = item.RawContent is { Length: > 0 }
+                                ? Zebl.Application.Utilities.ContentHashUtility.Sha256Hex(item.RawContent)
+                                : Zebl.Application.Utilities.ContentHashUtility.Sha256HexFromUtf8($"{item.FileName}|{item.FileType}|{item.PayerName}|{item.PaymentAmount}|{item.Note}|{item.TraceNumber}");
+                            if (item.RawContent is { Length: > 0 })
+                            {
+                                var utf8 = Encoding.UTF8.GetString(item.RawContent);
+                                var fileType = ResolveInboundFileType(item.FileName, utf8);
+                                var create = await _ediReportService.CreateReceivedAsync(
+                                    request.ReceiverLibraryId.Value,
+                                    request.ConnectionLibraryId,
+                                    item.FileName,
+                                    fileType,
+                                    item.RawContent,
+                                    correlationId,
+                                    HttpContext.RequestAborted);
+                                report = create.Report;
+                                if (create.IsDuplicate) skippedCount++;
+                                else processedCount++;
+                                _logger.LogInformation(
+                                    "Inbound file lifecycle status. CorrelationId={CorrelationId} FileName={FileName} Hash={Hash} Status={Status} ClpCount={ClpCount}",
+                                    correlationId,
+                                    item.FileName,
+                                    hash,
+                                    create.IsDuplicate ? "Skipped" : "Processed",
+                                    create.ClpCount ?? 0);
+                                createdReports.Add(new
+                                {
+                                    report.Id,
+                                    report.FileName,
+                                    report.FileType,
+                                    report.Status,
+                                    report.ClaimIdentifier,
+                                    report.PayerName,
+                                    report.PaymentAmount,
+                                    report.Note,
+                                    isDuplicate = create.IsDuplicate
+                                });
+                                continue;
+                            }
 
-    /// <summary>
-    /// Downloads report metadata from HTTP mock (e.g. GET /api/get-reports) and creates EDI report records.
-    /// </summary>
-    private async Task<List<object>> DownloadFromHttpMockAsync(string baseUrl, ConnectionLibrary connection, Guid receiverLibraryId, Guid? connectionLibraryId)
-    {
-        var baseNormalized = baseUrl.TrimEnd('/');
-        var client = _httpClientFactory.CreateClient();
-        client.Timeout = TimeSpan.FromSeconds(30);
+                            var metadataType = NormalizeInboundTypeFromMetadata(item.FileType);
+                            var metadataCreate = await _ediReportService.CreateReceivedFromMetadataAsync(
+                                request.ReceiverLibraryId.Value,
+                                request.ConnectionLibraryId,
+                                item.FileName,
+                                metadataType,
+                                correlationId,
+                                payerName: item.PayerName,
+                                paymentAmount: item.PaymentAmount,
+                                note: item.Note,
+                                traceNumber: item.TraceNumber,
+                                cancellationToken: HttpContext.RequestAborted);
+                            report = metadataCreate.Report;
+                            if (metadataCreate.IsDuplicate) skippedCount++;
+                            else processedCount++;
+                            _logger.LogInformation(
+                                "Inbound file lifecycle status. CorrelationId={CorrelationId} FileName={FileName} Hash={Hash} Status={Status} ClpCount={ClpCount}",
+                                correlationId,
+                                item.FileName,
+                                hash,
+                                metadataCreate.IsDuplicate ? "Skipped" : "Processed",
+                                metadataCreate.ClpCount ?? 0);
+                            createdReports.Add(new
+                            {
+                                report.Id,
+                                report.FileName,
+                                report.FileType,
+                                report.Status,
+                                report.ClaimIdentifier,
+                                report.PayerName,
+                                report.PaymentAmount,
+                                report.Note,
+                                isDuplicate = metadataCreate.IsDuplicate
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            failedCount++;
+                            _logger.LogError(
+                                ex,
+                                "Inbound file failed but pipeline continues. CorrelationId={CorrelationId} FileName={FileName} Reason=HttpInboundFileProcessing",
+                                correlationId,
+                                item.FileName);
+                        }
+                    }
 
-        // Mock server requires Basic auth.
-        // Many connections store SFTP credentials (not HTTP). So we try connection credentials first, and if the mock returns 401,
-        // we retry once using the documented defaults (Admin / Admin@123).
-        string? connectionUsername = string.IsNullOrWhiteSpace(connection.Username) ? null : connection.Username.Trim();
-        string? connectionPassword = null;
-        if (!string.IsNullOrWhiteSpace(connection.EncryptedPassword))
-        {
-            // Decrypt only in backend (never send encrypted text).
-            connectionPassword = _encryptionService.Decrypt(connection.EncryptedPassword);
-        }
+                    break;
+                }
 
-        void SetBasicAuth(string user, string pass)
-        {
-            var token = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{user}:{pass}"));
-            client.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", token);
-        }
-
-        if (!string.IsNullOrWhiteSpace(connectionUsername) && !string.IsNullOrWhiteSpace(connectionPassword))
-            SetBasicAuth(connectionUsername!, connectionPassword!);
-        else
-            SetBasicAuth("Admin", "Admin@123");
-
-        var url = baseNormalized + "/api/get-reports";
-        HttpResponseMessage response;
-        try
-        {
-            response = await client.GetAsync(url);
-            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized &&
-                (connectionUsername != "Admin" || connectionPassword != "Admin@123"))
-            {
-                // Retry with documented defaults
-                response.Dispose();
-                SetBasicAuth("Admin", "Admin@123");
-                response = await client.GetAsync(url);
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Could not reach the report server at {url}. Ensure the connection host is correct and the server is running. {ex.Message}", ex);
-        }
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var body = await response.Content.ReadAsStringAsync();
-            var preview = body.Length > 200 ? body.AsSpan(0, 200).ToString() + "..." : body;
-            throw new InvalidOperationException(
-                $"Report server returned {(int)response.StatusCode} {response.ReasonPhrase}. URL: {url}. Response: {preview}");
-        }
-
-        var json = await response.Content.ReadAsStringAsync();
-        JsonDocument doc;
-        try
-        {
-            doc = JsonDocument.Parse(json);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Report server returned invalid JSON from {url}. Expected a JSON array. {ex.Message}", ex);
-        }
-
-        using (doc)
-        {
-            var root = doc.RootElement;
-            if (root.ValueKind != JsonValueKind.Array)
-                return new List<object>();
-
-            // Idempotency: treat "Get Reports" as a refresh for this receiver+connection.
-            // Delete only non-archived reports so archived history is preserved.
-            await _ediReportService.DeleteNonArchivedByReceiverAndConnectionAsync(
-                receiverLibraryId,
-                connectionLibraryId);
-
-            var created = new List<object>();
-            foreach (var item in root.EnumerateArray())
-            {
-                var fileName = item.TryGetProperty("fileName", out var fn) ? fn.GetString() ?? "report.edi" : "report.edi";
-                var fileType = item.TryGetProperty("fileType", out var ft) ? ft.GetString() ?? ".EDI" : ".EDI";
-                var payer = item.TryGetProperty("payer", out var p) ? p.GetString() : null;
-                decimal? paymentAmount = null;
-                if (item.TryGetProperty("paymentAmount", out var pa) && pa.ValueKind == JsonValueKind.Number)
-                    paymentAmount = pa.GetDecimal();
-                var note = item.TryGetProperty("note", out var n) ? n.GetString() : null;
-                var traceNumber = item.TryGetProperty("traceNumber", out var tn) ? tn.GetString() : null;
-
-                var report = await _ediReportService.CreateReceivedFromMetadataAsync(
-                    receiverLibraryId,
-                    connectionLibraryId,
-                    fileName,
-                    fileType.TrimStart('.'),
-                    payerName: payer,
-                    paymentAmount: paymentAmount,
-                    note: note,
-                    traceNumber: traceNumber);
-
-                created.Add(new
+                case ConnectionType.Sftp:
                 {
-                    report.Id,
-                    report.FileName,
-                    report.FileType,
-                    report.Status,
-                    report.PayerName,
-                    report.PaymentAmount,
-                    report.Note
-                });
+                    _logger.LogInformation(
+                        "EDI inbound SFTP download. CorrelationId={CorrelationId} ConnectionId={ConnectionId} ReceiverId={ReceiverId}",
+                        correlationId,
+                        connection.Id,
+                        request.ReceiverLibraryId);
+
+                    var files = await _sftpTransport.DownloadFilesAsync(connection).ConfigureAwait(false);
+                    foreach (var file in files)
+                    {
+                        try
+                        {
+                            _logger.LogInformation("Processing file: {FileName}", file.FileName);
+                            var fileHash = Zebl.Application.Utilities.ContentHashUtility.Sha256Hex(file.Content);
+                            var content = Encoding.UTF8.GetString(file.Content);
+                            var fileType = ResolveInboundFileType(file.FileName, content);
+                            var create = await _ediReportService.CreateReceivedAsync(
+                                request.ReceiverLibraryId.Value,
+                                request.ConnectionLibraryId,
+                                file.FileName,
+                                fileType,
+                                file.Content,
+                                correlationId,
+                                HttpContext.RequestAborted);
+                            var report = create.Report;
+                            if (create.IsDuplicate) skippedCount++;
+                            else processedCount++;
+
+                            _logger.LogInformation(
+                                "Inbound file lifecycle status. CorrelationId={CorrelationId} FileName={FileName} Hash={Hash} Status={Status} ClpCount={ClpCount}",
+                                correlationId,
+                                file.FileName,
+                                fileHash,
+                                create.IsDuplicate ? "Skipped" : "Processed",
+                                create.ClpCount ?? 0);
+
+                            await _sftpTransport.MoveInboundFileAsync(connection, file.FullPath, InboundLifecycleTarget.Processed, HttpContext.RequestAborted)
+                                .ConfigureAwait(false);
+
+                            createdReports.Add(new
+                            {
+                                report.Id,
+                                report.FileName,
+                                report.FileType,
+                                report.Status,
+                                report.ClaimIdentifier,
+                                report.PayerName,
+                                report.PaymentAmount,
+                                report.Note,
+                                isDuplicate = create.IsDuplicate
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            failedCount++;
+                            var fileHash = Zebl.Application.Utilities.ContentHashUtility.Sha256Hex(file.Content);
+                            _logger.LogError(
+                                ex,
+                                "Inbound file lifecycle status. CorrelationId={CorrelationId} FileName={FileName} Hash={Hash} Status=Failed",
+                                correlationId,
+                                file.FileName,
+                                fileHash);
+                            try
+                            {
+                                await _sftpTransport.MoveInboundFileAsync(connection, file.FullPath, InboundLifecycleTarget.Failed, HttpContext.RequestAborted)
+                                    .ConfigureAwait(false);
+                            }
+                            catch (Exception moveEx)
+                            {
+                                _logger.LogError(
+                                    moveEx,
+                                    "Failed moving errored inbound file to failed folder. CorrelationId={CorrelationId} FileName={FileName}",
+                                    correlationId,
+                                    file.FileName);
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                default:
+                    return Ok(new
+                    {
+                        processed = 0,
+                        skipped = 0,
+                        failed = 1,
+                        count = 0,
+                        skippedCount = 0,
+                        failedCount = 1,
+                        reports = createdReports,
+                        message = "Unsupported ConnectionType.",
+                        correlationId
+                    });
             }
 
-            return created;
+            var message = processedCount == 0 ? "No new files to process" : null;
+            return Ok(new
+            {
+                processed = processedCount,
+                skipped = skippedCount,
+                failed = failedCount,
+                count = processedCount,
+                skippedCount,
+                failedCount,
+                reports = createdReports,
+                message,
+                correlationId
+            });
+        }
+        catch (Exception ex)
+        {
+            failedCount++;
+            _logger.LogError(ex, "Inbound download failed at transport/controller level. CorrelationId={CorrelationId}", correlationId);
+            return Ok(new
+            {
+                processed = processedCount,
+                skipped = skippedCount,
+                failed = failedCount,
+                count = processedCount,
+                skippedCount,
+                failedCount,
+                reports = createdReports,
+                message = "Download completed with errors.",
+                correlationId
+            });
         }
     }
 
     [HttpGet("{id:guid}/content")]
     public async Task<IActionResult> GetContent(Guid id, [FromQuery] bool preview = false)
     {
+        var correlationId = HttpContext.TraceIdentifier;
         var report = await _ediReportService.GetByIdAsync(id);
         if (report == null)
             return NotFound();
 
-        if (report.FileContent == null || report.FileContent.Length == 0)
-            return NotFound(new { error = "File content not available." });
-
-        // Quick view: show first 500KB only
-        if (preview && report.FileSize > 500 * 1024)
+        try
         {
-            var previewContent = Encoding.UTF8.GetString(report.FileContent, 0, 500 * 1024);
-            return Content($"[FILE TOO LARGE TO PREVIEW ENTIRELY - DOUBLE CLICK FILE TO ANALYZE]\n\n{previewContent}", "text/plain");
-        }
+            await using var stream = await _contentReader.OpenReadAsync(report, HttpContext.RequestAborted).ConfigureAwait(false);
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024 * 64, leaveOpen: true);
 
-        var content = Encoding.UTF8.GetString(report.FileContent);
-        return Content(content, "text/plain");
+            if (preview && report.FileSize > 500 * 1024)
+            {
+                var buffer = new char[500 * 1024];
+                var read = await reader.ReadBlockAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+                var previewContent = new string(buffer, 0, read);
+                return Content($"[FILE TOO LARGE TO PREVIEW ENTIRELY - DOUBLE CLICK FILE TO ANALYZE]\n\n{previewContent}", "text/plain");
+            }
+
+            var content = await reader.ReadToEndAsync(HttpContext.RequestAborted).ConfigureAwait(false);
+            return Content(content, "text/plain");
+        }
+        catch (EdiReportFileNotAvailableException ex)
+        {
+            _logger.LogWarning(ex, "EDI content not available. CorrelationId={CorrelationId} ReportId={ReportId}", correlationId, id);
+            return NotFound(new { error = ex.Message, correlationId });
+        }
     }
 
     [HttpPost("archive/{id:guid}")]
@@ -454,40 +566,92 @@ public class EdiReportsController : ControllerBase
         return Ok(new { success = true });
     }
 
+    [HttpPost("{id:guid}/apply")]
+    public async Task<IActionResult> Apply835(Guid id)
+    {
+        var correlationId = HttpContext.TraceIdentifier;
+        var facilityId = _currentContext.FacilityId;
+        var tenantId = _currentContext.TenantId;
+        _logger.LogInformation("835 apply request received. CorrelationId={CorrelationId} ReportId={ReportId}", correlationId, id);
+        try
+        {
+            var postedBy = User?.Identity?.Name ?? "system";
+            _logger.LogInformation("835 apply scope resolved. CorrelationId={CorrelationId} ReportId={ReportId} TenantId={TenantId} FacilityId={FacilityId}", correlationId, id, tenantId, facilityId);
+            var result = await _ediAutoPostService.Apply835Async(id, correlationId, postedBy, HttpContext.RequestAborted).ConfigureAwait(false);
+            return Ok(new
+            {
+                processed = result.Processed,
+                applied = result.Applied,
+                skipped = result.Skipped,
+                duplicatesSkipped = result.DuplicatesSkipped,
+                unmatched = result.Unmatched,
+                reversed = result.Reversed,
+                invalid = result.Invalid,
+                creditsCreated = result.CreditsCreated,
+                correlationId
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "835 apply rejected. CorrelationId={CorrelationId} ReportId={ReportId}", correlationId, id);
+            return BadRequest(new { error = ex.Message, correlationId });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "835 apply failed. CorrelationId={CorrelationId} ReportId={ReportId}", correlationId, id);
+            return StatusCode(500, new { error = "Failed to apply 835 report.", correlationId });
+        }
+    }
+
     [HttpGet("{id:guid}/export")]
     public async Task<IActionResult> ExportFile(Guid id)
     {
+        var correlationId = HttpContext.TraceIdentifier;
         var report = await _ediReportService.GetByIdAsync(id);
         if (report == null)
             return NotFound();
 
-        if (report.FileContent == null || report.FileContent.Length == 0)
-            return NotFound(new { error = "File content not available." });
-
-        return File(report.FileContent, "application/octet-stream", report.FileName);
+        try
+        {
+            var stream = await _contentReader.OpenReadAsync(report, HttpContext.RequestAborted).ConfigureAwait(false);
+            return File(stream, "application/octet-stream", report.FileName);
+        }
+        catch (EdiReportFileNotAvailableException ex)
+        {
+            _logger.LogWarning(ex, "EDI export failed: file missing. CorrelationId={CorrelationId} ReportId={ReportId}", correlationId, id);
+            return NotFound(new { error = ex.Message, correlationId });
+        }
     }
 
-    /// <summary>
-    /// Detects file type from content (ST*835, ST*999, CSR) or falls back to extension.
-    /// </summary>
-    private static string InferFileType(string fileName, string content)
+    private static OutboundEdiKind ResolveOutboundKind(string? fileType, ExportFormat receiverExportFormat)
     {
-        // Check content first
-        if (content.Contains("ST*835"))
-            return "835";
-        if (content.Contains("ST*999"))
-            return "999";
-        if (content.Contains("CSR") || content.Contains("csr"))
-            return "CSR";
-        
-        // Fall back to extension
-        var ext = Path.GetExtension(fileName)?.ToLowerInvariant();
-        if (ext == ".edi" || ext == ".835") return "835";
-        if (ext == ".837") return "837";
-        if (ext == ".270") return "270";
-        if (ext == ".999") return "999";
-        
-        return "835"; // Default
+        var ft = (fileType ?? "").Trim();
+        if (string.Equals(ft, "270", StringComparison.OrdinalIgnoreCase))
+            return OutboundEdiKind.Eligibility270;
+        if (string.Equals(ft, "837", StringComparison.OrdinalIgnoreCase))
+            return OutboundEdiKind.Claim837;
+
+        return receiverExportFormat == ExportFormat.Eligibility270
+            ? OutboundEdiKind.Eligibility270
+            : OutboundEdiKind.Claim837;
+    }
+
+    private static string ResolveInboundFileType(string fileName, string content)
+    {
+        var st01 = X12TransactionDetector.TryGetTransactionIdentifier(content);
+        if (X12TransactionDetector.IsSupported(st01))
+            return st01!;
+
+        throw new InvalidOperationException(
+            $"Cannot determine inbound EDI transaction type from ST01. File={fileName} ST01={st01 ?? "<null>"}.");
+    }
+
+    private static string NormalizeInboundTypeFromMetadata(string? fileType)
+    {
+        var normalized = (fileType ?? string.Empty).Trim();
+        if (!X12TransactionDetector.IsSupported(normalized))
+            throw new InvalidOperationException($"Inbound metadata fileType {normalized} is unsupported.");
+        return normalized;
     }
 
     public class GenerateEdiReportRequest

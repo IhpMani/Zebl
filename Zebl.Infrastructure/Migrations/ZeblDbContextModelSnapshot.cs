@@ -22,6 +22,171 @@ namespace Zebl.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Zebl.Application.Domain.ClaimCreditBalance", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("ClaimId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("CreditAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SourceReportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TraceNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id")
+                        .HasName("PK_ClaimCreditBalance_Id");
+
+                    b.ToTable("ClaimCreditBalance", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Application.Domain.ClaimPayment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal?>("AdjustmentAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("ApplyRunId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("ChargeAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("CheckDateUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ClaimExternalId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ClaimId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("InsuranceAppliedAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<bool>("IsApplied")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsOrphan")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsReversed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PatientResponsibility")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PayerId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PayerLevel")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<long?>("PaymentBatchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("PaymentDateUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PostedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PostedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ReversedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ServiceLineCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasDefaultValue("");
+
+                    b.Property<Guid?>("SourceReportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StatusCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<decimal?>("TakebackAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("TotalCharge")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TraceNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id")
+                        .HasName("PK_ClaimPayment_Id");
+
+                    b.HasIndex("TraceNumber", "ClaimExternalId", "ServiceLineCode")
+                        .HasDatabaseName("IX_ClaimPayment_TraceClaimLine");
+
+                    b.HasIndex("TraceNumber", "ClaimExternalId", "PaidAmount", "ServiceLineCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ClaimPayment_TransactionDedup");
+
+                    b.HasIndex("SourceReportId", "TraceNumber", "ClaimExternalId", "PaidAmount", "ServiceLineCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ClaimPayment_ReportScopedDedup")
+                        .HasFilter("[SourceReportId] IS NOT NULL");
+
+                    b.ToTable("ClaimPayment", (string)null);
+                });
+
             modelBuilder.Entity("Zebl.Application.Domain.ClaimRejection", b =>
                 {
                     b.Property<int>("Id")
@@ -134,6 +299,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasDatabaseName("IX_ClaimSubmission_BatchId_TransactionControlNumber")
                         .HasFilter("[BatchId] IS NOT NULL");
 
+                    b.HasIndex("ClaimId", "SubmissionDate")
+                        .HasDatabaseName("IX_ClaimSubmission_ClaimId_SubmissionDate");
+
                     b.ToTable("ClaimSubmission", (string)null);
                 });
 
@@ -152,6 +320,11 @@ namespace Zebl.Infrastructure.Migrations
 
                     b.Property<bool>("AutoRenameFiles")
                         .HasColumnType("bit");
+
+                    b.Property<int>("ConnectionType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -174,8 +347,12 @@ namespace Zebl.Infrastructure.Migrations
 
                     b.Property<string>("Host")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("InboundFetchPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -223,8 +400,21 @@ namespace Zebl.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ClaimIdentifier")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<Guid?>("ConnectionLibraryId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentHashSha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -234,8 +424,9 @@ namespace Zebl.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<byte[]>("FileContent")
-                        .HasColumnType("varbinary(max)");
+                    b.Property<string>("FileHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("FileName")
                         .IsRequired()
@@ -244,6 +435,11 @@ namespace Zebl.Infrastructure.Migrations
 
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("FileStorageKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("FileType")
                         .IsRequired()
@@ -303,6 +499,11 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_EdiReport_Status");
 
+                    b.HasIndex("TenantId", "FileHash")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EdiReport_FileHash")
+                        .HasFilter("[FileHash] IS NOT NULL");
+
                     b.ToTable("EdiReport", (string)null);
                 });
 
@@ -314,11 +515,20 @@ namespace Zebl.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BatchFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ControlNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("EdiReportId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
@@ -326,26 +536,51 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<int>("PayerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PolicyNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<string>("ProviderMode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTime?>("ResponseReceivedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("ProviderNpi")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("SubscriberId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("UsedPayerOverride")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id")
                         .HasName("PK_EligibilityRequest_Id");
+
+                    b.HasIndex("ControlNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EligibilityRequest_ControlNumber");
 
                     b.HasIndex("PatientId")
                         .HasDatabaseName("IX_EligibilityRequest_PatientId");
 
                     b.HasIndex("PayerId")
                         .HasDatabaseName("IX_EligibilityRequest_PayerId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_EligibilityRequest_Status");
+
+                    b.HasIndex("SubscriberId")
+                        .HasDatabaseName("IX_EligibilityRequest_SubscriberId");
+
+                    b.HasIndex("TenantId", "FacilityId", "PatientId")
+                        .HasDatabaseName("IX_EligibilityRequest_TenantFacilityPatient");
 
                     b.ToTable("EligibilityRequest", (string)null);
                 });
@@ -358,43 +593,29 @@ namespace Zebl.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal?>("CoinsurancePercent")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("CopayAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("CoverageEndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("CoverageStartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CoverageStatus")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal?>("DeductibleAmount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("EligibilityStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("EligibilityRequestId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PlanName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Raw271")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id")
                         .HasName("PK_EligibilityResponse_Id");
 
-                    b.HasIndex("EligibilityRequestId")
+                    b.HasIndex("RequestId")
                         .HasDatabaseName("IX_EligibilityResponse_RequestId");
 
                     b.ToTable("EligibilityResponse", (string)null);
@@ -461,6 +682,47 @@ namespace Zebl.Infrastructure.Migrations
                     b.ToTable("EraException", (string)null);
                 });
 
+            modelBuilder.Entity("Zebl.Application.Domain.PaymentBatch", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CheckDateUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ModifiedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TraceNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id")
+                        .HasName("PK_PaymentBatch_Id");
+
+                    b.HasIndex("TenantId", "FacilityId", "TraceNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PaymentBatch_TenantFacilityTrace");
+
+                    b.ToTable("PaymentBatch", (string)null);
+                });
+
             modelBuilder.Entity("Zebl.Application.Domain.ReceiverLibrary", b =>
                 {
                     b.Property<Guid>("Id")
@@ -507,6 +769,9 @@ namespace Zebl.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("FirstName")
                         .HasMaxLength(255)
@@ -574,6 +839,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<int>("SubmitterType")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<string>("TestProdIndicator")
                         .HasMaxLength(1)
                         .HasColumnType("nvarchar(1)");
@@ -584,6 +852,9 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasIndex("LibraryEntryName")
                         .IsUnique()
                         .HasDatabaseName("IX_ReceiverLibrary_LibraryEntryName");
+
+                    b.HasIndex("TenantId", "FacilityId", "IsActive")
+                        .HasDatabaseName("IX_ReceiverLibrary_TenantFacility_IsActive");
 
                     b.ToTable("ReceiverLibrary", (string)null);
                 });
@@ -1279,6 +1550,10 @@ namespace Zebl.Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(2)");
 
+                    b.Property<string>("ClaEdiClaimId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("ClaExternalFID")
                         .HasMaxLength(50)
                         .IsUnicode(false)
@@ -1633,6 +1908,9 @@ namespace Zebl.Infrastructure.Migrations
 
                     b.HasIndex("ClaBillingPhyFID");
 
+                    b.HasIndex("ClaEdiClaimId")
+                        .HasDatabaseName("IX_Claim_ClaEdiClaimId");
+
                     b.HasIndex("ClaFacilityPhyFID");
 
                     b.HasIndex("ClaOperatingPhyFID");
@@ -1647,7 +1925,159 @@ namespace Zebl.Infrastructure.Migrations
 
                     b.HasIndex("ClaSupervisingPhyFID");
 
+                    b.HasIndex("TenantId", "FacilityId")
+                        .HasDatabaseName("IX_Claim_Tenant_Facility");
+
+                    b.HasIndex("TenantId", "FacilityId", "ClaEdiClaimId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Claim_TenantFacility_ClaEdiClaimId")
+                        .HasFilter("[ClaEdiClaimId] IS NOT NULL");
+
                     b.ToTable("Claim", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.ClaimBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ConnectionLibraryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConnectionType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FailureCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SentEdiContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("SubmissionNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("SubmitterReceiverId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SuccessCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalClaims")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK_ClaimBatch_Id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_ClaimBatch_Status");
+
+                    b.HasIndex("SubmitterReceiverId")
+                        .HasDatabaseName("IX_ClaimBatch_SubmitterReceiverId");
+
+                    b.HasIndex("TenantId", "FacilityId", "CreatedAt")
+                        .HasDatabaseName("IX_ClaimBatch_TenantFacility_CreatedAt");
+
+                    b.HasIndex("TenantId", "FacilityId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ClaimBatch_TenantFacility_IdempotencyKey")
+                        .HasFilter("[IdempotencyKey] IS NOT NULL");
+
+                    b.ToTable("ClaimBatch", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.ClaimBatchItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ClaimId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK_ClaimBatchItem_Id");
+
+                    b.HasIndex("BatchId")
+                        .HasDatabaseName("IX_ClaimBatchItem_BatchId");
+
+                    b.HasIndex("ClaimId")
+                        .HasDatabaseName("IX_ClaimBatchItem_ClaimId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_ClaimBatchItem_Status");
+
+                    b.HasIndex("BatchId", "ClaimId")
+                        .HasDatabaseName("IX_ClaimBatchItem_BatchId_ClaimId");
+
+                    b.ToTable("ClaimBatchItem", (string)null);
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.ClaimTemplate", b =>
@@ -1915,6 +2345,45 @@ namespace Zebl.Infrastructure.Migrations
                     b.HasIndex("ClaInsPayFID");
 
                     b.ToTable("Claim_Insured", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.ControlNumberSequence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<long>("LastGroupNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
+                    b.Property<long>("LastInterchangeNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
+                    b.Property<long>("LastTransactionNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK_ControlNumberSequence_Id");
+
+                    b.HasIndex("TenantId", "FacilityId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ControlNumberSequence_Tenant_Facility");
+
+                    b.ToTable("ControlNumberSequence", (string)null);
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.CustomFieldDefinition", b =>
@@ -3781,6 +4250,9 @@ namespace Zebl.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProcID"));
 
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("ProcAdjust")
                         .HasColumnType("money");
 
@@ -3940,11 +4412,10 @@ namespace Zebl.Infrastructure.Migrations
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
-                    b.Property<int>("FacilityId")
-                        .HasColumnType("int");
-
                     b.HasKey("ProcID")
                         .HasName("PK__Procedur__07C21CFE69FC361F");
+
+                    b.HasIndex("FacilityId");
 
                     b.HasIndex("ProcBillingPhyFID");
 
@@ -4104,6 +4575,48 @@ namespace Zebl.Infrastructure.Migrations
                         .HasName("PK_SecondaryForwardableAdjustmentRules");
 
                     b.ToTable("SecondaryForwardableAdjustmentRules", (string)null);
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.SendingClaimsSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NextSubmissionNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("PatientControlNumberMode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)")
+                        .HasDefaultValue("ClaimId");
+
+                    b.Property<bool>("ShowBillToPatientClaims")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK_SendingClaimsSettings_Id");
+
+                    b.HasIndex("TenantId", "FacilityId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SendingClaimsSettings_Tenant_Facility");
+
+                    b.ToTable("SendingClaimsSettings", (string)null);
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Service_Line", b =>
@@ -4610,6 +5123,18 @@ namespace Zebl.Infrastructure.Migrations
                     b.Navigation("ClaSupervisingPhyF");
                 });
 
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.ClaimBatchItem", b =>
+                {
+                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.ClaimBatch", "Batch")
+                        .WithMany("Items")
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_ClaimBatchItem_ClaimBatch");
+
+                    b.Navigation("Batch");
+                });
+
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Claim_Insured", b =>
                 {
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Claim", "ClaInsClaF")
@@ -4803,6 +5328,13 @@ namespace Zebl.Infrastructure.Migrations
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Procedure_Code", b =>
                 {
+                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.FacilityScope", null)
+                        .WithMany()
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Procedure_Code_FacilityScope");
+
                     b.HasOne("Zebl.Infrastructure.Persistence.Entities.Physician", "ProcBillingPhyF")
                         .WithMany("Procedure_Codes")
                         .HasForeignKey("ProcBillingPhyFID")
@@ -4821,13 +5353,6 @@ namespace Zebl.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_Procedure_Code_Tenant");
-
-                    b.HasOne("Zebl.Infrastructure.Persistence.Entities.FacilityScope", null)
-                        .WithMany()
-                        .HasForeignKey("FacilityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Procedure_Code_FacilityScope");
 
                     b.Navigation("ProcBillingPhyF");
 
@@ -4878,6 +5403,11 @@ namespace Zebl.Infrastructure.Migrations
                     b.Navigation("Claim_Insureds");
 
                     b.Navigation("Service_Lines");
+                });
+
+            modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.ClaimBatch", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Zebl.Infrastructure.Persistence.Entities.Insured", b =>

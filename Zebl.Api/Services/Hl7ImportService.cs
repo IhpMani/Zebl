@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Zebl.Application.Abstractions;
+using Zebl.Application.Domain;
+using PayerEntity = Zebl.Infrastructure.Persistence.Entities.Payer;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
 using Zebl.Infrastructure.Services;
@@ -9,7 +11,7 @@ namespace Zebl.Api.Services;
 
 /// <summary>
 /// Service for importing HL7 DFT messages into the database
-/// Implements EZClaim-style claim creation: always creates new claims per DFT message
+/// Imports DFT messages: matches patients by MRN; reuses an existing claim when patient + first FT1 DOS + PV1 visit match.
 /// </summary>
 public class Hl7ImportService
 {
@@ -157,6 +159,8 @@ public class Hl7ImportService
                     result.SuccessCount++;
                     result.NewPatientsCount += messageStats.NewPatient ? 1 : 0;
                     result.NewClaimsCount += messageStats.NewClaim ? 1 : 0;
+                    if (!messageStats.NewClaim)
+                        result.DuplicateClaimsCount++;
                     result.NewServiceLinesCount += messageStats.ServiceLinesCreated;
                     result.TotalAmount += messageStats.Amount;
 
@@ -306,22 +310,30 @@ public class Hl7ImportService
             return stats;
         }
         stats.NewClaim = isNewClaim;
-        Console.WriteLine($"[HL7] Claim created for {patientFirstNameForLog} {patientLastNameForLog}");
+        Console.WriteLine(
+            stats.NewClaim
+                ? $"[HL7] New claim {claim.ClaID} for {patientFirstNameForLog} {patientLastNameForLog}"
+                : $"[HL7] Reusing existing claim {claim.ClaID} for {patientFirstNameForLog} {patientLastNameForLog}");
 
         // Claim is now in the database; claim.ClaID is set.
         _logger.LogInformation("HL7 Claim persisted with ClaID {ClaimId}; creating insurance rows and payers before service lines.", claim.ClaID);
 
-        // Step 4a: Claim_Insured + Payers MUST exist before Service_Line inserts: SrvResponsibleParty FK references Payer.PayID.
-        // Previously service lines used hardcoded PayID=1 before any payer was created, causing FK failures and zero imports.
-        await CreateClaimInsuredRecords(claim.ClaID, patient.PatID, message.In1Segments);
-
-        try
+        // Step 4a: Claim_Insured + Payers (only for newly created claims — avoid duplicate primary/secondary rows on re-import).
+        if (stats.NewClaim)
         {
-            await _claimAuditService.AddInsuranceEditedAsync(claim.ClaID);
+            await CreateClaimInsuredRecords(claim.ClaID, patient.PatID, message.In1Segments);
         }
-        catch (Exception ex)
+
+        if (stats.NewClaim)
         {
-            _logger.LogWarning(ex, "Claim_Audit AddInsuranceEdited failed for claim {ClaId} (non-fatal).", claim.ClaID);
+            try
+            {
+                await _claimAuditService.AddInsuranceEditedAsync(claim.ClaID);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Claim_Audit AddInsuranceEdited failed for claim {ClaId} (non-fatal).", claim.ClaID);
+            }
         }
 
         var primaryPayerId = await _db.Claim_Insureds.AsNoTracking()
@@ -350,13 +362,22 @@ public class Hl7ImportService
 
         if (serviceLinesCreated == 0)
         {
-            _logger.LogWarning("No FT1 service lines detected for claim {ClaID}. Creating default HL7 service line.", claim.ClaID);
-            var defaultFt1 = $"FT1|1|||{claimFirstDate:yyyyMMdd}||||||DEFAULT|1";
-            var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, defaultFt1, claimFirstDate, primaryPayerId);
-            if (created)
+            if (stats.NewClaim)
             {
-                serviceLinesCreated++;
-                amount += charges;
+                _logger.LogWarning("No FT1 service lines detected for claim {ClaID}. Creating default HL7 service line.", claim.ClaID);
+                var defaultFt1 = $"FT1|1|||{claimFirstDate:yyyyMMdd}||||||DEFAULT|1";
+                var (created, charges) = await CreateServiceLineFromFt1WithCharges(claim.ClaID, defaultFt1, claimFirstDate, primaryPayerId);
+                if (created)
+                {
+                    serviceLinesCreated++;
+                    amount += charges;
+                }
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "HL7 re-import: no new FT1 lines for existing claim {ClaID}; skipping default placeholder line.",
+                    claim.ClaID);
             }
         }
 
@@ -376,7 +397,7 @@ public class Hl7ImportService
         // Step 7: Insert Claim_Audit (shows in Claim Note List with filename)
         var noteText = stats.NewClaim
             ? $"Claim Note: Imported from file {fileName}."
-            : $"Claim Note: Updated from file {fileName}.";
+            : $"Claim Note: HL7 re-import from file {fileName} merged into existing claim (duplicate visit/DOS).";
         var activityType = stats.NewClaim ? "Claim Imported" : "Claim Updated";
         try
         {
@@ -557,9 +578,8 @@ public class Hl7ImportService
     }
 
     /// <summary>
-    /// Creates a NEW Claim for the DFT message or returns existing if duplicate.
-    /// For new claims: adds to DbSet and calls SaveChangesAsync so ClaID is generated before any Service_Line is created.
-    /// Do not rely on EF ordering; claim is explicitly persisted here.
+    /// Returns an existing claim when the same patient already has a claim for this first FT1 DOS and PV1 visit (unless force-create debug is on);
+    /// otherwise creates a new claim, saves it, and returns it with isNew true.
     /// </summary>
     private async Task<(Claim claim, bool isNew)> CreateNewClaim(int patientId, Hl7DftMessage message)
     {
@@ -572,6 +592,12 @@ public class Hl7ImportService
         {
             throw new ArgumentException($"Invalid patient ID: {patientId}", nameof(patientId));
         }
+
+        // Default Bill-To for imported claims:
+        // - When IN1 exists, there is primary insurance → Primary (1)
+        // - When IN1 is missing, treat as no insurance/self-pay → Patient (0)
+        var hasIn1Segments = message.In1Segments != null && message.In1Segments.Count > 0;
+        var defaultBillTo = hasIn1Segments ? (int)ClaimBillTo.Primary : (int)ClaimBillTo.Patient;
 
         var patient = await _db.Patients.AsNoTracking()
             .FirstOrDefaultAsync(p =>
@@ -642,7 +668,33 @@ public class Hl7ImportService
             firstServiceDate = _parser.ParseHl7Date(transactionDateStr);
         }
 
-        // EZClaim-import mode: always create a claim per message.
+        // Same dedupe key as HL7 review: patient + first DOS + PV1 visit/account (ClaMedicalRecordNumber).
+        if (!ForceCreateEnabled && firstServiceDate.HasValue)
+        {
+            var normVisit = NormalizeHl7VisitKey(visitNumber);
+            var existingClaim = await _db.Claims
+                .Where(c => c.TenantId == tenantId && c.FacilityId == facilityId && c.ClaPatFID == patientId)
+                .Where(c => c.ClaFirstDateTRIG == firstServiceDate)
+                .Where(c => normVisit == null
+                    ? c.ClaMedicalRecordNumber == null || c.ClaMedicalRecordNumber == ""
+                    : c.ClaMedicalRecordNumber == normVisit)
+                .OrderByDescending(c => c.ClaID)
+                .FirstOrDefaultAsync();
+            if (existingClaim != null)
+            {
+                _logger.LogInformation(
+                    "HL7 DFT: reusing existing claim ClaID={ClaId} for patient PatID={PatId}, DOS={Dos}, visit={Visit} (duplicate import).",
+                    existingClaim.ClaID,
+                    patientId,
+                    firstServiceDate,
+                    normVisit ?? "(none)");
+
+                // If legacy data has NULL ClaBillTo, deterministically default based on IN1 presence.
+                if (existingClaim.ClaBillTo == null)
+                    existingClaim.ClaBillTo = defaultBillTo;
+                return (existingClaim, false);
+            }
+        }
 
         // Attending always from PV1-7; billing/referring from PV1-8 when present, else same as attending (no random First()).
         var attendingPhy = await FindOrCreatePhysicianFromHl7Pv1Async(
@@ -677,6 +729,7 @@ public class Hl7ImportService
         }
 
         var initialClaStatus = await _claimInitialStatus.GetInitialClaStatusStringAsync();
+        Console.WriteLine("DEFAULT STATUS FROM SETTINGS: " + initialClaStatus);
 
         var newClaim = new Claim
         {
@@ -685,6 +738,7 @@ public class Hl7ImportService
             ClaPatFID = patientId,
             ClaStatus = initialClaStatus,
             ClaSubmissionMethod = "Electronic", // HL7 imports are electronic
+            ClaBillTo = defaultBillTo,
             ClaAdmittedDate = admittedDate,
             ClaDischargedDate = dischargedDate,
             ClaFirstDateTRIG = firstServiceDate,
@@ -707,6 +761,7 @@ public class Hl7ImportService
             ClaRenderingPhyFID = billingPhy.PhyID,
             ClaSupervisingPhyFID = attendingPhy.PhyID
         };
+        Console.WriteLine("FINAL CLAIM STATUS: " + newClaim.ClaStatus);
         if (newClaim.TenantId != patient.TenantId)
         {
             Console.WriteLine("HL7 warning: missing data - tenant mismatch on claim/patient");
@@ -747,6 +802,10 @@ public class Hl7ImportService
         _logger.LogInformation("Created new claim ClaID: {ClaID} for patient PatID: {PatID}", newClaim.ClaID, patientId);
         return (newClaim, true);
     }
+
+    /// <summary>Normalize PV1-19 visit / account number so "" and null match the same as in HL7 review.</summary>
+    private static string? NormalizeHl7VisitKey(string? visitNumber) =>
+        string.IsNullOrWhiteSpace(visitNumber) ? null : visitNumber.Trim();
 
     /// <summary>
     /// Creates a Service_Line from an FT1 segment or returns existing if duplicate.
@@ -1072,7 +1131,7 @@ public class Hl7ImportService
         }
     }
 
-    private async Task<Payer> EnsurePayerExistsAsync(
+    private async Task<PayerEntity> EnsurePayerExistsAsync(
         string normalizedName,
         string? addr1,
         string? city,
@@ -1098,7 +1157,7 @@ public class Hl7ImportService
         if (!string.IsNullOrWhiteSpace(state)) payerCityStateZipParts.Add(state);
         if (!string.IsNullOrWhiteSpace(zip)) payerCityStateZipParts.Add(zip);
 
-        payer = new Payer
+        payer = new PayerEntity
         {
             PayName = normalizedName,
             TenantId = tenantId,

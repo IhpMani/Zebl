@@ -64,6 +64,10 @@ namespace Zebl.Api.Controllers
                 {
                     SrvID = s.SrvID,
                     SrvClaFID = s.SrvClaFID,
+                    SrvDateTimeCreated = s.SrvDateTimeCreated,
+                    SrvDateTimeModified = s.SrvDateTimeModified,
+                    CreatedDate = s.SrvDateTimeCreated,
+                    ModifiedDate = s.SrvDateTimeModified,
                     SrvFromDate = s.SrvFromDate,
                     SrvToDate = s.SrvToDate,
                     SrvProcedureCode = s.SrvProcedureCode,
@@ -149,25 +153,53 @@ namespace Zebl.Api.Controllers
 
             var totalCount = await query.CountAsync();
 
-            List<ServiceListItemDto> data;
-            if (columnsToInclude.Count > 0 && (hasClaStatus || hasClaDateTimeCreated || hasPatFirstName || hasPatLastName || hasPatFullNameCC))
+            // Always project full service line fields; populate AdditionalColumns in a follow-up query
+            // so requesting related columns never zeros out base service fields (regression fix).
+            var data = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(s => new ServiceListItemDto
+                {
+                    SrvID = s.SrvID,
+                    SrvClaFID = s.SrvClaFID,
+                    SrvDateTimeCreated = s.SrvDateTimeCreated,
+                    SrvDateTimeModified = s.SrvDateTimeModified,
+                    CreatedDate = s.SrvDateTimeCreated,
+                    ModifiedDate = s.SrvDateTimeModified,
+                    SrvFromDate = s.SrvFromDate,
+                    SrvToDate = s.SrvToDate,
+                    SrvProcedureCode = s.SrvProcedureCode,
+                    SrvModifier1 = s.SrvModifier1,
+                    SrvModifier2 = s.SrvModifier2,
+                    SrvModifier3 = s.SrvModifier3,
+                    SrvModifier4 = s.SrvModifier4,
+                    SrvDesc = s.SrvDesc,
+                    SrvCharges = s.SrvCharges,
+                    SrvAllowedAmt = s.SrvAllowedAmt,
+                    SrvUnits = s.SrvUnits,
+                    SrvTotalInsAmtPaidTRIG = s.SrvTotalInsAmtPaidTRIG,
+                    SrvTotalPatAmtPaidTRIG = s.SrvTotalPatAmtPaidTRIG,
+                    SrvTotalBalanceCC = s.SrvTotalBalanceCC,
+                    SrvTotalAmtPaidCC = s.SrvTotalAmtPaidCC,
+                    SrvResponsibleParty = s.SrvResponsibleParty,
+                    SrvNationalDrugCode = s.SrvNationalDrugCode,
+                    SrvDrugUnitCount = s.SrvDrugUnitCount,
+                    SrvDrugUnitMeasurement = s.SrvDrugUnitMeasurement,
+                    SrvPrescriptionNumber = s.SrvPrescriptionNumber,
+                    SrvRevenueCode = s.SrvRevenueCode,
+                    AdditionalColumns = new Dictionary<string, object?>()
+                })
+                .ToListAsync();
+
+            if (columnsToInclude.Count > 0 &&
+                (hasClaStatus || hasClaDateTimeCreated || hasPatFirstName || hasPatLastName || hasPatFullNameCC))
             {
-                var raw = await query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
+                var ids = data.Select(d => d.SrvID).ToList();
+                var extraRows = await _db.Service_Lines.AsNoTracking()
+                    .Where(s => ids.Contains(s.SrvID) && s.SrvClaF != null && s.SrvClaF.TenantId == tid && s.SrvClaF.FacilityId == fid)
                     .Select(s => new
                     {
                         s.SrvID,
-                        s.SrvClaFID,
-                        s.SrvFromDate,
-                        s.SrvToDate,
-                        s.SrvProcedureCode,
-                        s.SrvDesc,
-                        s.SrvCharges,
-                        s.SrvUnits,
-                        s.SrvResponsibleParty,
-                        s.SrvTotalBalanceCC,
-                        s.SrvTotalAmtPaidCC,
                         ClaStatus = s.SrvClaF != null ? s.SrvClaF.ClaStatus : null,
                         ClaDateTimeCreated = s.SrvClaF != null ? s.SrvClaF.ClaDateTimeCreated : default,
                         PatFirstName = s.SrvClaF != null && s.SrvClaF.ClaPatF != null ? s.SrvClaF.ClaPatF.PatFirstName : null,
@@ -175,77 +207,18 @@ namespace Zebl.Api.Controllers
                         PatFullNameCC = s.SrvClaF != null && s.SrvClaF.ClaPatF != null ? s.SrvClaF.ClaPatF.PatFullNameCC : null
                     })
                     .ToListAsync();
-
-                data = raw.Select(r =>
+                var byId = extraRows.ToDictionary(x => x.SrvID, x => x);
+                foreach (var row in data)
                 {
+                    if (!byId.TryGetValue(row.SrvID, out var x)) continue;
                     var addCols = new Dictionary<string, object?>();
-                    if (hasClaStatus) addCols["claStatus"] = r.ClaStatus;
-                    if (hasClaDateTimeCreated) addCols["claDateTimeCreated"] = r.ClaDateTimeCreated;
-                    if (hasPatFirstName) addCols["patFirstName"] = r.PatFirstName;
-                    if (hasPatLastName) addCols["patLastName"] = r.PatLastName;
-                    if (hasPatFullNameCC) addCols["patFullNameCC"] = r.PatFullNameCC;
-                    return new ServiceListItemDto
-                    {
-                        SrvID = r.SrvID,
-                        SrvClaFID = r.SrvClaFID,
-                        SrvFromDate = r.SrvFromDate,
-                        SrvToDate = r.SrvToDate,
-                        SrvProcedureCode = r.SrvProcedureCode,
-                        SrvModifier1 = null,
-                        SrvModifier2 = null,
-                        SrvModifier3 = null,
-                        SrvModifier4 = null,
-                        SrvDesc = r.SrvDesc,
-                        SrvCharges = r.SrvCharges,
-                        SrvAllowedAmt = 0,
-                        SrvUnits = r.SrvUnits,
-                        SrvTotalInsAmtPaidTRIG = 0,
-                        SrvTotalPatAmtPaidTRIG = 0,
-                        SrvTotalBalanceCC = r.SrvTotalBalanceCC,
-                        SrvTotalAmtPaidCC = r.SrvTotalAmtPaidCC,
-                        SrvResponsibleParty = r.SrvResponsibleParty,
-                        SrvNationalDrugCode = null,
-                        SrvDrugUnitCount = null,
-                        SrvDrugUnitMeasurement = null,
-                        SrvPrescriptionNumber = null,
-                        SrvRevenueCode = null,
-                        AdditionalColumns = addCols
-                    };
-                }).ToList();
-            }
-            else
-            {
-                data = await query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(s => new ServiceListItemDto
-                    {
-                        SrvID = s.SrvID,
-                        SrvClaFID = s.SrvClaFID,
-                        SrvFromDate = s.SrvFromDate,
-                        SrvToDate = s.SrvToDate,
-                        SrvProcedureCode = s.SrvProcedureCode,
-                        SrvModifier1 = s.SrvModifier1,
-                        SrvModifier2 = s.SrvModifier2,
-                        SrvModifier3 = s.SrvModifier3,
-                        SrvModifier4 = s.SrvModifier4,
-                        SrvDesc = s.SrvDesc,
-                        SrvCharges = s.SrvCharges,
-                        SrvAllowedAmt = s.SrvAllowedAmt,
-                        SrvUnits = s.SrvUnits,
-                        SrvTotalInsAmtPaidTRIG = s.SrvTotalInsAmtPaidTRIG,
-                        SrvTotalPatAmtPaidTRIG = s.SrvTotalPatAmtPaidTRIG,
-                        SrvTotalBalanceCC = s.SrvTotalBalanceCC,
-                        SrvTotalAmtPaidCC = s.SrvTotalAmtPaidCC,
-                        SrvResponsibleParty = s.SrvResponsibleParty,
-                        SrvNationalDrugCode = s.SrvNationalDrugCode,
-                        SrvDrugUnitCount = s.SrvDrugUnitCount,
-                        SrvDrugUnitMeasurement = s.SrvDrugUnitMeasurement,
-                        SrvPrescriptionNumber = s.SrvPrescriptionNumber,
-                        SrvRevenueCode = s.SrvRevenueCode,
-                        AdditionalColumns = new Dictionary<string, object?>()
-                    })
-                    .ToListAsync();
+                    if (hasClaStatus) addCols["claStatus"] = x.ClaStatus;
+                    if (hasClaDateTimeCreated) addCols["claDateTimeCreated"] = x.ClaDateTimeCreated;
+                    if (hasPatFirstName) addCols["patFirstName"] = x.PatFirstName;
+                    if (hasPatLastName) addCols["patLastName"] = x.PatLastName;
+                    if (hasPatFullNameCC) addCols["patFullNameCC"] = x.PatFullNameCC;
+                    row.AdditionalColumns = addCols;
+                }
             }
 
             return Ok(new ApiResponse<List<ServiceListItemDto>>
@@ -627,6 +600,9 @@ namespace Zebl.Api.Controllers
                 SrvID = s.SrvID,
                 SrvClaFID = s.SrvClaFID,
                 SrvDateTimeCreated = s.SrvDateTimeCreated,
+                SrvDateTimeModified = s.SrvDateTimeModified,
+                CreatedDate = s.SrvDateTimeCreated,
+                ModifiedDate = s.SrvDateTimeModified,
                 SrvFromDate = s.SrvFromDate,
                 SrvToDate = s.SrvToDate,
                 SrvProcedureCode = s.SrvProcedureCode,

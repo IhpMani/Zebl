@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,9 @@ using Zebl.Application.Services;
 using Zebl.Application.Dtos.Common;
 using Zebl.Infrastructure.Persistence.Context;
 using Zebl.Infrastructure.Persistence.Entities;
+using Zebl.Api.Services;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -27,33 +30,39 @@ namespace Zebl.Api.Controllers
         private readonly ZeblDbContext _db;
         private readonly ICurrentUserContext _userContext;
         private readonly ICurrentContext _currentContext;
-        private readonly IClaimExportService _claimExportService;
         private readonly ISecondaryTriggerService _secondaryTriggerService;
         private readonly ILogger<ClaimsController> _logger;
         private readonly Zebl.Infrastructure.Services.ProgramSettingsService _programSettingsService;
         private readonly Zebl.Application.Repositories.IClaimRejectionRepository _claimRejectionRepository;
         private readonly IClaimScrubService _claimScrubService;
+        private readonly IClaimBatchService _claimBatchService;
+        private readonly ISendingClaimsSettingsService _sendingClaimsSettingsService;
+        private readonly Zebl.Application.Repositories.IServiceLineRepository _serviceLineRepository;
 
         public ClaimsController(
             ZeblDbContext db,
             ICurrentUserContext userContext,
             ICurrentContext currentContext,
-            IClaimExportService claimExportService,
             ISecondaryTriggerService secondaryTriggerService,
             ILogger<ClaimsController> logger,
             Zebl.Infrastructure.Services.ProgramSettingsService programSettingsService,
             Zebl.Application.Repositories.IClaimRejectionRepository claimRejectionRepository,
-            IClaimScrubService claimScrubService)
+            IClaimScrubService claimScrubService,
+            IClaimBatchService claimBatchService,
+            ISendingClaimsSettingsService sendingClaimsSettingsService,
+            Zebl.Application.Repositories.IServiceLineRepository serviceLineRepository)
         {
             _db = db;
             _userContext = userContext;
             _currentContext = currentContext;
-            _claimExportService = claimExportService;
             _secondaryTriggerService = secondaryTriggerService;
             _logger = logger;
             _programSettingsService = programSettingsService;
             _claimRejectionRepository = claimRejectionRepository;
             _claimScrubService = claimScrubService;
+            _claimBatchService = claimBatchService;
+            _sendingClaimsSettingsService = sendingClaimsSettingsService;
+            _serviceLineRepository = serviceLineRepository;
         }
 
         [HttpGet("rejections")]
@@ -106,6 +115,80 @@ namespace Zebl.Api.Controllers
             public int ClaimId { get; set; }
         }
 
+        public sealed class SendBatchRequest
+        {
+            public List<int> ClaimIds { get; set; } = [];
+            public bool ForceResubmit { get; set; }
+            public string? IdempotencyKey { get; set; }
+            public Guid? SubmitterReceiverId { get; set; }
+            public string? ConnectionType { get; set; }
+            public Guid? ConnectionLibraryId { get; set; }
+        }
+
+        public sealed class FailedClaimDto
+        {
+            public int ClaimId { get; set; }
+            public string ErrorMessage { get; set; } = string.Empty;
+        }
+
+        public sealed class BlockedClaimDto
+        {
+            public int ClaimId { get; set; }
+            public string Reason { get; set; } = string.Empty;
+        }
+
+        public sealed class SendBatchResponseDto
+        {
+            public bool Success { get; set; }
+            public string BatchId { get; set; } = string.Empty;
+            public int Total { get; set; }
+            public int SuccessCount { get; set; }
+            public int FailureCount { get; set; }
+            public string? FilePath { get; set; }
+            public List<FailedClaimDto> FailedClaims { get; set; } = [];
+            public List<BlockedClaimDto> BlockedClaims { get; set; } = [];
+        }
+
+        public sealed class ClaimBatchListItemDto
+        {
+            public Guid Id { get; set; }
+            public string Status { get; set; } = string.Empty;
+            public int SubmissionNumber { get; set; }
+            public Guid? SubmitterReceiverId { get; set; }
+            public string? ConnectionType { get; set; }
+            public int TotalClaims { get; set; }
+            public int SuccessCount { get; set; }
+            public int FailureCount { get; set; }
+            public DateTime CreatedAt { get; set; }
+            public DateTime? SubmittedAt { get; set; }
+            public string? FilePath { get; set; }
+        }
+
+        public sealed class ClaimBatchItemDto
+        {
+            public int Id { get; set; }
+            public int ClaimId { get; set; }
+            public string Status { get; set; } = string.Empty;
+            public string? ErrorMessage { get; set; }
+            public DateTime CreatedAt { get; set; }
+        }
+
+        public sealed class ClaimBatchDetailDto
+        {
+            public Guid Id { get; set; }
+            public string Status { get; set; } = string.Empty;
+            public int SubmissionNumber { get; set; }
+            public Guid? SubmitterReceiverId { get; set; }
+            public string? ConnectionType { get; set; }
+            public int TotalClaims { get; set; }
+            public int SuccessCount { get; set; }
+            public int FailureCount { get; set; }
+            public DateTime CreatedAt { get; set; }
+            public DateTime? SubmittedAt { get; set; }
+            public string? FilePath { get; set; }
+            public List<ClaimBatchItemDto> Items { get; set; } = [];
+        }
+
         /// <summary>
         /// Evaluate claim for secondary: rule-driven PR/CO forwardable amount, create secondary if eligible.
         /// Call after ERA is posted and reconciliation passes, or after manual posting.
@@ -121,6 +204,500 @@ namespace Zebl.Api.Controllers
                 forwardAmount = result.ForwardAmount,
                 secondaryClaimId = result.SecondaryClaimId
             });
+        }
+
+        [HttpGet("sendable")]
+        public async Task<IActionResult> GetSendableClaims([FromQuery] int page = 1, [FromQuery] int pageSize = 100, CancellationToken cancellationToken = default)
+        {
+            if (page < 1)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "Page must be at least 1"
+                });
+            }
+
+            if (pageSize < 1 || pageSize > 500)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "Page size must be between 1 and 500"
+                });
+            }
+
+            var query = await BuildSendableClaimsQueryAsync(cancellationToken);
+            var totalCount = await query.CountAsync();
+            var rows = await query
+                .OrderByDescending(c => c.ClaID)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new
+                {
+                    claID = c.ClaID,
+                    claStatus = c.ClaStatus,
+                    claSubmissionMethod = c.ClaSubmissionMethod,
+                    claDateTimeCreated = c.ClaDateTimeCreated,
+                    claTotalChargeTRIG = c.ClaTotalChargeTRIG,
+                    claTotalBalanceCC = c.ClaTotalBalanceCC,
+                    claPatFID = c.ClaPatFID,
+                    // TEMP DEBUG: expose payer mapping used by Send Claims eligibility.
+                    debugPayer = c.Claim_Insureds
+                        .Where(i => i.ClaInsSequence == 1)
+                        .Select(i => new
+                        {
+                            claInsPayFID = (int?)i.ClaInsPayFID,
+                            payID = (int?)i.ClaInsPayF.PayID,
+                            payName = i.ClaInsPayF.PayName,
+                            payExternalID = i.ClaInsPayF.PayExternalID
+                        })
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
+
+            foreach (var row in rows)
+            {
+                _logger.LogInformation(
+                    "Claim {id} -> Status={status}, PayFID={payId}, PayerPayID={payerPayId}, Name={name}, ExternalID={extId}",
+                    row.claID,
+                    row.claStatus,
+                    row.debugPayer?.claInsPayFID,
+                    row.debugPayer?.payID,
+                    row.debugPayer?.payName,
+                    row.debugPayer?.payExternalID);
+            }
+
+            return Ok(new
+            {
+                data = rows,
+                meta = new { page, pageSize, totalCount }
+            });
+        }
+
+        [HttpPost("send-batch")]
+        public async Task<IActionResult> SendBatch([FromBody] SendBatchRequest request, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation(
+                "SendBatch start. Tenant={TenantId}, Facility={FacilityId}, Request={@Request}",
+                _currentContext.TenantId,
+                _currentContext.FacilityId,
+                request);
+
+            if (request?.ClaimIds == null || request.ClaimIds.Count == 0)
+            {
+                _logger.LogError("SendBatch validation failed: missing claimIds. Request={@Request}", request);
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "At least one claimId is required."
+                });
+            }
+
+            var claimIds = request.ClaimIds
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+            if (claimIds.Count == 0)
+            {
+                _logger.LogError("SendBatch validation failed: no positive claimIds. Request={@Request}", request);
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "Claim IDs must be positive integers."
+                });
+            }
+
+            if (!request.SubmitterReceiverId.HasValue)
+            {
+                _logger.LogError("SendBatch validation failed: SubmitterReceiverId missing. Request={@Request}", request);
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "SubmitterReceiverId is required."
+                });
+            }
+
+            var connectionTrimmed = request.ConnectionType?.Trim();
+            if (string.IsNullOrEmpty(connectionTrimmed) ||
+                (!string.Equals(connectionTrimmed, "Export", StringComparison.OrdinalIgnoreCase) &&
+                 !string.Equals(connectionTrimmed, "Clearinghouse", StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogError(
+                    "SendBatch validation failed: invalid ConnectionType='{ConnectionType}'. Request={@Request}",
+                    request.ConnectionType,
+                    request);
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "ConnectionType must be Export or Clearinghouse."
+                });
+            }
+
+            if (string.Equals(connectionTrimmed, "Clearinghouse", StringComparison.OrdinalIgnoreCase) &&
+                (!request.ConnectionLibraryId.HasValue || request.ConnectionLibraryId.Value == Guid.Empty))
+            {
+                _logger.LogError("SendBatch validation failed: ConnectionLibraryId missing for clearinghouse. Request={@Request}", request);
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "ConnectionLibraryId is required for Clearinghouse."
+                });
+            }
+
+            try
+            {
+                _logger.LogInformation("SendBatch creating batch. ClaimCount={ClaimCount}", claimIds.Count);
+                var creation = await _claimBatchService.CreateBatchAsync(
+                    new CreateBatchRequest
+                    {
+                        ClaimIds = claimIds,
+                        ForceResubmit = request.ForceResubmit,
+                        IdempotencyKey = request.IdempotencyKey,
+                        SubmitterReceiverId = request.SubmitterReceiverId,
+                        ConnectionType = request.ConnectionType,
+                        ConnectionLibraryId = request.ConnectionLibraryId,
+                        TenantId = _currentContext.TenantId,
+                        FacilityId = _currentContext.FacilityId,
+                        CreatedBy = _userContext.UserName
+                    },
+                    cancellationToken);
+                _logger.LogInformation(
+                    "Batch created. BatchId={BatchId}, IsIdempotentHit={IsIdempotentHit}, BlockedClaims={BlockedCount}",
+                    creation.BatchId,
+                    creation.IsIdempotentHit,
+                    creation.BlockedClaims.Count);
+
+                if (creation.BlockedClaims.Count == claimIds.Count)
+                {
+                    _logger.LogWarning(
+                        "SendBatch: all selected claims were blocked. BatchId={BatchId}, Selected={SelectedCount}",
+                        creation.BatchId,
+                        claimIds.Count);
+                    return Conflict(new ErrorResponseDto
+                    {
+                        ErrorCode = "BATCH_CONFLICT",
+                        Message = "No eligible claims were available to send for this batch."
+                    });
+                }
+
+                if (creation.IsIdempotentHit)
+                {
+                    var existing = await _claimBatchService.GetBatchAsync(
+                        new GetBatchRequest
+                        {
+                            BatchId = creation.BatchId,
+                            TenantId = _currentContext.TenantId,
+                            FacilityId = _currentContext.FacilityId
+                        },
+                        cancellationToken);
+
+                    if (existing != null)
+                    {
+                        return Ok(new SendBatchResponseDto
+                        {
+                            Success = existing.SuccessCount > 0,
+                            BatchId = existing.Id.ToString(),
+                            Total = claimIds.Count,
+                            SuccessCount = existing.SuccessCount,
+                            FailureCount = existing.FailureCount,
+                            FilePath = existing.FilePath,
+                            FailedClaims = existing.Items
+                                .Where(i => i.Status == "Failed" && !string.IsNullOrWhiteSpace(i.ErrorMessage))
+                                .Select(i => new FailedClaimDto { ClaimId = i.ClaimId, ErrorMessage = i.ErrorMessage! })
+                                .ToList(),
+                            BlockedClaims = creation.BlockedClaims
+                                .Select(b => new BlockedClaimDto { ClaimId = b.ClaimId, Reason = b.Reason })
+                                .ToList()
+                        });
+                    }
+                }
+
+                _logger.LogInformation("Batch processing started. BatchId={BatchId}", creation.BatchId);
+                var processResult = await _claimBatchService.ProcessBatchAsync(
+                    new ProcessBatchRequest
+                    {
+                        BatchId = creation.BatchId,
+                        TenantId = _currentContext.TenantId,
+                        FacilityId = _currentContext.FacilityId
+                    },
+                    cancellationToken);
+                _logger.LogInformation(
+                    "Batch completed. BatchId={BatchId}, Success={SuccessCount}, Failed={FailureCount}",
+                    processResult.BatchId,
+                    processResult.SuccessCount,
+                    processResult.FailureCount);
+
+                var batchRows = await _db.ClaimBatches
+                    .AsNoTracking()
+                    .Where(b => b.Id == processResult.BatchId)
+                    .Select(b => new
+                    {
+                        b.Id,
+                        b.Status,
+                        b.FilePath,
+                        b.CreatedAt,
+                        b.SubmittedAt
+                    })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                var batchItemCount = await _db.ClaimBatchItems
+                    .AsNoTracking()
+                    .CountAsync(i => i.BatchId == processResult.BatchId, cancellationToken);
+
+                _logger.LogInformation(
+                    "Batch persistence check. Batch={@Batch}, BatchItemCount={BatchItemCount}, FileGenerated={FileGenerated}",
+                    batchRows,
+                    batchItemCount,
+                    !string.IsNullOrWhiteSpace(batchRows?.FilePath));
+
+                return Ok(new SendBatchResponseDto
+                {
+                    Success = processResult.SuccessCount > 0,
+                    BatchId = processResult.BatchId.ToString(),
+                    Total = claimIds.Count,
+                    SuccessCount = processResult.SuccessCount,
+                    FailureCount = processResult.FailureCount,
+                    FilePath = batchRows?.FilePath,
+                    FailedClaims = processResult.FailedClaims
+                        .Select(f => new FailedClaimDto { ClaimId = f.ClaimId, ErrorMessage = f.ErrorMessage })
+                        .ToList(),
+                    BlockedClaims = creation.BlockedClaims
+                        .Select(b => new BlockedClaimDto { ClaimId = b.ClaimId, Reason = b.Reason })
+                        .ToList()
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "SendBatch failed with argument error. Request={@Request}", request);
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "SendBatch failed with operation conflict. Request={@Request}", request);
+                return Conflict(new ErrorResponseDto
+                {
+                    ErrorCode = "BATCH_CONFLICT",
+                    Message = ex.Message
+                });
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogError(ex, "SendBatch failed with DB concurrency error. Request={@Request}", request);
+                return Conflict(new ErrorResponseDto
+                {
+                    ErrorCode = "BATCH_CONCURRENCY",
+                    Message = "Batch was modified by another process. Please retry."
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SendBatch failed with unexpected error. Request={@Request}", request);
+                throw;
+            }
+        }
+
+        [HttpPost("retry-batch/{batchId:guid}")]
+        public async Task<IActionResult> RetryBatch([FromRoute] Guid batchId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _claimBatchService.RetryBatchAsync(
+                    new RetryBatchRequest
+                    {
+                        BatchId = batchId,
+                        TenantId = _currentContext.TenantId,
+                        FacilityId = _currentContext.FacilityId
+                    },
+                    cancellationToken);
+
+                return Ok(new SendBatchResponseDto
+                {
+                    BatchId = result.BatchId.ToString(),
+                    Total = result.TotalClaims,
+                    SuccessCount = result.SuccessCount,
+                    FailureCount = result.FailureCount,
+                    FailedClaims = result.FailedClaims
+                        .Select(f => new FailedClaimDto { ClaimId = f.ClaimId, ErrorMessage = f.ErrorMessage })
+                        .ToList()
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Batch not found." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new ErrorResponseDto { ErrorCode = "BATCH_CONFLICT", Message = ex.Message });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Conflict(new ErrorResponseDto
+                {
+                    ErrorCode = "BATCH_CONCURRENCY",
+                    Message = "Batch was modified by another process. Please retry."
+                });
+            }
+        }
+
+        [HttpGet("batches")]
+        public async Task<IActionResult> GetBatches([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            if (page < 1 || pageSize < 1 || pageSize > 200)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "Invalid paging values."
+                });
+            }
+
+            var result = await _claimBatchService.GetBatchesAsync(
+                new GetBatchesRequest
+                {
+                    TenantId = _currentContext.TenantId,
+                    FacilityId = _currentContext.FacilityId,
+                    Page = page,
+                    PageSize = pageSize
+                },
+                CancellationToken.None);
+
+            var data = result.Items.Select(b => new ClaimBatchListItemDto
+            {
+                Id = b.Id,
+                Status = b.Status,
+                SubmissionNumber = b.SubmissionNumber,
+                SubmitterReceiverId = b.SubmitterReceiverId,
+                ConnectionType = b.ConnectionType,
+                TotalClaims = b.TotalClaims,
+                SuccessCount = b.SuccessCount,
+                FailureCount = b.FailureCount,
+                CreatedAt = b.CreatedAt,
+                SubmittedAt = b.SubmittedAt,
+                FilePath = b.FilePath
+            }).ToList();
+
+            return Ok(new
+            {
+                data,
+                meta = new { page = result.Page, pageSize = result.PageSize, totalCount = result.TotalCount }
+            });
+        }
+
+        [HttpGet("batches/{batchId:guid}")]
+        public async Task<IActionResult> GetBatchById([FromRoute] Guid batchId, CancellationToken cancellationToken)
+        {
+            var batch = await _claimBatchService.GetBatchAsync(
+                new GetBatchRequest
+                {
+                    BatchId = batchId,
+                    TenantId = _currentContext.TenantId,
+                    FacilityId = _currentContext.FacilityId
+                },
+                cancellationToken);
+            if (batch == null)
+            {
+                return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Batch not found." });
+            }
+
+            return Ok(new ClaimBatchDetailDto
+            {
+                Id = batch.Id,
+                Status = batch.Status,
+                SubmissionNumber = batch.SubmissionNumber,
+                SubmitterReceiverId = batch.SubmitterReceiverId,
+                ConnectionType = batch.ConnectionType,
+                TotalClaims = batch.TotalClaims,
+                SuccessCount = batch.SuccessCount,
+                FailureCount = batch.FailureCount,
+                CreatedAt = batch.CreatedAt,
+                SubmittedAt = batch.SubmittedAt,
+                FilePath = batch.FilePath,
+                Items = batch.Items.Select(i => new ClaimBatchItemDto
+                {
+                    Id = i.Id,
+                    ClaimId = i.ClaimId,
+                    Status = i.Status,
+                    ErrorMessage = i.ErrorMessage,
+                    CreatedAt = i.CreatedAt
+                }).ToList()
+            });
+        }
+
+        [HttpGet("batches/{batchId:guid}/edi")]
+        public async Task<IActionResult> GetBatchEdi([FromRoute] Guid batchId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _claimBatchService.GetBatchEdiAsync(
+                    new GetBatchRequest
+                    {
+                        BatchId = batchId,
+                        TenantId = _currentContext.TenantId,
+                        FacilityId = _currentContext.FacilityId
+                    },
+                    cancellationToken);
+
+                return Ok(new
+                {
+                    batchId = result.BatchId,
+                    ediContent = result.EdiContent
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Batch not found." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = ex.Message });
+            }
+        }
+
+        [HttpPost("batches/{batchId:guid}/export-zip")]
+        public async Task<IActionResult> ExportBatchZip([FromRoute] Guid batchId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _claimBatchService.ExportBatchZipAsync(
+                    new GetBatchRequest
+                    {
+                        BatchId = batchId,
+                        TenantId = _currentContext.TenantId,
+                        FacilityId = _currentContext.FacilityId
+                    },
+                    cancellationToken);
+
+                return File(result.Content, "application/zip", result.FileName);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Batch not found." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = ex.Message });
+            }
+        }
+
+        private async Task<IQueryable<Claim>> BuildSendableClaimsQueryAsync(CancellationToken cancellationToken)
+        {
+            var tenantId = _currentContext.TenantId;
+            var facilityId = _currentContext.FacilityId;
+            var rts = ClaimStatusCatalog.ToStorage(ClaimStatus.RTS);
+            var settings = await _sendingClaimsSettingsService.GetSettingsAsync(tenantId, facilityId, cancellationToken);
+
+            return _db.Claims
+                .AsNoTracking()
+                .WhereEligibleForSend(tenantId, facilityId, rts, settings.ShowBillToPatientClaims);
         }
 
         [HttpGet]
@@ -221,10 +798,23 @@ namespace Zebl.Api.Controllers
             var hasFacilityName = columnsToInclude.Any(col => col.Key == "facilityName");
 
             // Build efficient LINQ query with server-side filtering
-            // Note: We don't need Include() when using Select() - EF Core will automatically join
             var tenantId = _currentContext.TenantId;
             var facilityId = _currentContext.FacilityId;
-            var query = _db.Claims.AsNoTracking()
+            var scopedServiceLines = _db.Service_Lines
+                .AsNoTracking()
+                .Where(s => s.TenantId == tenantId && s.FacilityId == facilityId && s.SrvClaFID.HasValue);
+            var serviceLineAgg = scopedServiceLines
+                .GroupBy(s => s.SrvClaFID!.Value)
+                .Select(g => new
+                {
+                    ClaimId = g.Key,
+                    TotalCharge = g.Sum(x => (decimal?)x.SrvCharges) ?? 0m,
+                    TotalInsBalance = g.Sum(x => x.SrvTotalInsBalanceCC) ?? 0m,
+                    TotalPatBalance = g.Sum(x => x.SrvTotalPatBalanceCC) ?? 0m,
+                    TotalBalance = g.Sum(x => x.SrvTotalBalanceCC) ?? 0m
+                });
+
+            var baseQuery = _db.Claims.AsNoTracking()
                 .Where(c => c.TenantId == tenantId && c.FacilityId == facilityId);
 
             // Excel-style status filter: support both single status and comma-separated list
@@ -235,81 +825,74 @@ namespace Zebl.Api.Controllers
                     .ToList();
                 if (statuses.Any())
                 {
-                    query = query.Where(c => c.ClaStatus != null && statuses.Contains(c.ClaStatus));
+                    baseQuery = baseQuery.Where(c => c.ClaStatus != null && statuses.Contains(c.ClaStatus));
                 }
             }
             else if (!string.IsNullOrWhiteSpace(status))
             {
-                query = query.Where(c => c.ClaStatus == status);
+                baseQuery = baseQuery.Where(c => c.ClaStatus == status);
             }
 
             // Date range filter
             if (fromDate.HasValue)
             {
-                query = query.Where(c => c.ClaDateTimeCreated >= fromDate.Value);
+                baseQuery = baseQuery.Where(c => c.ClaDateTimeCreated >= fromDate.Value);
             }
 
             if (toDate.HasValue)
             {
-                query = query.Where(c => c.ClaDateTimeCreated <= toDate.Value);
+                baseQuery = baseQuery.Where(c => c.ClaDateTimeCreated <= toDate.Value);
             }
 
             // Claim ID range filter
             if (minClaimId.HasValue)
             {
-                query = query.Where(c => c.ClaID >= minClaimId.Value);
+                baseQuery = baseQuery.Where(c => c.ClaID >= minClaimId.Value);
             }
 
             if (maxClaimId.HasValue)
             {
-                query = query.Where(c => c.ClaID <= maxClaimId.Value);
+                baseQuery = baseQuery.Where(c => c.ClaID <= maxClaimId.Value);
             }
+
+            var query = from c in baseQuery
+                        join agg in serviceLineAgg on c.ClaID equals agg.ClaimId into aggJoin
+                        from agg in aggJoin.DefaultIfEmpty()
+                        select new { Claim = c, Agg = agg };
 
             // Total Charge range filter
             if (minTotalCharge.HasValue)
             {
-                query = query.Where(c =>
-                    (_db.Service_Lines
-                        .Where(s => s.SrvClaFID == c.ClaID)
-                        .Sum(s => (decimal?)s.SrvCharges) ?? 0m) >= minTotalCharge.Value);
+                query = query.Where(x => (x.Agg != null ? x.Agg.TotalCharge : 0m) >= minTotalCharge.Value);
             }
 
             if (maxTotalCharge.HasValue)
             {
-                query = query.Where(c =>
-                    (_db.Service_Lines
-                        .Where(s => s.SrvClaFID == c.ClaID)
-                        .Sum(s => (decimal?)s.SrvCharges) ?? 0m) <= maxTotalCharge.Value);
+                query = query.Where(x => (x.Agg != null ? x.Agg.TotalCharge : 0m) <= maxTotalCharge.Value);
             }
 
             // Total Balance range filter
             if (minTotalBalance.HasValue)
             {
-                query = query.Where(c =>
-                    (_db.Service_Lines
-                        .Where(s => s.SrvClaFID == c.ClaID)
-                        .Sum(s => s.SrvTotalBalanceCC) ?? 0m) >= minTotalBalance.Value);
+                query = query.Where(x => (x.Agg != null ? x.Agg.TotalBalance : 0m) >= minTotalBalance.Value);
             }
 
             if (maxTotalBalance.HasValue)
             {
-                query = query.Where(c =>
-                    (_db.Service_Lines
-                        .Where(s => s.SrvClaFID == c.ClaID)
-                        .Sum(s => s.SrvTotalBalanceCC) ?? 0m) <= maxTotalBalance.Value);
+                query = query.Where(x => (x.Agg != null ? x.Agg.TotalBalance : 0m) <= maxTotalBalance.Value);
             }
 
             // Patient filter (for ribbon: open claims for a specific patient)
             if (patientId.HasValue)
             {
-                query = query.Where(c => c.ClaPatFID == patientId.Value);
+                query = query.Where(x => x.Claim.ClaPatFID == patientId.Value);
             }
 
             // Patient account number filter (from Claim List Account # column filter – exact match)
             if (!string.IsNullOrWhiteSpace(patAccountNo))
             {
                 var accountNoTrimmed = patAccountNo.Trim();
-                query = query.Where(c => c.ClaPatF != null && c.ClaPatF.PatAccountNo != null && c.ClaPatF.PatAccountNo == accountNoTrimmed);
+                query = query.Where(x => x.Claim.ClaPatF != null && x.Claim.ClaPatF.PatAccountNo != null && x.Claim.ClaPatF.PatAccountNo == accountNoTrimmed);
             }
 
             // Text search across multiple columns (optimized for SQL)
@@ -321,441 +904,278 @@ namespace Zebl.Api.Controllers
                 // Try to parse as number for ID and numeric fields (much faster)
                 if (int.TryParse(searchText, out int searchInt))
                 {
-                    query = query.Where(c => c.ClaID == searchInt);
+                    query = query.Where(x => x.Claim.ClaID == searchInt);
                 }
                 else if (decimal.TryParse(searchText, out decimal searchDecimal))
                 {
-                    query = query.Where(c =>
-                        ((_db.Service_Lines
-                            .Where(s => s.SrvClaFID == c.ClaID)
-                            .Sum(s => (decimal?)s.SrvCharges) ?? 0m) == searchDecimal) ||
-                        (c.ClaTotalAmtPaidCC.HasValue && c.ClaTotalAmtPaidCC.Value == searchDecimal) ||
-                        ((_db.Service_Lines
-                            .Where(s => s.SrvClaFID == c.ClaID)
-                            .Sum(s => s.SrvTotalBalanceCC) ?? 0m) == searchDecimal));
+                    query = query.Where(x =>
+                        (x.Agg != null ? x.Agg.TotalCharge : 0m) == searchDecimal ||
+                        (x.Claim.ClaTotalAmtPaidCC.HasValue && x.Claim.ClaTotalAmtPaidCC.Value == searchDecimal) ||
+                        (x.Agg != null ? x.Agg.TotalBalance : 0m) == searchDecimal);
                 }
                 else
                 {
                     // Text search only on string fields (can use indexes if available)
-                    query = query.Where(c => c.ClaStatus != null && c.ClaStatus.ToLower().Contains(searchLower));
+                    query = query.Where(x => x.Claim.ClaStatus != null && x.Claim.ClaStatus.ToLower().Contains(searchLower));
                 }
             }
 
             // Order by ID descending for consistent pagination
-            query = query.OrderByDescending(c => c.ClaID);
+            query = query.OrderByDescending(x => x.Claim.ClaID);
 
-            // Get count with timeout protection and fallback
-            // For large tables, use approximate count when no filters are applied
+            var countQuery = query.Select(x => x.Claim.ClaID);
+            var pagedQuery = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new
+                {
+                    Claim = x.Claim,
+                    TotalCharge = x.Agg != null ? x.Agg.TotalCharge : 0m,
+                    TotalInsBalance = x.Agg != null ? x.Agg.TotalInsBalance : 0m,
+                    TotalPatBalance = x.Agg != null ? x.Agg.TotalPatBalance : 0m,
+                    TotalBalance = x.Agg != null ? x.Agg.TotalBalance : 0m
+                });
+
             int totalCount;
-            bool hasFilters = !string.IsNullOrWhiteSpace(status) || 
-                             !string.IsNullOrWhiteSpace(statusList) ||
-                             fromDate.HasValue || 
-                             toDate.HasValue ||
-                             minClaimId.HasValue || 
-                             maxClaimId.HasValue ||
-                             minTotalCharge.HasValue || 
-                             maxTotalCharge.HasValue ||
-                             minTotalBalance.HasValue || 
-                             maxTotalBalance.HasValue ||
-                             patientId.HasValue ||
-                             !string.IsNullOrWhiteSpace(patAccountNo) ||
-                             !string.IsNullOrWhiteSpace(searchText);
-
-            if (!hasFilters)
+            try
             {
-                // No filters - use fast approximate count from metadata
-                try
-                {
-                    totalCount = await GetApproxClaimCountAsync();
-                }
-                catch
-                {
-                    // If metadata query fails, use a large estimate
-                    totalCount = 1000000; // Large estimate so pagination still works
-                }
+                // Count from filtered base query (no correlated projection).
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                var countSw = Stopwatch.StartNew();
+                totalCount = await countQuery.CountAsync(cts.Token);
+                countSw.Stop();
+                _logger.LogInformation("FindClaims count query duration={DurationMs}ms", countSw.ElapsedMilliseconds);
             }
-            else
+            catch (OperationCanceledException)
             {
-                // Has filters - try exact count with timeout protection
-                try
+                _logger.LogWarning("FindClaims count query timed out for tenant={tenantId}, facility={facilityId}", tenantId, facilityId);
+                return StatusCode(503, new ErrorResponseDto
                 {
-                    // Use a cancellation token with timeout (15 seconds for filtered queries)
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-                    totalCount = await query.CountAsync(cts.Token);
-                }
-                catch (OperationCanceledException)
+                    ErrorCode = "QUERY_TIMEOUT",
+                    Message = "The claim count query took too long. Please narrow your filters and try again."
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "FindClaims count query failed for tenant={tenantId}, facility={facilityId}", tenantId, facilityId);
+                return StatusCode(500, new ErrorResponseDto
                 {
-                    // If count times out, use approximate count
-                    _logger.LogWarning("Count query timed out, using approximate count");
-                    try
-                    {
-                        totalCount = await GetApproxClaimCountAsync();
-                    }
-                    catch
-                    {
-                        // If that also fails, estimate based on page
-                        totalCount = pageSize * (page + 10); // Estimate: current page + 10 more
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error getting claim count");
-                    // Fallback to approximate count
-                    try
-                    {
-                        totalCount = await GetApproxClaimCountAsync();
-                    }
-                    catch
-                    {
-                        totalCount = pageSize * (page + 10); // Rough estimate
-                    }
-                }
+                    ErrorCode = "INTERNAL_ERROR",
+                    Message = "Failed to count claims."
+                });
             }
 
-            // Apply pagination and project to DTO
-            List<ClaimListItemDto> result;
-            
-            if (columnsToInclude.Any())
-            {
-                // Use explicit LEFT JOINs instead of Include to avoid excluding claims when
-                // ClaRenderingPhyFID/ClaBillingPhyFID/ClaFacilityPhyFID=0 or FK references missing row
-                var joinQuery = from c in query
-                               join p in _db.Patients.AsNoTracking() on c.ClaPatFID equals p.PatID into pGrp
-                               from p in pGrp.DefaultIfEmpty()
-                               join rend in _db.Physicians.AsNoTracking() on c.ClaRenderingPhyFID equals rend.PhyID into rendGrp
-                               from rend in rendGrp.DefaultIfEmpty()
-                               join bill in _db.Physicians.AsNoTracking() on c.ClaBillingPhyFID equals bill.PhyID into billGrp
-                               from bill in billGrp.DefaultIfEmpty()
-                               join fac in _db.Physicians.AsNoTracking() on c.ClaFacilityPhyFID equals fac.PhyID into facGrp
-                               from fac in facGrp.DefaultIfEmpty()
-                               select new
-                               {
-                                   Claim = new ClaimListItemDto
-                                   {
-                                       ClaID = c.ClaID,
-                                       ClaStatus = c.ClaStatus,
-                                       ClaDateTimeCreated = c.ClaDateTimeCreated,
-                                       ClaTotalChargeTRIG = _db.Service_Lines
-                                           .Where(s => s.SrvClaFID == c.ClaID)
-                                           .Sum(s => (decimal?)s.SrvCharges) ?? 0m,
-                                       ClaTotalInsBalanceTRIG = _db.Service_Lines
-                                           .Where(s => s.SrvClaFID == c.ClaID)
-                                           .Sum(s => s.SrvTotalInsBalanceCC) ?? 0m,
-                                       ClaTotalPatBalanceTRIG = _db.Service_Lines
-                                           .Where(s => s.SrvClaFID == c.ClaID)
-                                           .Sum(s => s.SrvTotalPatBalanceCC) ?? 0m,
-                                       ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
-                                       ClaTotalBalanceCC = _db.Service_Lines
-                                           .Where(s => s.SrvClaFID == c.ClaID)
-                                           .Sum(s => s.SrvTotalBalanceCC) ?? 0m,
-                                       ClaClassification = c.ClaClassification ?? (fac != null ? fac.PhyName : null),
-                                       ClaDateTotalFrom = c.ClaDateTotalFrom,
-                                       ClaBillTo = c.ClaBillTo,
-                                       PatFullNameCC = p != null ? p.PatFullNameCC : null,
-                                       PrimaryPayerName = _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsPay.PayName)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsPayF.PayName)
-                                               .FirstOrDefault(),
-                                       ClaPatFID = c.ClaPatFID,
-                                       ClaAttendingPhyFID = c.ClaAttendingPhyFID,
-                                       ClaBillingPhyFID = c.ClaBillingPhyFID,
-                                       ClaReferringPhyFID = c.ClaReferringPhyFID,
-                                       ClaBillDate = c.ClaBillDate,
-                                       ClaTypeOfBill = c.ClaTypeOfBill,
-                                       ClaAdmissionType = c.ClaAdmissionType,
-                                       ClaPatientStatus = c.ClaPatientStatus,
-                                       ClaCreatedUserName = c.ClaCreatedUserName,
-                                       ClaLastUserName = c.ClaLastUserName,
-                                       ClaDiagnosis1 = c.ClaDiagnosis1,
-                                       ClaDiagnosis2 = c.ClaDiagnosis2,
-                                       ClaDiagnosis3 = c.ClaDiagnosis3,
-                                       ClaDiagnosis4 = c.ClaDiagnosis4,
-                                       ClaFirstDateTRIG = c.ClaFirstDateTRIG,
-                                       ClaLastDateTRIG = c.ClaLastDateTRIG
-                                   },
-                                   ClaimEntity = c,
-                                   PatFirstName = hasPatFirstName ? (p != null ? p.PatFirstName : null) : null,
-                                   PatLastName = hasPatLastName ? (p != null ? p.PatLastName : null) : null,
-                                   PatFullNameCC = hasPatFullNameCC ? (p != null ? p.PatFullNameCC : null) : null,
-                                   PrimaryPayerName = hasPrimaryPayerName
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsPay.PayName)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsPayF.PayName)
-                                               .FirstOrDefault()
-                                       : null,
-                                   PatAccountNo = hasPatAccountNo ? (p != null ? p.PatAccountNo : null) : null,
-                                   PatPhoneNo = hasPatPhoneNo ? (p != null ? p.PatPhoneNo : null) : null,
-                                   PatCity = hasPatCity ? (p != null ? p.PatCity : null) : null,
-                                   PatState = hasPatState ? (p != null ? p.PatState : null) : null,
-                                   PatBirthDate = hasPatBirthDate ? (p != null ? p.PatBirthDate : (DateOnly?)null) : null,
-                                   PatDob = hasPatDob ? (p != null ? p.PatBirthDate : (DateOnly?)null) : null,
-                                   PatClassification = hasPatClassification ? (p != null ? p.PatClassification : null) : null,
-                                   AttendingPhysicianName = hasAttendingPhysicianName
-                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaAttendingPhyFID).Select(px => px.PhyName).FirstOrDefault()
-                                       : null,
-                                   ReferringPhysicianName = hasReferringPhysicianName
-                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaReferringPhyFID).Select(px => px.PhyName).FirstOrDefault()
-                                       : null,
-                                   RenderingPhysicianName = hasRenderingPhysicianName
-                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaRenderingPhyFID).Select(px => px.PhyName).FirstOrDefault()
-                                       : null,
-                                   OperatingPhysicianName = hasOperatingPhysicianName
-                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaOperatingPhyFID).Select(px => px.PhyName).FirstOrDefault()
-                                       : null,
-                                   OrderingPhysicianName = hasOrderingPhysicianName
-                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaOrderingPhyFID).Select(px => px.PhyName).FirstOrDefault()
-                                       : null,
-                                   BillingPhysicianName = hasBillingPhysicianName
-                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaBillingPhyFID).Select(px => px.PhyName).FirstOrDefault()
-                                       : null,
-                                   SupervisingPhysicianName = hasSupervisingPhysicianName
-                                       ? _db.Physicians.Where(px => px.PhyID == c.ClaSupervisingPhyFID).Select(px => px.PhyName).FirstOrDefault()
-                                       : null,
-                                   SecondaryPayerName = hasSecondaryPayerName
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 2)
-                                           .Select(pi => pi.PatInsIns.InsPay.PayName)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 2)
-                                               .Select(ci => ci.ClaInsPayF.PayName)
-                                               .FirstOrDefault()
-                                       : null,
-                                   PrimaryPayerID = hasPrimaryPayerID
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsPay.PayExternalID)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsPayF.PayExternalID)
-                                               .FirstOrDefault()
-                                       : null,
-                                   PrimaryPayerPhone = hasPrimaryPayerPhone
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsPay.PayPhoneNo)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsPayF.PayPhoneNo)
-                                               .FirstOrDefault()
-                                       : null,
-                                   PriInsClaimFilingInd = hasPriInsClaimFilingInd
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsClaimFilingIndicator)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsClaimFilingIndicator)
-                                               .FirstOrDefault()
-                                       : null,
-                                   SecInsClaimFilingInd = hasSecInsClaimFilingInd
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 2)
-                                           .Select(pi => pi.PatInsIns.InsClaimFilingIndicator)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 2)
-                                               .Select(ci => ci.ClaInsClaimFilingIndicator)
-                                               .FirstOrDefault()
-                                       : null,
-                                   PrimaryInsuredID = hasPrimaryInsuredID
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsIDNumber)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsIDNumber)
-                                               .FirstOrDefault()
-                                       : null,
-                                   PrimaryInsuredName = hasPrimaryInsuredName
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => ((pi.PatInsIns.InsLastName ?? "") + ", " + (pi.PatInsIns.InsFirstName ?? "")).Trim().Trim(','))
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ((ci.ClaInsLastName ?? "") + ", " + (ci.ClaInsFirstName ?? "")).Trim().Trim(','))
-                                               .FirstOrDefault()
-                                       : null,
-                                   PrimaryInsuredDOB = hasPrimaryInsuredDOB
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsBirthDate)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsBirthDate)
-                                               .FirstOrDefault()
-                                       : null,
-                                   PrimaryInsuredEmployer = hasPrimaryInsuredEmployer
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsEmployer)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsEmployer)
-                                               .FirstOrDefault()
-                                       : null,
-                                   PrimaryInsuredPlan = hasPrimaryInsuredPlan
-                                       ? _db.Patient_Insureds
-                                           .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                                           .Select(pi => pi.PatInsIns.InsPlanName)
-                                           .FirstOrDefault()
-                                           ?? _db.Claim_Insureds
-                                               .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                               .Select(ci => ci.ClaInsPlanName)
-                                               .FirstOrDefault()
-                                       : null,
-                                   RenderingPhyName = hasRenderingPhyName ? (rend != null ? rend.PhyName : null) : null,
-                                   RenderingPhyNPI = hasRenderingPhyNPI ? (rend != null ? rend.PhyNPI : null) : null,
-                                   BillingPhyName = hasBillingPhyName ? (bill != null ? bill.PhyName : null) : null,
-                                   BillingPhyNPI = hasBillingPhyNPI ? (bill != null ? bill.PhyNPI : null) : null,
-                                   FacilityPhyName = hasFacilityName ? (fac != null ? fac.PhyName : null) : null
-                               };
+            _logger.LogInformation("FindClaims: tenant={tenantId}, facility={facilityId}, total={count}", tenantId, facilityId, totalCount);
 
-                var data = await joinQuery
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
+            _logger.LogInformation("FindClaims count SQL: {Sql}", countQuery.ToQueryString());
+            _logger.LogInformation("FindClaims data SQL: {Sql}", pagedQuery.ToQueryString());
+            var dataSw = Stopwatch.StartNew();
+            var pageRows = await pagedQuery.ToListAsync();
+            dataSw.Stop();
+            _logger.LogInformation("FindClaims data query duration={DurationMs}ms", dataSw.ElapsedMilliseconds);
 
-                // Map to final DTOs with additional columns
-                result = data.Select(d =>
+            var claimIds = pageRows.Select(r => r.Claim.ClaID).ToList();
+            var patientIds = pageRows.Select(r => r.Claim.ClaPatFID).Distinct().ToList();
+            var physicianIds = pageRows
+                .SelectMany(r => new[]
                 {
-                    var claim = d.Claim;
-                    claim.AdditionalColumns = new Dictionary<string, object?>();
+                    r.Claim.ClaAttendingPhyFID, r.Claim.ClaReferringPhyFID, r.Claim.ClaRenderingPhyFID, r.Claim.ClaOperatingPhyFID,
+                    r.Claim.ClaOrderingPhyFID, r.Claim.ClaBillingPhyFID, r.Claim.ClaSupervisingPhyFID, r.Claim.ClaFacilityPhyFID
+                })
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            var patients = await _db.Patients.AsNoTracking()
+                .Where(p => patientIds.Contains(p.PatID))
+                .ToDictionaryAsync(p => p.PatID);
+
+            var physicians = await _db.Physicians.AsNoTracking()
+                .Where(p => physicianIds.Contains(p.PhyID))
+                .ToDictionaryAsync(p => p.PhyID);
+
+            var claimInsuredRows = await _db.Claim_Insureds.AsNoTracking()
+                .Where(ci => claimIds.Contains(ci.ClaInsClaFID) && (ci.ClaInsSequence == 1 || ci.ClaInsSequence == 2))
+                .Select(ci => new
+                {
+                    ci.ClaInsClaFID,
+                    ci.ClaInsSequence,
+                    PayName = ci.ClaInsPayF != null ? ci.ClaInsPayF.PayName : null,
+                    PayExternalId = ci.ClaInsPayF != null ? ci.ClaInsPayF.PayExternalID : null,
+                    PayPhone = ci.ClaInsPayF != null ? ci.ClaInsPayF.PayPhoneNo : null,
+                    ClaimFilingIndicator = ci.ClaInsClaimFilingIndicator,
+                    ci.ClaInsIDNumber,
+                    ci.ClaInsFirstName,
+                    ci.ClaInsLastName,
+                    ci.ClaInsBirthDate,
+                    ci.ClaInsEmployer,
+                    ci.ClaInsPlanName
+                })
+                .ToListAsync();
+            var claimInsuredMap = claimInsuredRows
+                .GroupBy(x => (x.ClaInsClaFID, x.ClaInsSequence))
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var patientInsuredRows = await _db.Patient_Insureds.AsNoTracking()
+                .Where(pi => patientIds.Contains(pi.PatInsPatFID) && (pi.PatInsSequence == 1 || pi.PatInsSequence == 2))
+                .Select(pi => new
+                {
+                    pi.PatInsPatFID,
+                    pi.PatInsSequence,
+                    PayName = pi.PatInsIns != null && pi.PatInsIns.InsPay != null ? pi.PatInsIns.InsPay.PayName : null,
+                    PayExternalId = pi.PatInsIns != null && pi.PatInsIns.InsPay != null ? pi.PatInsIns.InsPay.PayExternalID : null,
+                    PayPhone = pi.PatInsIns != null && pi.PatInsIns.InsPay != null ? pi.PatInsIns.InsPay.PayPhoneNo : null,
+                    ClaimFilingIndicator = pi.PatInsIns != null ? pi.PatInsIns.InsClaimFilingIndicator : null,
+                    InsIdNumber = pi.PatInsIns != null ? pi.PatInsIns.InsIDNumber : null,
+                    InsFirstName = pi.PatInsIns != null ? pi.PatInsIns.InsFirstName : null,
+                    InsLastName = pi.PatInsIns != null ? pi.PatInsIns.InsLastName : null,
+                    InsBirthDate = pi.PatInsIns != null ? pi.PatInsIns.InsBirthDate : (DateOnly?)null,
+                    InsEmployer = pi.PatInsIns != null ? pi.PatInsIns.InsEmployer : null,
+                    InsPlanName = pi.PatInsIns != null ? pi.PatInsIns.InsPlanName : null
+                })
+                .ToListAsync();
+            var patientInsuredMap = patientInsuredRows
+                .GroupBy(x => (x.PatInsPatFID, x.PatInsSequence))
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var auditRows = await _db.Claim_Audits.AsNoTracking()
+                .Where(a => claimIds.Contains(a.ClaFID))
+                .Select(a => new { a.ClaFID, a.ActivityDate, a.UserName })
+                .ToListAsync();
+            var firstAuditUser = auditRows
+                .GroupBy(a => a.ClaFID)
+                .ToDictionary(g => g.Key, g => g.OrderBy(x => x.ActivityDate).Select(x => x.UserName).FirstOrDefault());
+            var lastAuditUser = auditRows
+                .GroupBy(a => a.ClaFID)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.ActivityDate).Select(x => x.UserName).FirstOrDefault());
+
+            string? GetPhysicianName(int id) => id > 0 && physicians.TryGetValue(id, out var px) ? px.PhyName : null;
+            string? GetPhysicianNpi(int id) => id > 0 && physicians.TryGetValue(id, out var px) ? px.PhyNPI : null;
+            string? BuildInsuredName(string? lastName, string? firstName) => string.IsNullOrWhiteSpace(lastName) && string.IsNullOrWhiteSpace(firstName)
+                ? null
+                : ((lastName ?? "") + ", " + (firstName ?? "")).Trim().Trim(',');
+
+            var result = pageRows.Select(r =>
+            {
+                var c = r.Claim;
+                patients.TryGetValue(c.ClaPatFID, out var pat);
+                claimInsuredMap.TryGetValue((c.ClaID, 1), out var claimPrimary);
+                claimInsuredMap.TryGetValue((c.ClaID, 2), out var claimSecondary);
+                patientInsuredMap.TryGetValue((c.ClaPatFID, 1), out var patientPrimary);
+                patientInsuredMap.TryGetValue((c.ClaPatFID, 2), out var patientSecondary);
+
+                var primaryPayerName = patientPrimary?.PayName ?? claimPrimary?.PayName;
+                var secondaryPayerName = patientSecondary?.PayName ?? claimSecondary?.PayName;
+                var facilityName = GetPhysicianName(c.ClaFacilityPhyFID);
+
+                var claimDto = new ClaimListItemDto
+                {
+                    ClaID = c.ClaID,
+                    ClaStatus = c.ClaStatus,
+                    ClaDateTimeCreated = c.ClaDateTimeCreated,
+                    ClaDateTimeModified = c.ClaDateTimeModified,
+                    CreatedDate = c.ClaDateTimeCreated,
+                    ModifiedDate = c.ClaDateTimeModified,
+                    ClaTotalChargeTRIG = r.TotalCharge,
+                    ClaTotalInsBalanceTRIG = r.TotalInsBalance,
+                    ClaTotalPatBalanceTRIG = r.TotalPatBalance,
+                    ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
+                    ClaTotalBalanceCC = r.TotalBalance,
+                    ClaClassification = c.ClaClassification ?? facilityName,
+                    ClaDateTotalFrom = c.ClaDateTotalFrom,
+                    ClaBillTo = c.ClaBillTo,
+                    BillToDisplay = c.ClaBillTo == 1 ? $"P - {claimPrimary?.PayName ?? "PRIMARY"}" :
+                                    c.ClaBillTo == 2 ? $"S - {claimSecondary?.PayName ?? "SECONDARY"}" : "Patient",
+                    PatFullNameCC = pat?.PatFullNameCC,
+                    PrimaryPayerName = primaryPayerName,
+                    ClaPatFID = c.ClaPatFID,
+                    ClaAttendingPhyFID = c.ClaAttendingPhyFID,
+                    ClaBillingPhyFID = c.ClaBillingPhyFID,
+                    ClaReferringPhyFID = c.ClaReferringPhyFID,
+                    ClaBillDate = c.ClaBillDate,
+                    ClaTypeOfBill = c.ClaTypeOfBill,
+                    ClaAdmissionType = c.ClaAdmissionType,
+                    ClaPatientStatus = c.ClaPatientStatus,
+                    ClaCreatedUserName = c.ClaCreatedUserName ?? (firstAuditUser.TryGetValue(c.ClaID, out var createdBy) ? createdBy : null),
+                    ClaLastUserName = c.ClaLastUserName ?? (lastAuditUser.TryGetValue(c.ClaID, out var lastBy) ? lastBy : null),
+                    ClaDiagnosis1 = c.ClaDiagnosis1,
+                    ClaDiagnosis2 = c.ClaDiagnosis2,
+                    ClaDiagnosis3 = c.ClaDiagnosis3,
+                    ClaDiagnosis4 = c.ClaDiagnosis4,
+                    ClaFirstDateTRIG = c.ClaFirstDateTRIG,
+                    ClaLastDateTRIG = c.ClaLastDateTRIG
+                };
+
+                if (columnsToInclude.Any())
+                {
+                    claimDto.AdditionalColumns = new Dictionary<string, object?>();
                     foreach (var col in columnsToInclude)
                     {
                         object? value = col.Key switch
                         {
-                            "patFirstName" => d.PatFirstName,
-                            "patLastName" => d.PatLastName,
-                            "patFullNameCC" => d.PatFullNameCC,
-                            "primaryPayerName" => d.PrimaryPayerName,
-                            "patAccountNo" => d.PatAccountNo,
-                            "patPhoneNo" => d.PatPhoneNo,
-                            "patCity" => d.PatCity,
-                            "patState" => d.PatState,
-                            "patBirthDate" => d.PatBirthDate,
-                            "patDOB" => d.PatDob,
-                            "patClassification" => d.PatClassification,
-                            "patID" => d.Claim.ClaPatFID,
-                            "claDateTotalFrom" => d.Claim.ClaDateTotalFrom,
-                            "claLastDateTRIG" => d.Claim.ClaLastDateTRIG,
-                            "claFirstDOS" => d.Claim.ClaFirstDateTRIG,
-                            "claLastDOS" => d.Claim.ClaLastDateTRIG,
-                            "claTotalChargeTRIG" => d.Claim.ClaTotalChargeTRIG,
-                            "claTotalInsBalanceTRIG" => d.Claim.ClaTotalInsBalanceTRIG,
-                            "claTotalPatBalanceTRIG" => d.Claim.ClaTotalPatBalanceTRIG,
-                            "claTotalBalanceCC" => d.Claim.ClaTotalBalanceCC,
-                            "claTotalCharge" => d.Claim.ClaTotalChargeTRIG,
-                            "claTotalInsBalance" => d.Claim.ClaTotalInsBalanceTRIG,
-                            "claTotalPatBalance" => d.Claim.ClaTotalPatBalanceTRIG,
-                            "claTotalBalance" => d.Claim.ClaTotalBalanceCC,
-                            "attendingPhysicianName" => d.AttendingPhysicianName,
-                            "referringPhysicianName" => d.ReferringPhysicianName,
-                            "renderingPhysicianName" => d.RenderingPhysicianName,
-                            "operatingPhysicianName" => d.OperatingPhysicianName,
-                            "orderingPhysicianName" => d.OrderingPhysicianName,
-                            "billingPhysicianName" => d.BillingPhysicianName,
-                            "supervisingPhysicianName" => d.SupervisingPhysicianName,
-                            "secondaryPayerName" => d.SecondaryPayerName,
-                            "primaryPayerID" => d.PrimaryPayerID,
-                            "primaryPayerPhone" => d.PrimaryPayerPhone,
-                            "priInsClaimFilingInd" => d.PriInsClaimFilingInd,
-                            "secInsClaimFilingInd" => d.SecInsClaimFilingInd,
-                            "primaryInsuredID" => d.PrimaryInsuredID,
-                            "primaryInsuredName" => string.IsNullOrWhiteSpace(d.PrimaryInsuredName) ? null : d.PrimaryInsuredName,
-                            "primaryInsuredDOB" => d.PrimaryInsuredDOB,
-                            "primaryInsuredEmployer" => d.PrimaryInsuredEmployer,
-                            "primaryInsuredPlan" => d.PrimaryInsuredPlan,
-                            "renderingPhyName" => d.RenderingPhyName,
-                            "renderingPhyNPI" => d.RenderingPhyNPI,
-                            "billingPhyName" => d.BillingPhyName,
-                            "billingPhyNPI" => d.BillingPhyNPI,
-                            "facilityName" => d.FacilityPhyName,
-                            "claClassification" => d.Claim.ClaClassification ?? d.FacilityPhyName,
+                            "patFirstName" => pat?.PatFirstName,
+                            "patLastName" => pat?.PatLastName,
+                            "patFullNameCC" => pat?.PatFullNameCC,
+                            "primaryPayerName" => primaryPayerName,
+                            "patAccountNo" => pat?.PatAccountNo,
+                            "patPhoneNo" => pat?.PatPhoneNo,
+                            "patCity" => pat?.PatCity,
+                            "patState" => pat?.PatState,
+                            "patBirthDate" => pat?.PatBirthDate,
+                            "patDOB" => pat?.PatBirthDate,
+                            "patClassification" => pat?.PatClassification,
+                            "patID" => c.ClaPatFID,
+                            "claDateTotalFrom" => c.ClaDateTotalFrom,
+                            "claLastDateTRIG" => c.ClaLastDateTRIG,
+                            "claFirstDOS" => c.ClaFirstDateTRIG,
+                            "claLastDOS" => c.ClaLastDateTRIG,
+                            "claTotalChargeTRIG" => claimDto.ClaTotalChargeTRIG,
+                            "claTotalInsBalanceTRIG" => claimDto.ClaTotalInsBalanceTRIG,
+                            "claTotalPatBalanceTRIG" => claimDto.ClaTotalPatBalanceTRIG,
+                            "claTotalBalanceCC" => claimDto.ClaTotalBalanceCC,
+                            "claTotalCharge" => claimDto.ClaTotalChargeTRIG,
+                            "claTotalInsBalance" => claimDto.ClaTotalInsBalanceTRIG,
+                            "claTotalPatBalance" => claimDto.ClaTotalPatBalanceTRIG,
+                            "claTotalBalance" => claimDto.ClaTotalBalanceCC,
+                            "attendingPhysicianName" => GetPhysicianName(c.ClaAttendingPhyFID),
+                            "referringPhysicianName" => GetPhysicianName(c.ClaReferringPhyFID),
+                            "renderingPhysicianName" => GetPhysicianName(c.ClaRenderingPhyFID),
+                            "operatingPhysicianName" => GetPhysicianName(c.ClaOperatingPhyFID),
+                            "orderingPhysicianName" => GetPhysicianName(c.ClaOrderingPhyFID),
+                            "billingPhysicianName" => GetPhysicianName(c.ClaBillingPhyFID),
+                            "supervisingPhysicianName" => GetPhysicianName(c.ClaSupervisingPhyFID),
+                            "secondaryPayerName" => secondaryPayerName,
+                            "primaryPayerID" => patientPrimary?.PayExternalId ?? claimPrimary?.PayExternalId,
+                            "primaryPayerPhone" => patientPrimary?.PayPhone ?? claimPrimary?.PayPhone,
+                            "priInsClaimFilingInd" => patientPrimary?.ClaimFilingIndicator ?? claimPrimary?.ClaimFilingIndicator,
+                            "secInsClaimFilingInd" => patientSecondary?.ClaimFilingIndicator ?? claimSecondary?.ClaimFilingIndicator,
+                            "primaryInsuredID" => patientPrimary?.InsIdNumber ?? claimPrimary?.ClaInsIDNumber,
+                            "primaryInsuredName" => BuildInsuredName(patientPrimary?.InsLastName ?? claimPrimary?.ClaInsLastName, patientPrimary?.InsFirstName ?? claimPrimary?.ClaInsFirstName),
+                            "primaryInsuredDOB" => patientPrimary?.InsBirthDate ?? claimPrimary?.ClaInsBirthDate,
+                            "primaryInsuredEmployer" => patientPrimary?.InsEmployer ?? claimPrimary?.ClaInsEmployer,
+                            "primaryInsuredPlan" => patientPrimary?.InsPlanName ?? claimPrimary?.ClaInsPlanName,
+                            "renderingPhyName" => GetPhysicianName(c.ClaRenderingPhyFID),
+                            "renderingPhyNPI" => GetPhysicianNpi(c.ClaRenderingPhyFID),
+                            "billingPhyName" => GetPhysicianName(c.ClaBillingPhyFID),
+                            "billingPhyNPI" => GetPhysicianNpi(c.ClaBillingPhyFID),
+                            "facilityName" => facilityName,
+                            "claClassification" => claimDto.ClaClassification,
+                            "claCreatedUser" => claimDto.ClaCreatedUserName,
+                            "claModifiedUser" => claimDto.ClaLastUserName,
+                            "claCreatedUserName" => claimDto.ClaCreatedUserName,
+                            "claLastUserName" => claimDto.ClaLastUserName,
                             _ => null
                         };
                         if (value == null)
                         {
-                            value = GetClaimColumnValue(d.ClaimEntity, col.Key);
+                            value = GetClaimColumnValue(c, col.Key);
                         }
-                        claim.AdditionalColumns[col.Key] = value;
+                        claimDto.AdditionalColumns[col.Key] = value;
                     }
-                    return claim;
-                }).ToList();
-            }
-            else
-            {
-                // No additional columns - simple projection without related entities
-                result = await query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(c => new ClaimListItemDto
-                    {
-                        ClaID = c.ClaID,
-                        ClaStatus = c.ClaStatus,
-                        ClaDateTimeCreated = c.ClaDateTimeCreated,
-                        ClaTotalChargeTRIG = _db.Service_Lines
-                            .Where(s => s.SrvClaFID == c.ClaID)
-                            .Sum(s => (decimal?)s.SrvCharges) ?? 0m,
-                        ClaTotalInsBalanceTRIG = _db.Service_Lines
-                            .Where(s => s.SrvClaFID == c.ClaID)
-                            .Sum(s => s.SrvTotalInsBalanceCC) ?? 0m,
-                        ClaTotalPatBalanceTRIG = _db.Service_Lines
-                            .Where(s => s.SrvClaFID == c.ClaID)
-                            .Sum(s => s.SrvTotalPatBalanceCC) ?? 0m,
-                        ClaTotalAmtPaidCC = c.ClaTotalAmtPaidCC,
-                        ClaTotalBalanceCC = _db.Service_Lines
-                            .Where(s => s.SrvClaFID == c.ClaID)
-                            .Sum(s => s.SrvTotalBalanceCC) ?? 0m,
-                        ClaClassification = c.ClaClassification ?? _db.Physicians
-                            .Where(px => px.PhyID == c.ClaFacilityPhyFID)
-                            .Select(px => px.PhyName)
-                            .FirstOrDefault(),
-                        ClaDateTotalFrom = c.ClaDateTotalFrom,
-                        ClaBillTo = c.ClaBillTo,
-                        PatFullNameCC = c.ClaPatF.PatFullNameCC,
-                        PrimaryPayerName = _db.Patient_Insureds
-                            .Where(pi => pi.PatInsPatFID == c.ClaPatFID && pi.PatInsSequence == 1)
-                            .Select(pi => pi.PatInsIns.InsPay.PayName)
-                            .FirstOrDefault()
-                            ?? _db.Claim_Insureds
-                                .Where(ci => ci.ClaInsClaFID == c.ClaID && ci.ClaInsSequence == 1)
-                                .Select(ci => ci.ClaInsPayF.PayName)
-                                .FirstOrDefault(),
-                        ClaPatFID = c.ClaPatFID,
-                        ClaAttendingPhyFID = c.ClaAttendingPhyFID,
-                        ClaBillingPhyFID = c.ClaBillingPhyFID,
-                        ClaReferringPhyFID = c.ClaReferringPhyFID,
-                        ClaBillDate = c.ClaBillDate,
-                        ClaTypeOfBill = c.ClaTypeOfBill,
-                        ClaAdmissionType = c.ClaAdmissionType,
-                        ClaPatientStatus = c.ClaPatientStatus,
-                        ClaCreatedUserName = c.ClaCreatedUserName,
-                        ClaLastUserName = c.ClaLastUserName,
-                        ClaDiagnosis1 = c.ClaDiagnosis1,
-                        ClaDiagnosis2 = c.ClaDiagnosis2,
-                        ClaDiagnosis3 = c.ClaDiagnosis3,
-                        ClaDiagnosis4 = c.ClaDiagnosis4,
-                        ClaFirstDateTRIG = c.ClaFirstDateTRIG,
-                        ClaLastDateTRIG = c.ClaLastDateTRIG
-                    })
-                    .ToListAsync();
-            }
+                }
+
+                return claimDto;
+            }).ToList();
 
             return Ok(new ApiResponse<List<ClaimListItemDto>>
             {
@@ -996,8 +1416,9 @@ namespace Zebl.Api.Controllers
                 }
             }
 
-            var availableColumns = RelatedColumnConfig.GetAvailableColumns()["Claim"];
-            var columnsToInclude = availableColumns.Where(c => requestedColumns.Contains(c.Key)).ToList();
+            var columnsToInclude = requestedColumns
+                .Select(k => new RelatedColumnDefinition { Key = k, Label = k, Table = "Claim", Path = k })
+                .ToList();
             var hasPatFirstName = columnsToInclude.Any(c => c.Key == "patFirstName");
             var hasPatLastName = columnsToInclude.Any(c => c.Key == "patLastName");
             var hasPatFullNameCC = columnsToInclude.Any(c => c.Key == "patFullNameCC");
@@ -1011,6 +1432,8 @@ namespace Zebl.Api.Controllers
             var hasBillingPhyName = columnsToInclude.Any(c => c.Key == "billingPhyName");
             var hasBillingPhyNPI = columnsToInclude.Any(c => c.Key == "billingPhyNPI");
             var hasFacilityName = columnsToInclude.Any(c => c.Key == "facilityName");
+            var hasCreatedUser = columnsToInclude.Any(c => c.Key == "claCreatedUser" || c.Key == "claCreatedUserName");
+            var hasModifiedUser = columnsToInclude.Any(c => c.Key == "claModifiedUser" || c.Key == "claLastUserName");
 
             try
             {
@@ -1055,7 +1478,19 @@ namespace Zebl.Api.Controllers
                                c.ClaDiagnosis2,
                                c.ClaDiagnosis3,
                                c.ClaDiagnosis4,
-                               c.ClaLastUserName,
+                               // Match GetClaims: names on Claim row are often empty; audit trail has the user.
+                               ClaCreatedUserName = c.ClaCreatedUserName
+                                   ?? _db.Claim_Audits
+                                       .Where(a2 => a2.ClaFID == c.ClaID)
+                                       .OrderBy(a2 => a2.ActivityDate)
+                                       .Select(a2 => a2.UserName)
+                                       .FirstOrDefault(),
+                               ClaLastUserName = c.ClaLastUserName
+                                   ?? _db.Claim_Audits
+                                       .Where(a2 => a2.ClaFID == c.ClaID)
+                                       .OrderByDescending(a2 => a2.ActivityDate)
+                                       .Select(a2 => a2.UserName)
+                                       .FirstOrDefault(),
                                c.ClaRenderingPhyFID,
                                c.ClaBillingPhyFID,
                                c.ClaFacilityPhyFID,
@@ -1121,6 +1556,16 @@ namespace Zebl.Api.Controllers
                     if (hasBillingPhyName) addCols["billingPhyName"] = x.BillingPhyName;
                     if (hasBillingPhyNPI) addCols["billingPhyNPI"] = x.BillingPhyNPI;
                     if (hasFacilityName) addCols["facilityName"] = x.FacilityPhyName;
+                    if (hasCreatedUser)
+                    {
+                        addCols["claCreatedUser"] = x.ClaCreatedUserName;
+                        addCols["claCreatedUserName"] = x.ClaCreatedUserName;
+                    }
+                    if (hasModifiedUser)
+                    {
+                        addCols["claModifiedUser"] = x.ClaLastUserName;
+                        addCols["claLastUserName"] = x.ClaLastUserName;
+                    }
 
                     return new
                     {
@@ -1137,6 +1582,8 @@ namespace Zebl.Api.Controllers
                         claStatus = x.ClaStatus,
                         claDateTimeCreated = x.ClaDateTimeCreated,
                         claDateTimeModified = x.ClaDateTimeModified,
+                        createdDate = x.ActivityDate,
+                        modifiedDate = x.ActivityDate,
                         claTotalChargeTRIG = x.ClaTotalChargeTRIG,
                         claTotalBalanceCC = x.ClaTotalBalanceCC,
                         claClassification = x.ClaClassification,
@@ -1152,6 +1599,7 @@ namespace Zebl.Api.Controllers
                         claDiagnosis2 = x.ClaDiagnosis2,
                         claDiagnosis3 = x.ClaDiagnosis3,
                         claDiagnosis4 = x.ClaDiagnosis4,
+                        claCreatedUserName = x.ClaCreatedUserName,
                         claLastUserName = x.ClaLastUserName,
                         patFullNameCC = x.PatFullNameCC,
                         patFirstName = x.PatFirstName,
@@ -1171,199 +1619,6 @@ namespace Zebl.Api.Controllers
             {
                 _logger.LogWarning(ex, "Claim_Audit/GetClaimNotes failed. Table may not exist.");
                 return Ok(new { data = Array.Empty<object>(), meta = new { page, pageSize, totalCount = 0 } });
-            }
-        }
-
-        /// <summary>
-        /// Generates 837 for the claim (Payer rules), updates status to Submitted, returns 837 content.
-        /// </summary>
-        [HttpPost("{claId:int}/export837")]
-        public async Task<IActionResult> Export837([FromRoute] int claId)
-        {
-            if (claId <= 0) return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "Claim ID must be greater than 0" });
-            try
-            {
-                // Load claim settings
-                var settingsElement = await _programSettingsService.GetSectionAsync("claim", HttpContext.RequestAborted);
-                var claimSettings = settingsElement.ValueKind == System.Text.Json.JsonValueKind.Object
-                    ? settingsElement
-                    : System.Text.Json.JsonDocument.Parse("{}").RootElement;
-
-                bool lockClaimsAfterPrint = false;
-                if (claimSettings.ValueKind == System.Text.Json.JsonValueKind.Object &&
-                    claimSettings.TryGetProperty("lockClaimsAfterPrint", out var lockProp) &&
-                    lockProp.ValueKind == System.Text.Json.JsonValueKind.True)
-                {
-                    lockClaimsAfterPrint = true;
-                }
-
-                bool checkDuplicateServiceLines = false;
-                if (claimSettings.ValueKind == System.Text.Json.JsonValueKind.Object &&
-                    claimSettings.TryGetProperty("checkDuplicateServiceLines", out var dupProp) &&
-                    dupProp.ValueKind == System.Text.Json.JsonValueKind.True)
-                {
-                    checkDuplicateServiceLines = true;
-                }
-
-                bool validateIcdLogic = false;
-                if (claimSettings.ValueKind == System.Text.Json.JsonValueKind.Object &&
-                    claimSettings.TryGetProperty("validateICDLogic", out var icdProp) &&
-                    icdProp.ValueKind == System.Text.Json.JsonValueKind.True)
-                {
-                    validateIcdLogic = true;
-                }
-
-                // Load claim and service lines for validation
-                var claim = await _db.Claims
-                    .Include(c => c.Service_Lines)
-                    .FirstOrDefaultAsync(c =>
-                        c.ClaID == claId &&
-                        c.TenantId == _currentContext.TenantId &&
-                        c.FacilityId == _currentContext.FacilityId);
-
-                if (claim == null)
-                    return NotFound(new ErrorResponseDto { ErrorCode = "NOT_FOUND", Message = "Claim not found." });
-
-                if (checkDuplicateServiceLines)
-                {
-                    var duplicates = claim.Service_Lines
-                        .GroupBy(s => new
-                        {
-                            s.SrvFromDate,
-                            s.SrvProcedureCode,
-                            s.SrvProductCode,
-                            s.SrvModifier1,
-                            s.SrvModifier2,
-                            s.SrvModifier3,
-                            s.SrvModifier4,
-                            s.SrvDiagnosisPointer
-                        })
-                        .Where(g => g.Count() > 1)
-                        .FirstOrDefault();
-
-                    if (duplicates != null)
-                    {
-                        return BadRequest(new ErrorResponseDto
-                        {
-                            ErrorCode = "CLAIM_VALIDATION",
-                            Message = "Duplicate service lines detected. Please remove duplicates before exporting."
-                        });
-                    }
-                }
-
-                if (validateIcdLogic)
-                {
-                    var serviceDates = claim.Service_Lines
-                        .Select(s => s.SrvFromDate)
-                        .OrderBy(d => d)
-                        .ToList();
-
-                    if (serviceDates.Count > 0)
-                    {
-                        var cutoff = new DateOnly(2015, 10, 1);
-                        bool hasBefore = serviceDates.Any(d => d < cutoff);
-                        bool hasAfterOrOn = serviceDates.Any(d => d >= cutoff);
-
-                        if (hasBefore && hasAfterOrOn)
-                        {
-                            return BadRequest(new ErrorResponseDto
-                            {
-                                ErrorCode = "CLAIM_VALIDATION",
-                                Message = "Cannot combine service dates before and after Oct 1 2015 on the same claim."
-                            });
-                        }
-
-                        var icdIndicator = claim.ClaICDIndicator?.Trim();
-                        if (string.IsNullOrEmpty(icdIndicator))
-                        {
-                            return BadRequest(new ErrorResponseDto
-                            {
-                                ErrorCode = "CLAIM_VALIDATION",
-                                Message = "ICD Indicator is required."
-                            });
-                        }
-
-                        if (hasBefore && icdIndicator == "0")
-                        {
-                            return BadRequest(new ErrorResponseDto
-                            {
-                                ErrorCode = "CLAIM_VALIDATION",
-                                Message = "For service dates before Oct 1 2015, ICD Indicator cannot be 0 (ICD-10)."
-                            });
-                        }
-
-                        if (hasAfterOrOn && icdIndicator == "9")
-                        {
-                            return BadRequest(new ErrorResponseDto
-                            {
-                                ErrorCode = "CLAIM_VALIDATION",
-                                Message = "For service dates on or after Oct 1 2015, ICD Indicator cannot be 9 (ICD-9)."
-                            });
-                        }
-
-                        var diagnoses = new[]
-                        {
-                            claim.ClaDiagnosis1,
-                            claim.ClaDiagnosis2,
-                            claim.ClaDiagnosis3,
-                            claim.ClaDiagnosis4,
-                            claim.ClaDiagnosis5
-                        }.Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
-
-                        if (diagnoses.Count > 0)
-                        {
-                            foreach (var dx in diagnoses)
-                            {
-                                var trimmed = dx!.Trim();
-                                if (string.IsNullOrEmpty(trimmed))
-                                    continue;
-
-                                var first = trimmed[0];
-                                if (icdIndicator == "0")
-                                {
-                                    if (!char.IsLetter(first))
-                                    {
-                                        return BadRequest(new ErrorResponseDto
-                                        {
-                                            ErrorCode = "CLAIM_VALIDATION",
-                                            Message = $"ICD-10 diagnosis '{trimmed}' must start with a letter."
-                                        });
-                                    }
-                                }
-                                else if (icdIndicator == "9")
-                                {
-                                    if (char.IsLetter(first) && char.ToUpperInvariant(first) != 'E' && char.ToUpperInvariant(first) != 'V')
-                                    {
-                                        return BadRequest(new ErrorResponseDto
-                                        {
-                                            ErrorCode = "CLAIM_VALIDATION",
-                                            Message = $"ICD-9 diagnosis '{trimmed}' must start with a number, or E/V."
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                var content = await _claimExportService.Generate837Async(claId);
-
-                if (lockClaimsAfterPrint)
-                {
-                    claim.ClaLocked = true;
-                    await _db.SaveChangesAsync();
-                }
-
-                return Ok(new { content });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new ErrorResponseDto { ErrorCode = "EXPORT_RULE", Message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Export 837 failed for claim {ClaId}", claId);
-                return StatusCode(500, new ErrorResponseDto { ErrorCode = "EXPORT_ERROR", Message = ex.Message });
             }
         }
 
@@ -1392,6 +1647,8 @@ namespace Zebl.Api.Controllers
                         c.ClaID,
                         c.ClaPatFID,
                         c.ClaStatus,
+                        c.ClaCreatedUserName,
+                        c.ClaLastUserName,
                         ClaDateTimeCreated = c.ClaDateTimeCreated,
                         ClaDateTimeModified = c.ClaDateTimeModified,
                         c.ClaTotalChargeTRIG,
@@ -1463,6 +1720,21 @@ namespace Zebl.Api.Controllers
                         PayerName = ci.ClaInsPayF != null ? ci.ClaInsPayF.PayName : null
                     })
                     .ToListAsync(cts.Token);
+
+                var primaryPayerName = claimInsured
+                    .Where(i => i.ClaInsSequence == 1)
+                    .Select(i => i.PayerName)
+                    .FirstOrDefault();
+                var secondaryPayerName = claimInsured
+                    .Where(i => i.ClaInsSequence == 2)
+                    .Select(i => i.PayerName)
+                    .FirstOrDefault();
+                var billToDisplay = claimHeader.ClaBillTo switch
+                {
+                    1 => $"P - {primaryPayerName ?? "PRIMARY"}",
+                    2 => $"S - {secondaryPayerName ?? "SECONDARY"}",
+                    _ => "Patient"
+                };
 
                 var serviceLineRows = await _db.Service_Lines
                     .AsNoTracking()
@@ -1620,6 +1892,8 @@ namespace Zebl.Api.Controllers
                     claimHeader.ClaID,
                     claimHeader.ClaPatFID,
                     claimHeader.ClaStatus,
+                    claimHeader.ClaCreatedUserName,
+                    claimHeader.ClaLastUserName,
                     claimHeader.ClaDateTimeCreated,
                     claimHeader.ClaDateTimeModified,
                     claimHeader.ClaTotalChargeTRIG,
@@ -1628,6 +1902,9 @@ namespace Zebl.Api.Controllers
                     claimHeader.ClaTotalAmtAppliedCC,
                     claimHeader.ClaBillDate,
                     claimHeader.ClaBillTo,
+                    billToDisplay,
+                    primaryPayerName,
+                    secondaryPayerName,
                     claimHeader.ClaSubmissionMethod,
                     claimHeader.ClaInvoiceNumber,
                     claimHeader.ClaLocked,
@@ -1722,6 +1999,74 @@ namespace Zebl.Api.Controllers
                     .FirstOrDefaultAsync(c => c.ClaID == claId);
                 if (claim == null)
                     return NotFound();
+                var previousBillTo = claim.ClaBillTo;
+
+                if (request.ClaBillTo.HasValue && !ClaimBillToRules.IsValidValue(request.ClaBillTo.Value))
+                {
+                    return BadRequest(new ErrorResponseDto
+                    {
+                        ErrorCode = "INVALID_ARGUMENT",
+                        Message = "ClaBillTo must be one of 0 (Patient), 1 (Primary), 2 (Secondary/Final)."
+                    });
+                }
+
+                if (!request.PrimaryPayerId.HasValue || request.PrimaryPayerId.Value <= 0)
+                {
+                    return BadRequest(new ErrorResponseDto
+                    {
+                        ErrorCode = "INVALID_ARGUMENT",
+                        Message = "PrimaryPayerId is required and must be greater than 0."
+                    });
+                }
+
+                var primaryClaimInsured = await _db.Claim_Insureds
+                    .FirstOrDefaultAsync(i => i.ClaInsClaFID == claId && i.ClaInsSequence == 1);
+
+                if (primaryClaimInsured == null)
+                {
+                    return BadRequest(new ErrorResponseDto
+                    {
+                        ErrorCode = "INVALID_ARGUMENT",
+                        Message = "Primary claim insurance row is missing for this claim."
+                    });
+                }
+
+                var payloadPayerId = request.PrimaryPayerId.Value;
+                var previousPrimaryPayerId = primaryClaimInsured.ClaInsPayFID;
+                primaryClaimInsured.ClaInsPayFID = payloadPayerId;
+                _logger.LogInformation("Claim {id} payer updated to {payerId} in ClaimInsurance", claId, payloadPayerId);
+
+                _logger.LogInformation(
+                    "Claim {id} save payer trace: payloadPayerId={payloadPayerId}, storedClaInsPayFID={storedClaInsPayFID}",
+                    claId,
+                    payloadPayerId,
+                    primaryClaimInsured.ClaInsPayFID);
+
+                var effectivePrimaryPayerId = primaryClaimInsured.ClaInsPayFID;
+
+                // Insurance presence check:
+                // - "SELF PAY" (HL7 fallback payer) is treated as "no insurance" for Bill To purposes.
+                var hasInsurance = effectivePrimaryPayerId > 0 && await _db.Payers
+                    .AsNoTracking()
+                    .AnyAsync(p =>
+                        p.PayID == effectivePrimaryPayerId &&
+                        p.TenantId == claim.TenantId &&
+                        p.FacilityId == claim.FacilityId &&
+                        p.PayName != "SELF PAY");
+
+                // Resolve deterministically; never persist null.
+                claim.ClaBillTo = ClaimBillToRules.Resolve(request.ClaBillTo, claim.ClaBillTo, hasInsurance);
+                var didBillToChange = previousBillTo != claim.ClaBillTo;
+                var didPrimaryPayerChange = previousPrimaryPayerId != payloadPayerId;
+                _logger.LogInformation(
+                    "Claim update payer trace. claimId={claimId}, previousClaBillTo={previousClaBillTo}, newClaBillTo={newClaBillTo}, previousPrimaryPayerId={previousPrimaryPayerId}, newPrimaryPayerId={newPrimaryPayerId}, didBillToChange={didBillToChange}, didPrimaryPayerChange={didPrimaryPayerChange}",
+                    claId,
+                    previousBillTo,
+                    claim.ClaBillTo,
+                    previousPrimaryPayerId,
+                    payloadPayerId,
+                    didBillToChange,
+                    didPrimaryPayerChange);
 
                 claim.ClaClassification = request.ClaClassification != null
                     ? (request.ClaClassification.Length > 30 ? request.ClaClassification[..30] : request.ClaClassification)
@@ -1742,6 +2087,8 @@ namespace Zebl.Api.Controllers
                     claim.ClaDischargedDate = DateOnly.FromDateTime(request.ClaDischargedDate.Value);
                 if (request.ClaDateLastSeen.HasValue)
                     claim.ClaDateLastSeen = DateOnly.FromDateTime(request.ClaDateLastSeen.Value);
+                if (request.ClaBillDate.HasValue)
+                    claim.ClaBillDate = DateOnly.FromDateTime(request.ClaBillDate.Value);
                 if (request.ClaEDINotes != null)
                     claim.ClaEDINotes = request.ClaEDINotes;
                 if (request.ClaRemarks != null)
@@ -1836,7 +2183,51 @@ namespace Zebl.Api.Controllers
                     });
                 }
 
+                if (didBillToChange || didPrimaryPayerChange)
+                {
+                    _logger.LogInformation(
+                        "CALLING SYNC for claimId={claimId}, payerId={payerId}",
+                        claId,
+                        payloadPayerId);
+
+                    var updatedRows = await _serviceLineRepository.UpdateServiceLineResponsibleParty(claId, payloadPayerId);
+                    _logger.LogInformation(
+                        "After service-line sync: rowsAffected={rowsAffected}",
+                        updatedRows);
+
+                    var serviceLineRows = await _db.Service_Lines
+                        .AsNoTracking()
+                        .Where(s => s.SrvClaFID == claId)
+                        .OrderBy(s => s.SrvID)
+                        .Select(s => new { s.SrvID, s.SrvResponsibleParty })
+                        .ToListAsync();
+                    var snapshot = string.Join(", ", serviceLineRows.Select(r => $"{r.SrvID}:{r.SrvResponsibleParty}"));
+                    _logger.LogInformation(
+                        "Post-sync Service_Line snapshot. claimId={claimId}, rows={rows}",
+                        claId,
+                        snapshot);
+                }
+
+                var persistedPrimaryPayerId = await _db.Claim_Insureds
+                    .AsNoTracking()
+                    .Where(i => i.ClaInsClaFID == claId && i.ClaInsSequence == 1)
+                    .Select(i => i.ClaInsPayFID)
+                    .FirstOrDefaultAsync();
+
+                _logger.LogInformation(
+                    "Claim {id} save payer trace: payloadPayerId={payloadPayerId}, storedClaInsPayFID={storedClaInsPayFID}",
+                    claId,
+                    payloadPayerId,
+                    persistedPrimaryPayerId);
+
+                if (persistedPrimaryPayerId != payloadPayerId)
+                {
+                    throw new InvalidOperationException(
+                        $"Primary payer mismatch after save for claim {claId}. payloadPayerId={payloadPayerId}, storedClaInsPayFID={persistedPrimaryPayerId}");
+                }
+
                 _logger.LogInformation("Updated claim {ClaId}, ClaClassification={ClaClassification}", claId, claim.ClaClassification);
+                _logger.LogInformation("Claim {id} saved with payer {payerId}", claId, effectivePrimaryPayerId);
                 return Ok(new
                 {
                     claim.ClaID,
@@ -1899,19 +2290,15 @@ namespace Zebl.Api.Controllers
         {
             try
             {
-                // Fast metadata-based row count (works well for large tables)
-                // index_id 0 = heap, 1 = clustered index
-                const string sql =
-@"SELECT CAST(ISNULL(SUM(p.[rows]), 0) AS int) AS [Value]
-  FROM sys.partitions p
-  WHERE p.object_id = OBJECT_ID(N'[dbo].[Claim]')
-    AND p.index_id IN (0, 1)";
-
-                return await _db.Database.SqlQueryRaw<int>(sql).SingleAsync();
+                var tenantId = _currentContext.TenantId;
+                var facilityId = _currentContext.FacilityId;
+                return await _db.Claims
+                    .AsNoTracking()
+                    .Where(c => c.TenantId == tenantId && c.FacilityId == facilityId)
+                    .CountAsync();
             }
             catch
             {
-                // Fallback: if sys.* access is restricted, don't break the endpoint
                 return 0;
             }
         }

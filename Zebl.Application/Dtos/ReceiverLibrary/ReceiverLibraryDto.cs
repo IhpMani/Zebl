@@ -5,6 +5,8 @@ namespace Zebl.Application.Dtos.ReceiverLibrary;
 public class ReceiverLibraryDto
 {
     public Guid Id { get; set; }
+    public int? TenantId { get; set; }
+    public int? FacilityId { get; set; }
     public string LibraryEntryName { get; set; } = null!;
     public ExportFormat ExportFormat { get; set; }
     public string? ClaimType { get; set; }

@@ -17,6 +17,8 @@ public interface IServiceLineRepository
 
     /// <summary>Payment entry lines for one claim only (patient may have many claims).</summary>
     Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesByClaimIdAsync(int claimId, int? payerId, bool isPayerSource);
+    /// <summary>Payment entry lines for one responsible payer across scoped facility.</summary>
+    Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesByPayerIdAsync(int payerId);
     /// <summary>Add amount to SrvTotalInsAmtPaidTRIG. Returns claim id for recalc.</summary>
     Task<int?> AddInsPaidAsync(int serviceLineId, decimal amount);
     /// <summary>Add amount to SrvTotalPatAmtPaidTRIG. Returns claim id for recalc.</summary>
@@ -31,4 +33,6 @@ public interface IServiceLineRepository
     Task<int> GetPayerIdForLineAsync(int serviceLineId);
     /// <summary>Advance responsible party: Primary -> Secondary -> Patient.</summary>
     Task AdvanceResponsiblePartyAsync(int serviceLineId);
+    /// <summary>Sync open service lines to a new responsible payer for a claim. Returns updated row count.</summary>
+    Task<int> UpdateServiceLineResponsibleParty(int claimId, int newPayerId);
 }

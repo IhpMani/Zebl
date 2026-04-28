@@ -67,6 +67,8 @@ public class ConnectionLibraryService
 
         var entity = new ConnectionLibrary(command.Name, command.Host, command.Username, encryptedPassword)
         {
+            ConnectionType = command.ConnectionType,
+            InboundFetchPath = string.IsNullOrWhiteSpace(command.InboundFetchPath) ? null : command.InboundFetchPath.Trim(),
             Port = port,
             UploadDirectory = command.UploadDirectory,
             DownloadDirectory = command.DownloadDirectory,
@@ -121,6 +123,8 @@ public class ConnectionLibraryService
         // Update entity properties
         entity.Name = command.Name;
         entity.Host = command.Host;
+        entity.ConnectionType = command.ConnectionType;
+        entity.InboundFetchPath = string.IsNullOrWhiteSpace(command.InboundFetchPath) ? null : command.InboundFetchPath.Trim();
         entity.Port = port;
         entity.Username = command.Username;
         entity.EncryptedPassword = encryptedPassword;
@@ -160,6 +164,8 @@ public class ConnectionLibraryService
             Id = entity.Id,
             Name = entity.Name,
             Host = entity.Host,
+            ConnectionType = entity.ConnectionType,
+            InboundFetchPath = entity.InboundFetchPath,
             Port = entity.Port,
             Username = entity.Username,
             Password = "********",

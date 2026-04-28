@@ -169,7 +169,7 @@ public class PaymentRepository : IPaymentRepository
                 Reference1 = x.PmtOtherReference1,
                 Reference2 = x.PmtOtherReference2,
                 Note = x.PmtNote,
-                Remaining = x.PmtRemainingCC
+                Remaining = x.PmtAmount - x.PmtDisbursedTRIG
             })
             .FirstOrDefaultAsync();
         if (p == null)
@@ -232,6 +232,8 @@ public class PaymentRepository : IPaymentRepository
                 PmtID = p.PmtID,
                 PmtDateTimeCreated = p.PmtDateTimeCreated,
                 PmtDateTimeModified = p.PmtDateTimeModified,
+                CreatedDate = p.PmtDateTimeCreated,
+                ModifiedDate = p.PmtDateTimeModified,
                 PmtCreatedUserName = p.PmtCreatedUserName,
                 PmtLastUserName = p.PmtLastUserName,
                 PmtDate = p.PmtDate,
@@ -255,6 +257,60 @@ public class PaymentRepository : IPaymentRepository
                 PatFullNameCC = p.PmtPatF != null ? p.PmtPatF.PatFullNameCC : null,
                 PatClassification = p.PmtPatF != null ? p.PmtPatF.PatClassification : null,
                 AdditionalColumns = new Dictionary<string, object?>()
+            })
+            .ToListAsync();
+
+        return (data, totalCount);
+    }
+
+    public async Task<(List<ClaimPaymentLedgerItemDto> Data, int TotalCount)> GetClaimPaymentLedgerAsync(
+        int page,
+        int pageSize,
+        bool? isApplied,
+        DateTime? fromDateUtc,
+        DateTime? toDateUtc,
+        string? payer,
+        string? claimExternalId)
+    {
+        var fid = _currentContext.FacilityId;
+        var query = _context.ClaimPayments
+            .AsNoTracking()
+            .Where(p => p.FacilityId == fid);
+
+        if (isApplied.HasValue)
+            query = query.Where(p => p.IsApplied == isApplied.Value);
+        if (fromDateUtc.HasValue)
+            query = query.Where(p => p.PaymentDateUtc >= fromDateUtc.Value);
+        if (toDateUtc.HasValue)
+            query = query.Where(p => p.PaymentDateUtc <= toDateUtc.Value);
+
+        var normalizedPayer = payer?.Trim();
+        if (!string.IsNullOrWhiteSpace(normalizedPayer))
+            query = query.Where(p => p.PayerId != null && p.PayerId.Contains(normalizedPayer));
+
+        var normalizedClaim = claimExternalId?.Trim();
+        if (!string.IsNullOrWhiteSpace(normalizedClaim))
+            query = query.Where(p => p.ClaimExternalId.Contains(normalizedClaim));
+
+        query = query.OrderByDescending(p => p.PaymentDateUtc).ThenByDescending(p => p.Id);
+        var totalCount = await query.CountAsync();
+
+        var data = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new ClaimPaymentLedgerItemDto
+            {
+                Id = p.Id,
+                ClaimId = p.ClaimId,
+                ClaimExternalId = p.ClaimExternalId,
+                TraceNumber = p.TraceNumber,
+                PayerId = p.PayerId,
+                PayerLevel = p.PayerLevel,
+                PaidAmount = p.PaidAmount,
+                AdjustmentAmount = p.AdjustmentAmount,
+                PatientResponsibility = p.PatientResponsibility,
+                IsApplied = p.IsApplied,
+                PaymentDateUtc = p.PaymentDateUtc
             })
             .ToListAsync();
 

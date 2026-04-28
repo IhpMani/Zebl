@@ -44,6 +44,9 @@ public class PayersController : ControllerBase
         {
             PayID = p.PayID,
             PayDateTimeCreated = p.PayDateTimeCreated,
+            PayDateTimeModified = p.PayDateTimeModified,
+            CreatedDate = p.PayDateTimeCreated,
+            ModifiedDate = p.PayDateTimeModified,
             PayName = p.PayName,
             PayClassification = p.PayClassification,
             PayClaimType = p.PayClaimType,

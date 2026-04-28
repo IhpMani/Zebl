@@ -33,14 +33,35 @@ namespace Zebl.Api.Controllers
         public async Task<IActionResult> GetServiceLinesForEntry([FromQuery] int? claimId = null, [FromQuery] int? patientId = null, [FromQuery] int? payerId = null)
         {
             var isPayerSource = payerId.HasValue && payerId.Value > 0;
+            var source = isPayerSource ? "Payer" : "Patient";
+            _logger.LogInformation(
+                "PaymentEntry.GetServiceLinesForEntry request. source={source}, claimId={claimId}, patientId={patientId}, payerId={payerId}",
+                source,
+                claimId,
+                patientId,
+                payerId);
             List<PaymentEntryServiceLineDto> lines;
             if (claimId.HasValue && claimId.Value > 0)
+            {
+                _logger.LogInformation("PaymentEntry.GetServiceLinesForEntry filter: claimId branch");
                 lines = await _serviceLineRepo.GetPaymentEntryLinesByClaimIdAsync(claimId.Value, payerId, isPayerSource);
+            }
             else if (patientId.HasValue && patientId.Value > 0)
+            {
+                _logger.LogInformation("PaymentEntry.GetServiceLinesForEntry filter: patientId branch");
                 lines = await _serviceLineRepo.GetPaymentEntryLinesAsync(patientId.Value, payerId, isPayerSource);
+            }
+            else if (isPayerSource)
+            {
+                _logger.LogInformation("PaymentEntry.GetServiceLinesForEntry filter: payer-only branch");
+                lines = await _serviceLineRepo.GetPaymentEntryLinesByPayerIdAsync(payerId!.Value);
+            }
             else
                 return BadRequest(new ErrorResponseDto { ErrorCode = "INVALID_ARGUMENT", Message = "claimId or patientId is required and must be greater than 0." });
 
+            _logger.LogInformation(
+                "PaymentEntry.GetServiceLinesForEntry response. lineCount={lineCount}",
+                lines.Count);
             return Ok(new ApiResponse<List<PaymentEntryServiceLineDto>> { Data = lines });
         }
 
@@ -214,6 +235,46 @@ namespace Zebl.Api.Controllers
             return Ok(new ApiResponse<List<RelatedColumnDefinition>>
             {
                 Data = columns
+            });
+        }
+
+        [HttpGet("ledger")]
+        public async Task<IActionResult> GetClaimPaymentLedger(
+            int page = 1,
+            int pageSize = 50,
+            bool? isApplied = null,
+            DateTime? fromDateUtc = null,
+            DateTime? toDateUtc = null,
+            string? payer = null,
+            string? claimExternalId = null)
+        {
+            if (page < 1 || pageSize < 1 || pageSize > 200)
+            {
+                return BadRequest(new ErrorResponseDto
+                {
+                    ErrorCode = "INVALID_ARGUMENT",
+                    Message = "Invalid paging values"
+                });
+            }
+
+            var (data, totalCount) = await _paymentRepo.GetClaimPaymentLedgerAsync(
+                page,
+                pageSize,
+                isApplied,
+                fromDateUtc,
+                toDateUtc,
+                payer,
+                claimExternalId);
+
+            return Ok(new ApiResponse<List<ClaimPaymentLedgerItemDto>>
+            {
+                Data = data,
+                Meta = new PaginationMetaDto
+                {
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalCount = totalCount
+                }
             });
         }
     }

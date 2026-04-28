@@ -16,14 +16,19 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Zebl.Api.Configuration;
 using Zebl.Api.Middleware;
 using Zebl.Api.Services;
+using Zebl.Infrastructure.Persistence;
 using Zebl.Infrastructure.Persistence.Context;
 using HealthChecks.UI.Client;
+using OpenTelemetry.Metrics;
+using Zebl.Api.Logging;
+using Zebl.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #region Logging (Serilog)
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.With(new CorrelationIdEnricher())
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -35,6 +40,21 @@ var jwtSettings =
     ?? new JwtSettings();
 
 builder.Services.AddSingleton(jwtSettings);
+builder.Services.Configure<EdiOperationalOptions>(builder.Configuration.GetSection(EdiOperationalOptions.SectionName));
+builder.Services.Configure<EdiAdaptiveLimiterOptions>(builder.Configuration.GetSection(EdiAdaptiveLimiterOptions.SectionName));
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddMeter("Zebl.Edi")
+            .AddAspNetCoreInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddOtlpExporter();
+    });
+builder.Services.Configure<ClearinghouseSettings>(builder.Configuration.GetSection("ClearinghouseSettings"));
+
+var opCfg = builder.Configuration.GetSection(EdiOperationalOptions.SectionName).Get<EdiOperationalOptions>() ?? new EdiOperationalOptions();
+EdiOperationalMetrics.ConfigureProcessingSampling(opCfg.ProcessingMetricSampleRate);
 
 builder.Services.Configure<AuditTrailOptions>(builder.Configuration.GetSection("AuditTrail"));
 builder.Services.PostConfigure<AuditTrailOptions>(opts =>
@@ -89,11 +109,22 @@ if (builder.Environment.IsProduction())
 #endregion
 
 #region Database
+var envConnectionOverride = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+if (!string.IsNullOrWhiteSpace(envConnectionOverride))
+{
+    throw new Exception("ConnectionStrings__DefaultConnection environment override is not allowed.");
+}
+
+var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(defaultConnection))
+{
+    throw new Exception("DefaultConnection is not configured");
+}
+
 void ConfigureDbContextOptions(DbContextOptionsBuilder options)
 {
-    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(
-        conn,
+        defaultConnection,
         sql => sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null));
 
     if (builder.Environment.IsDevelopment())
@@ -114,9 +145,12 @@ builder.Services.AddDbContext<ZeblDbContext>(
 #region Health Checks
 builder.Services.AddHealthChecks()
     .AddSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")!,
+        defaultConnection,
         name: "sqlserver",
-        tags: new[] { "db", "sql" });
+        tags: new[] { "db", "sql" })
+    .AddCheck<Zebl.Api.HealthChecks.EdiStorageHealthCheck>("edi-storage", tags: new[] { "edi", "storage" })
+    .AddCheck<Zebl.Api.HealthChecks.EdiTransportHealthCheck>("edi-transport", tags: new[] { "edi", "transport" })
+    .AddCheck<Zebl.Api.HealthChecks.EdiQueueHealthCheck>("edi-queue", tags: new[] { "edi", "queue" });
 
 builder.Services
     .AddHealthChecksUI(options =>
@@ -226,8 +260,11 @@ builder.Services.AddScoped<Zebl.Infrastructure.Services.ClaimInitialStatusProvid
 // Patient Eligibility (clearinghouse credentials only; password encrypted at rest)
 builder.Services.AddDataProtection();
 builder.Services.AddScoped<Zebl.Application.Abstractions.IEligibilitySettingsProvider, Zebl.Api.Services.PatientEligibilitySettingsService>();
-builder.Services.AddScoped<Zebl.Application.Services.Eligibility271Parser>();
-builder.Services.AddScoped<Zebl.Application.Services.IEligibilityService, Zebl.Infrastructure.Services.EligibilityService>();
+builder.Services.AddScoped<Zebl.Application.Services.IEligibilityParser, Zebl.Application.Services.EligibilityParser>();
+builder.Services.AddScoped<Zebl.Application.Services.IEligibilityService, Zebl.Api.Services.EligibilityService>();
+builder.Services.AddHostedService<Zebl.Api.Services.EligibilityPollingService>();
+builder.Services.AddHostedService<Zebl.Api.Services.EdiOrphanReconciliationService>();
+builder.Services.AddHostedService<Zebl.Api.Services.EdiMetricsReporterService>();
 
 // Receiver Library
 builder.Services.AddScoped<Zebl.Application.Repositories.IReceiverLibraryRepository, Zebl.Infrastructure.Repositories.ReceiverLibraryRepository>();
@@ -235,11 +272,13 @@ builder.Services.AddScoped<Zebl.Application.Services.ReceiverLibraryService>();
 
 // EDI Export
 builder.Services.AddScoped<Zebl.Application.Repositories.IClaimRepository, Zebl.Infrastructure.Repositories.ClaimRepository>();
-builder.Services.AddScoped<Zebl.Application.Services.IEdiExportService, Zebl.Application.Services.EdiExportService>();
 builder.Services.AddScoped<Zebl.Application.Services.IClaimExportDataProvider, Zebl.Infrastructure.Services.ClaimExportDataProvider>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IScrubRuleRepository, Zebl.Infrastructure.Repositories.ScrubRuleRepository>();
 builder.Services.AddScoped<Zebl.Application.Services.IClaimScrubService, Zebl.Infrastructure.Services.ClaimScrubService>();
-builder.Services.AddScoped<Zebl.Application.Services.IClaimExportService, Zebl.Application.Services.ClaimExportService>();
+builder.Services.AddScoped<Zebl.Application.Services.IClaimBatchService, Zebl.Api.Services.ClaimBatchService>();
+builder.Services.AddScoped<Zebl.Application.Services.ISendingClaimsSettingsService, Zebl.Api.Services.SendingClaimsSettingsService>();
+builder.Services.AddScoped<Zebl.Application.Services.IControlNumberService, Zebl.Api.Services.ControlNumberService>();
+builder.Services.AddScoped<Zebl.Api.Services.IClearinghouseClient, Zebl.Api.Services.ClearinghouseClient>();
 
 // Connection Library
 builder.Services.AddHttpClient();
@@ -247,14 +286,25 @@ builder.Services.AddScoped<Zebl.Application.Repositories.IConnectionLibraryRepos
 builder.Services.AddScoped<Zebl.Application.Services.ConnectionLibraryService>();
 builder.Services.AddScoped<Zebl.Application.Services.IEncryptionService, Zebl.Infrastructure.Services.AesEncryptionService>();
 builder.Services.AddScoped<Zebl.Infrastructure.Services.SftpTransportService>();
+builder.Services.AddScoped<Zebl.Infrastructure.Services.HttpInboundTransportService>();
 
 // EDI Reports
+var ediReportsRoot = Path.Combine(builder.Environment.ContentRootPath, "Data", "EdiReports");
+Directory.CreateDirectory(ediReportsRoot);
+builder.Services.AddSingleton<Zebl.Application.Services.IEdiReportFileStore>(_ => new Zebl.Infrastructure.Services.EdiReportFileStore(ediReportsRoot));
+builder.Services.AddSingleton<Zebl.Application.Services.IEdiProcessingLimiter, Zebl.Infrastructure.Services.EdiProcessingLimiter>();
+builder.Services.AddScoped<Zebl.Application.Services.IFileStorageCoordinator, Zebl.Infrastructure.Services.FileStorageCoordinator>();
+builder.Services.AddScoped<Zebl.Application.Services.IEdiReportContentReader, Zebl.Infrastructure.Services.EdiReportContentReader>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IEdiReportRepository, Zebl.Infrastructure.Repositories.EdiReportRepository>();
+builder.Services.AddScoped<Zebl.Application.Services.IClaimPaymentIngestionService, Zebl.Infrastructure.Services.ClaimPaymentIngestionService>();
+builder.Services.AddScoped<Zebl.Application.Services.IEdiAutoPostService, Zebl.Infrastructure.Services.EdiAutoPostService>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IClaimRejectionRepository, Zebl.Infrastructure.Repositories.ClaimRejectionRepository>();
 builder.Services.AddScoped<Zebl.Application.Repositories.IClaimSubmissionRepository, Zebl.Infrastructure.Repositories.ClaimSubmissionRepository>();
-builder.Services.AddScoped<Zebl.Application.Services.Parser999Service>();
+builder.Services.AddScoped<Zebl.Application.Abstractions.IClaimEdiDataProvider, Zebl.Infrastructure.Services.ClaimEdiDataProvider>();
+builder.Services.AddScoped<Zebl.Application.Services.Edi.IEdiGenerator, Zebl.Application.Services.Edi.EdiGenerator>();
+builder.Services.AddScoped<Zebl.Application.Services.Edi.IEdiValidationService, Zebl.Application.Services.Edi.EdiValidationService>();
+builder.Services.AddScoped<Zebl.Application.Abstractions.IEdiInboundPostProcessor, Zebl.Api.Services.Edi.Claim999InboundPostProcessor>();
 builder.Services.AddScoped<Zebl.Application.Services.EdiReportService>();
-// IEdiReportFileStore removed - FileContent now stored in database
 
 // Payer Library
 builder.Services.AddScoped<Zebl.Application.Repositories.IPayerRepository, Zebl.Infrastructure.Repositories.PayerRepository>();
@@ -328,7 +378,7 @@ var app = builder.Build();
 #region Database startup — apply EF migrations only (no ad-hoc schema SQL)
 if (builder.Configuration.GetValue("Database:ApplyMigrationsAtStartup", true))
 {
-    var csBootstrap = builder.Configuration.GetConnectionString("DefaultConnection");
+    var csBootstrap = defaultConnection;
     if (!string.IsNullOrWhiteSpace(csBootstrap))
     {
         // Pooling=false avoids connection-pool session swaps that can break EF's __EFMigrationsLock
@@ -341,6 +391,12 @@ if (builder.Configuration.GetValue("Database:ApplyMigrationsAtStartup", true))
             .Options;
         try
         {
+            var ediReportsBootstrapRoot = Path.Combine(builder.Environment.ContentRootPath, "Data", "EdiReports");
+            Directory.CreateDirectory(ediReportsBootstrapRoot);
+            EdiReportLegacyFileContentBackfill.RunAsync(csb.ConnectionString, ediReportsBootstrapRoot)
+                .GetAwaiter()
+                .GetResult();
+
             using var db = new ZeblDbContext(bootstrapOptions);
             db.Database.Migrate();
         }
@@ -383,6 +439,7 @@ if (builder.Configuration.GetValue("Database:ApplyMigrationsAtStartup", true))
 
 #region Middleware Pipeline
 app.UseSerilogRequestLogging();
+app.UseMiddleware<CorrelationEnforcementMiddleware>();
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -432,7 +489,7 @@ try
 {
     Log.Information("Zebl API starting");
 
-    if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("DefaultConnection")))
+    if (!string.IsNullOrWhiteSpace(defaultConnection))
     {
         using (var scope = app.Services.CreateScope())
         {
@@ -467,6 +524,12 @@ try
                 }
             }
         }
+    }
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ZeblDbContext>();
+        Console.WriteLine("🔥 ACTIVE CONNECTION: " + db.Database.GetDbConnection().ConnectionString);
     }
 
     app.Run();

@@ -20,6 +20,8 @@ namespace Zebl.Application.Dtos.Claims
         public string? PatFirstName { get; set; }
         public string? PatLastName { get; set; }
         public DateTime? PatBirthDate { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? ModifiedDate { get; set; }
     }
 
     public class ServiceLineDto
@@ -34,5 +36,7 @@ namespace Zebl.Application.Dtos.Claims
         public decimal? SrvTotalInsAmtPaidTRIG { get; set; }
         public decimal? SrvTotalPatAmtPaidTRIG { get; set; }
         public decimal? SrvTotalBalanceCC { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? ModifiedDate { get; set; }
     }
 }

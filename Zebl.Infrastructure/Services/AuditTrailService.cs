@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Zebl.Application.Abstractions;
 using Zebl.Application.Dtos.Common;
@@ -13,7 +14,7 @@ namespace Zebl.Infrastructure.Services;
 
 public sealed class AuditTrailService : IAuditTrail
 {
-    private readonly IDbContextFactory<ZeblDbContext> _dbFactory;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly AuditTrailOptions _options;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
@@ -23,10 +24,10 @@ public sealed class AuditTrailService : IAuditTrail
     };
 
     public AuditTrailService(
-        IDbContextFactory<ZeblDbContext> dbFactory,
+        IServiceScopeFactory scopeFactory,
         IOptions<AuditTrailOptions> options)
     {
-        _dbFactory = dbFactory;
+        _scopeFactory = scopeFactory;
         _options = options.Value;
     }
 
@@ -48,7 +49,8 @@ public sealed class AuditTrailService : IAuditTrail
 
         var timestampUtc = DateTime.UtcNow;
 
-        await using var db = await _dbFactory.CreateDbContextAsync(cancellationToken);
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ZeblDbContext>();
         var previousHash = await db.AuditLogs.AsNoTracking()
             .OrderByDescending(a => a.Id)
             .Select(a => a.Hash)

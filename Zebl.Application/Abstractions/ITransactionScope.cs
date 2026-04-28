@@ -7,6 +7,13 @@ public interface ITransactionScope
 {
     /// <summary>Begins a transaction on the shared DbContext. Caller must CommitAsync or dispose (rollback).</summary>
     Task<IPaymentTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Executes the supplied operation inside SqlServer retry strategy and a single transaction.
+    /// </summary>
+    Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Active transaction. CommitAsync to persist; dispose without commit rolls back.</summary>

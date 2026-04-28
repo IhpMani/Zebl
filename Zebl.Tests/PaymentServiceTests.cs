@@ -64,6 +64,9 @@ public class PaymentServiceTests
         transaction.Setup(x => x.CommitAsync(CancellationToken.None)).Returns(Task.CompletedTask);
         transaction.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
         transactionScope.Setup(x => x.BeginTransactionAsync(CancellationToken.None)).ReturnsAsync(transaction.Object);
+        transactionScope
+            .Setup(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), CancellationToken.None))
+            .Returns<Func<CancellationToken, Task<int>>, CancellationToken>((op, ct) => op(ct));
         reconciliationService.Setup(x => x.VerifyClaimAsync(claimId, CancellationToken.None)).ReturnsAsync(new ReconciliationResult { Success = true });
         disbursementRepo.Setup(x => x.AddAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string?>())).Returns(Task.CompletedTask);
 
@@ -130,6 +133,9 @@ public class PaymentServiceTests
         transaction.Setup(x => x.CommitAsync(CancellationToken.None)).Returns(Task.CompletedTask);
         transaction.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
         transactionScope.Setup(x => x.BeginTransactionAsync(CancellationToken.None)).ReturnsAsync(transaction.Object);
+        transactionScope
+            .Setup(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), CancellationToken.None))
+            .Returns<Func<CancellationToken, Task<int>>, CancellationToken>((op, ct) => op(ct));
         reconciliationService.Setup(x => x.VerifyClaimAsync(claimId, CancellationToken.None)).ReturnsAsync(new ReconciliationResult { Success = true });
 
         var sut = new PaymentService(
@@ -261,6 +267,9 @@ public class PaymentServiceTests
         transaction.Setup(x => x.CommitAsync(CancellationToken.None)).Returns(Task.CompletedTask);
         transaction.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
         transactionScope.Setup(x => x.BeginTransactionAsync(CancellationToken.None)).ReturnsAsync(transaction.Object);
+        transactionScope
+            .Setup(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), CancellationToken.None))
+            .Returns<Func<CancellationToken, Task<int>>, CancellationToken>((op, ct) => op(ct));
         reconciliationService.Setup(x => x.VerifyClaimAsync(claimId, CancellationToken.None)).ReturnsAsync(new ReconciliationResult { Success = true });
         serviceLineRepo.Setup(x => x.RecalculateServiceLineAsync(srvId)).ReturnsAsync(claimId);
 

@@ -49,7 +49,9 @@ public class ClaimTemplateController : ControllerBase
             return BadRequest();
 
         await _service.UpdateAsync(id, dto);
-        return Ok();
+        var updated = await _service.GetByIdAsync(id);
+        if (updated == null) return NotFound();
+        return Ok(updated);
     }
 
     [HttpDelete("{id:int}")]

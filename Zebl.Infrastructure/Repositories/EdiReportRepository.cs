@@ -27,26 +27,24 @@ public class EdiReportRepository : IEdiReportRepository
         return await _context.EdiReports.FirstOrDefaultAsync(r => r.Id == id);
     }
 
-    public async Task<int> DeleteByReceiverAndConnectionAsync(Guid receiverLibraryId, Guid? connectionLibraryId)
+    public async Task<EdiReport?> FindByFileHashAsync(int tenantId, string fileHash, CancellationToken cancellationToken = default)
     {
-        var toRemove = await _context.EdiReports
-            .Where(r => r.ReceiverLibraryId == receiverLibraryId && r.ConnectionLibraryId == connectionLibraryId)
-            .ToListAsync();
-        _context.EdiReports.RemoveRange(toRemove);
-        await _context.SaveChangesAsync();
-        return toRemove.Count;
+        if (string.IsNullOrWhiteSpace(fileHash))
+            return null;
+        return await _context.EdiReports
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.TenantId == tenantId && r.FileHash == fileHash, cancellationToken)
+            .ConfigureAwait(false);
     }
 
-    public async Task<int> DeleteNonArchivedByReceiverAndConnectionAsync(Guid receiverLibraryId, Guid? connectionLibraryId)
+    public async Task<bool> ExistsByFileHashAsync(int tenantId, string fileHash, CancellationToken cancellationToken = default)
     {
-        var toRemove = await _context.EdiReports
-            .Where(r => r.ReceiverLibraryId == receiverLibraryId
-                        && r.ConnectionLibraryId == connectionLibraryId
-                        && !r.IsArchived)
-            .ToListAsync();
-        _context.EdiReports.RemoveRange(toRemove);
-        await _context.SaveChangesAsync();
-        return toRemove.Count;
+        if (string.IsNullOrWhiteSpace(fileHash))
+            return false;
+        return await _context.EdiReports
+            .AsNoTracking()
+            .AnyAsync(r => r.TenantId == tenantId && r.FileHash == fileHash, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task AddAsync(EdiReport report)
@@ -74,4 +72,5 @@ public class EdiReportRepository : IEdiReportRepository
             await _context.SaveChangesAsync();
         }
     }
+
 }

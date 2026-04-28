@@ -12,6 +12,12 @@ namespace Zebl.Application.Dtos.Claims
         public string? ClaStatus { get; set; }
         
         public DateTime? ClaDateTimeCreated { get; set; }
+
+        public DateTime? ClaDateTimeModified { get; set; }
+
+        /** Standardized audit fields across list DTOs. */
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? ModifiedDate { get; set; }
         
         [Range(0, double.MaxValue, ErrorMessage = "Total charge must be non-negative")]
         public decimal? ClaTotalChargeTRIG { get; set; }
@@ -31,6 +37,7 @@ namespace Zebl.Application.Dtos.Claims
         public string? ClaClassification { get; set; }
         public DateOnly? ClaDateTotalFrom { get; set; }
         public int? ClaBillTo { get; set; }
+        public string? BillToDisplay { get; set; }
         public string? PatFullNameCC { get; set; }
         public string? PrimaryPayerName { get; set; }
         public int ClaPatFID { get; set; }

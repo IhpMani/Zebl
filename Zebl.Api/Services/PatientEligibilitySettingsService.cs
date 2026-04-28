@@ -42,8 +42,13 @@ public class PatientEligibilitySettingsService : IEligibilitySettingsProvider
         var dict = JsonElementToDictionary(raw);
         var incoming = JsonElementToDictionary(settings);
 
+        dict.Remove("source");
+
         foreach (var kv in incoming)
         {
+            if (string.Equals(kv.Key, "source", System.StringComparison.OrdinalIgnoreCase))
+                continue;
+
             if (kv.Key.Equals("password", System.StringComparison.OrdinalIgnoreCase))
             {
                 var plain = kv.Value?.ToString() ?? string.Empty;
@@ -72,9 +77,8 @@ public class PatientEligibilitySettingsService : IEligibilitySettingsProvider
         var dict = JsonElementToDictionary(raw);
         var dto = new EligibilitySettingsForCheckDto
         {
-            Source = GetString(dict, "source") ?? string.Empty,
             ReceiverId = GetStringOrNull(dict, "receiverId"),
-            ProviderMode = GetString(dict, "providerMode") ?? "PatientBillingProvider",
+            ProviderMode = GetString(dict, "providerMode") ?? "Billing",
             SpecificProviderId = GetIntOrNull(dict, "specificProviderId"),
             Username = GetString(dict, "username") ?? string.Empty,
             Password = DecryptPasswordIfNeeded(GetString(dict, "password") ?? string.Empty),
@@ -87,6 +91,7 @@ public class PatientEligibilitySettingsService : IEligibilitySettingsProvider
     private static JsonElement MaskPasswordInJson(JsonElement raw)
     {
         var dict = JsonElementToDictionary(raw);
+        dict.Remove("source");
         dict["password"] = string.Empty;
         var json = JsonSerializer.SerializeToUtf8Bytes(dict);
         using var doc = JsonDocument.Parse(json);

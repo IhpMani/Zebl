@@ -1,0 +1,48 @@
+groups:
+  - name: edi-operational-alerts
+    interval: 30s
+    rules:
+      - alert: EdiHighFailureRate
+        expr: rate(edi_failure_count_total{operation="persist-with-db"}[5m]) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          service: zebl-api
+          component: edi
+        annotations:
+          summary: "EDI failure rate is elevated"
+          description: "Failure counter exceeded threshold over 5m."
+
+      - alert: EdiRetriesIncreasing
+        expr: increase(edi_retry_count_total{operation="persist-with-db"}[10m]) > 50
+        for: 10m
+        labels:
+          severity: warning
+          service: zebl-api
+          component: edi
+        annotations:
+          summary: "EDI retries are increasing"
+          description: "Retry growth indicates transport/storage instability."
+
+      - alert: EdiQueueDepthHigh
+        expr: max_over_time(edi_queue_depth{queue="inbound"}[5m]) > 150
+        for: 5m
+        labels:
+          severity: warning
+          service: zebl-api
+          component: edi
+        annotations:
+          summary: "EDI inbound queue depth high"
+          description: "Backpressure queue is growing and processing latency may increase."
+
+      - alert: EdiValidationFailureSpike
+        expr: increase(edi_validation_failure_count_total{outcome="failed"}[10m]) > 25
+        for: 5m
+        labels:
+          severity: warning
+          service: zebl-api
+          component: edi
+        annotations:
+          summary: "EDI validation failures spiked"
+          description: "Potential upstream payload quality issue."
+

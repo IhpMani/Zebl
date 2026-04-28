@@ -15,24 +15,6 @@ namespace Zebl.Api.Controllers;
 [Authorize(Policy = "RequireAuth")]
 public class ProgramSettingsController : ControllerBase
 {
-    private static readonly HashSet<string> AllowedEligibilitySources = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Waystar",
-        "OfficeAlly",
-        "TriZetto",
-        "Navicure",
-        "Capario",
-        "PracticeInsight",
-        "ZirMed",
-        // Development/testing: route eligibility to local mock EDI server
-        "EDIConnection"
-    };
-
-    private static readonly HashSet<string> EligibilitySourcesRequiringCredentials = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Capario", "TriZetto", "Navicure", "PracticeInsight", "ZirMed", "OfficeAlly", "Waystar"
-    };
-
     private readonly ProgramSettingsService _service;
     private readonly ICurrentUserContext _userContext;
     private readonly IEligibilitySettingsProvider? _eligibilitySettingsProvider;
@@ -95,19 +77,22 @@ public class ProgramSettingsController : ControllerBase
 
         if (string.Equals(section, "patientEligibility", StringComparison.OrdinalIgnoreCase) && _eligibilitySettingsProvider != null)
         {
-            var source = settings.TryGetProperty("source", out var src) ? src.GetString()?.Trim() : null;
-            if (!string.IsNullOrWhiteSpace(source) && !AllowedEligibilitySources.Contains(source))
+            var receiverId = settings.TryGetProperty("receiverId", out var receiverIdNode) ? receiverIdNode.GetString()?.Trim() : null;
+            if (string.IsNullOrWhiteSpace(receiverId) || !Guid.TryParse(receiverId, out _))
             {
-                return BadRequest(new { error = $"Unsupported eligibility source '{source}'." });
+                return BadRequest(new { error = "Receiver is required for eligibility." });
             }
 
-            if (!string.IsNullOrEmpty(source) && EligibilitySourcesRequiringCredentials.Contains(source))
+            var username = settings.TryGetProperty("username", out var u) ? u.GetString()?.Trim() : null;
+            if (string.IsNullOrWhiteSpace(username))
             {
-                var username = settings.TryGetProperty("username", out var u) ? u.GetString()?.Trim() : null;
-                if (string.IsNullOrEmpty(username))
-                {
-                    return BadRequest(new { error = "Username is required when a clearinghouse source is selected." });
-                }
+                return BadRequest(new { error = "Username is required for eligibility." });
+            }
+
+            var server = settings.TryGetProperty("server", out var s) ? s.GetString()?.Trim() : null;
+            if (string.IsNullOrWhiteSpace(server))
+            {
+                return BadRequest(new { error = "Server is required for eligibility." });
             }
 
             await _eligibilitySettingsProvider.SaveAsync(settings, updatedBy, cancellationToken);
@@ -116,10 +101,18 @@ public class ProgramSettingsController : ControllerBase
 
         if (string.Equals(section, "claim", StringComparison.OrdinalIgnoreCase))
         {
+            Console.WriteLine("PROGRAM SETTINGS (claim) incoming payload: " + settings.GetRawText());
             settings = NormalizeClaimSectionSettings(settings);
+            Console.WriteLine("PROGRAM SETTINGS (claim) normalized payload: " + settings.GetRawText());
         }
 
         await _service.SaveSectionAsync(section, settings, updatedBy, cancellationToken);
+
+        if (string.Equals(section, "claim", StringComparison.OrdinalIgnoreCase))
+        {
+            var persisted = await _service.GetSectionAsync("claim", cancellationToken);
+            Console.WriteLine("PROGRAM SETTINGS (claim) persisted payload: " + persisted.GetRawText());
+        }
 
         return NoContent();
     }

@@ -211,6 +211,7 @@ public class ClaimRepository : IClaimRepository
         var primaryInsured = primary.Claim_Insureds?.FirstOrDefault(ci => ci.ClaInsSequence == 1);
         var now = DateTime.UtcNow;
         var initialStatus = await _claimInitialStatus.GetInitialClaStatusStringAsync();
+        Console.WriteLine("DEFAULT STATUS FROM SETTINGS: " + initialStatus);
         var newClaim = new Claim
         {
             ClaID = 0,
@@ -230,6 +231,8 @@ public class ClaimRepository : IClaimRepository
             ClaOperatingPhyFID = primary.ClaOperatingPhyFID,
             ClaOrderingPhyFID = primary.ClaOrderingPhyFID,
             ClaBillDate = primary.ClaBillDate,
+            // Secondary claims bill to secondary/final insurance (sequence 2 payer).
+            ClaBillTo = (int)ClaimBillTo.Secondary,
             ClaDiagnosis1 = primary.ClaDiagnosis1,
             ClaDiagnosis2 = primary.ClaDiagnosis2,
             ClaDiagnosis3 = primary.ClaDiagnosis3,
@@ -250,6 +253,7 @@ public class ClaimRepository : IClaimRepository
             ClaTotalInsBalanceTRIG = forwardAmount,
             ClaTotalPatBalanceTRIG = 0
         };
+        Console.WriteLine("FINAL CLAIM STATUS: " + newClaim.ClaStatus);
         if (newClaim.TenantId != primary.TenantId)
             throw new InvalidOperationException("Tenant mismatch: Claim.TenantId must match primary claim tenant.");
         _context.Claims.Add(newClaim);

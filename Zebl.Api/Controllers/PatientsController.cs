@@ -156,67 +156,38 @@ namespace Zebl.Api.Controllers
                 // Order by ID (primary key, should be indexed)
                 query = query.OrderByDescending(p => p.PatID);
 
-                // Smart count strategy
                 int totalCount;
-                bool hasFilters = active.HasValue || fromDate.HasValue || toDate.HasValue ||
-                                 minPatientId.HasValue || maxPatientId.HasValue || claimId.HasValue ||
-                                 !string.IsNullOrWhiteSpace(classificationList) || !string.IsNullOrWhiteSpace(searchText);
-
-                if (!hasFilters)
+                try
                 {
-                    try
-                    {
-                        totalCount = await GetApproxPatientCountAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Approximate count failed, using large estimate");
-                        totalCount = 1000000;
-                    }
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                    totalCount = await query.CountAsync(cts.Token);
                 }
-                else
+                catch (OperationCanceledException)
                 {
-                    try
+                    _logger.LogWarning("FindPatients count query timed out for tenant={tenantId}, facility={facilityId}", tenantId, facilityId);
+                    return StatusCode(503, new ErrorResponseDto
                     {
-                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-                        totalCount = await query.CountAsync(cts.Token);
-                    }
-                    catch (OperationCanceledException)
+                        ErrorCode = "QUERY_TIMEOUT",
+                        Message = "The patient count query took too long. Please narrow your filters and try again."
+                    });
+                }
+                catch (SqlException sqlEx) when (sqlEx.Number == -2 || sqlEx.Number == 2)
+                {
+                    _logger.LogWarning(sqlEx, "FindPatients SQL timeout for tenant={tenantId}, facility={facilityId}", tenantId, facilityId);
+                    return StatusCode(503, new ErrorResponseDto
                     {
-                        _logger.LogWarning("Patient count query timed out, using approximate count");
-                        try
-                        {
-                            totalCount = await GetApproxPatientCountAsync();
-                        }
-                        catch
-                        {
-                            totalCount = pageSize * (page + 10);
-                        }
-                    }
-                    catch (SqlException sqlEx) when (sqlEx.Number == -2 || sqlEx.Number == 2)
+                        ErrorCode = "QUERY_TIMEOUT",
+                        Message = "The patient count query timed out. Please narrow your filters and try again."
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "FindPatients count query failed for tenant={tenantId}, facility={facilityId}", tenantId, facilityId);
+                    return StatusCode(500, new ErrorResponseDto
                     {
-                        _logger.LogWarning(sqlEx, "Patient count query timed out (SQL timeout)");
-                        try
-                        {
-                            totalCount = await GetApproxPatientCountAsync();
-                        }
-                        catch
-                        {
-                            totalCount = pageSize * (page + 10);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error getting patient count");
-                        try
-                        {
-                            totalCount = await GetApproxPatientCountAsync();
-                        }
-                        catch
-                        {
-                            totalCount = pageSize * (page + 10);
-                        }
-                    }
+                        ErrorCode = "INTERNAL_ERROR",
+                        Message = "Failed to count patients."
+                    });
                 }
 
                 List<PatientListItemDto> data;
@@ -224,7 +195,7 @@ namespace Zebl.Api.Controllers
                 {
                     // Add timeout to prevent hanging queries (20 seconds for data query)
                     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-                    var patientData = await query
+                    data = await query
                         .Skip((page - 1) * pageSize)
                         .Take(pageSize)
                         .Select(p => new PatientListItemDto
@@ -232,30 +203,123 @@ namespace Zebl.Api.Controllers
                             PatID = p.PatID,
                             PatFirstName = p.PatFirstName,
                             PatLastName = p.PatLastName,
+                            PatMI = p.PatMI,
                             PatFullNameCC = p.PatFullNameCC,
                             PatDateTimeCreated = p.PatDateTimeCreated,
-                            PatActive = p.PatActive,
+                            PatDateTimeModified = p.PatDateTimeModified,
+                            CreatedDate = p.PatDateTimeCreated,
+                            ModifiedDate = p.PatDateTimeModified,
+                            PatCreatedUserGUID = p.PatCreatedUserGUID,
+                            PatLastUserGUID = p.PatLastUserGUID,
+                            PatCreatedUserName = p.PatCreatedUserName,
+                            PatLastUserName = p.PatLastUserName,
+                            PatCreatedComputerName = p.PatCreatedComputerName,
+                            PatLastComputerName = p.PatLastComputerName,
                             PatAccountNo = p.PatAccountNo,
-                            PatBirthDate = p.PatBirthDate,
-                            PatSSN = p.PatSSN,
-                            PatSex = p.PatSex,
+                            PatActive = p.PatActive,
                             PatAddress = p.PatAddress,
-                            PatCity = p.PatCity,
-                            PatState = p.PatState,
-                            PatZip = p.PatZip,
-                            PatPhoneNo = p.PatPhoneNo,
-                            PatCellPhoneNo = p.PatCellPhoneNo,
-                            PatPriEmail = p.PatPriEmail,
+                            PatAddress2 = p.PatAddress2,
+                            PatAptReminderPref = p.PatAptReminderPref,
+                            PatAuthTracking = p.PatAuthTracking,
                             PatBillingPhyFID = p.PatBillingPhyFID,
+                            PatBirthDate = p.PatBirthDate,
+                            PatBox8Reserved = p.PatBox8Reserved,
+                            PatBox9bReserved = p.PatBox9bReserved,
+                            PatBox9cReserved = p.PatBox9cReserved,
+                            PatCellPhoneNo = p.PatCellPhoneNo,
+                            PatCellSMTPHost = p.PatCellSMTPHost,
+                            PatCity = p.PatCity,
+                            PatClaLibFID = p.PatClaLibFID,
+                            PatClaimDefaults = p.PatClaimDefaults,
                             PatClassification = p.PatClassification,
+                            PatCoPayAmount = p.PatCoPayAmount,
+                            PatCoPayPercent = p.PatCoPayPercent,
+                            PatCustomField1 = p.PatCustomField1,
+                            PatCustomField2 = p.PatCustomField2,
+                            PatCustomField3 = p.PatCustomField3,
+                            PatCustomField4 = p.PatCustomField4,
+                            PatCustomField5 = p.PatCustomField5,
+                            PatDiagnosis1 = p.PatDiagnosis1,
+                            PatDiagnosis2 = p.PatDiagnosis2,
+                            PatDiagnosis3 = p.PatDiagnosis3,
+                            PatDiagnosis4 = p.PatDiagnosis4,
+                            PatDiagnosis5 = p.PatDiagnosis5,
+                            PatDiagnosis6 = p.PatDiagnosis6,
+                            PatDiagnosis7 = p.PatDiagnosis7,
+                            PatDiagnosis8 = p.PatDiagnosis8,
+                            PatDiagnosis9 = p.PatDiagnosis9,
+                            PatDiagnosis10 = p.PatDiagnosis10,
+                            PatDiagnosis11 = p.PatDiagnosis11,
+                            PatDiagnosis12 = p.PatDiagnosis12,
+                            PatDontSendPromotions = p.PatDontSendPromotions,
+                            PatDontSendStatements = p.PatDontSendStatements,
+                            PatEmergencyContactName = p.PatEmergencyContactName,
+                            PatEmergencyContactPhoneNo = p.PatEmergencyContactPhoneNo,
+                            PatEmergencyContactRelation = p.PatEmergencyContactRelation,
+                            PatEmployed = p.PatEmployed,
+                            PatExternalFID = p.PatExternalFID,
+                            PatPaymentMatchingKey = p.PatPaymentMatchingKey,
+                            PatEZClaimPayConsent = p.PatEZClaimPayConsent,
+                            PatFacilityPhyFID = p.PatFacilityPhyFID,
+                            PatFaxNo = p.PatFaxNo,
+                            PatFirstDateTRIG = p.PatFirstDateTRIG,
+                            PatHeight = p.PatHeight,
+                            PatHomePhoneNo = p.PatHomePhoneNo,
+                            PatInsuredSigOnFile = p.PatInsuredSigOnFile,
+                            PatLastAppointmentKeptTRIG = p.PatLastAppointmentKeptTRIG,
+                            PatLastAppointmentNotKeptTRIG = p.PatLastAppointmentNotKeptTRIG,
+                            PatLastServiceDateTRIG = p.PatLastServiceDateTRIG,
+                            PatLastCellSMPTHostUpdate = p.PatLastCellSMPTHostUpdate,
+                            PatLastStatementDateTRIG = p.PatLastStatementDateTRIG,
+                            PatLastPatPmtDateTRIG = p.PatLastPatPmtDateTRIG,
+                            PatLocked = p.PatLocked,
+                            PatMarried = p.PatMarried,
+                            PatMemberID = p.PatMemberID,
+                            PatOrderingPhyFID = p.PatOrderingPhyFID,
+                            PatPhoneNo = p.PatPhoneNo,
+                            PatPhyPrintDate = p.PatPhyPrintDate,
+                            PatPriEmail = p.PatPriEmail,
+                            PatPrintSigDate = p.PatPrintSigDate,
+                            PatReferringPhyFID = p.PatReferringPhyFID,
+                            PatRecallDate = p.PatRecallDate,
+                            PatReminderNote = p.PatReminderNote,
+                            PatReminderNoteEvent = p.PatReminderNoteEvent,
+                            PatRenderingPhyFID = p.PatRenderingPhyFID,
+                            PatResourceWants = p.PatResourceWants,
+                            PatSecEmail = p.PatSecEmail,
+                            PatSex = p.PatSex,
+                            PatSigOnFile = p.PatSigOnFile,
+                            PatSigSource = p.PatSigSource,
+                            PatSigText = p.PatSigText,
+                            PatSSN = p.PatSSN,
+                            PatState = p.PatState,
+                            PatStatementAddressLine1 = p.PatStatementAddressLine1,
+                            PatStatementAddressLine2 = p.PatStatementAddressLine2,
+                            PatStatementCity = p.PatStatementCity,
+                            PatStatementName = p.PatStatementName,
+                            PatStatementMessage = p.PatStatementMessage,
+                            PatStatementState = p.PatStatementState,
+                            PatStatementZipCode = p.PatStatementZipCode,
+                            PatSupervisingPhyFID = p.PatSupervisingPhyFID,
+                            PatTotalInsBalanceTRIG = p.PatTotalInsBalanceTRIG,
+                            PatTotalPatBalanceTRIG = p.PatTotalPatBalanceTRIG,
+                            PatTotalUndisbursedPaymentsTRIG = p.PatTotalUndisbursedPaymentsTRIG,
                             PatTotalBalanceCC = p.PatTotalBalanceCC,
+                            PatWeight = p.PatWeight,
+                            PatWorkPhoneNo = p.PatWorkPhoneNo,
+                            PatZip = p.PatZip,
+                            PatLastPaymentRequestTRIG = p.PatLastPaymentRequestTRIG,
+                            PatFirstNameTruncatedCC = p.PatFirstNameTruncatedCC,
+                            PatLastNameTruncatedCC = p.PatLastNameTruncatedCC,
+                            PatFullNameFMLCC = p.PatFullNameFMLCC,
+                            PatDiagnosisCodesCC = p.PatDiagnosisCodesCC,
+                            PatTotalBalanceIncludingUndisbursedPatPmtsCC = p.PatTotalBalanceIncludingUndisbursedPatPmtsCC,
+                            PatTotalPatBalanceIncludingUndisbursedPatPmtsCC = p.PatTotalPatBalanceIncludingUndisbursedPatPmtsCC,
+                            PatCityStateZipCC = p.PatCityStateZipCC,
+                            PatStatementCityStateZipCC = p.PatStatementCityStateZipCC,
                             AdditionalColumns = new Dictionary<string, object?>()
                         })
                         .ToListAsync(cts.Token);
-                    
-                    // For now, Patient has no related columns, but we set up the infrastructure
-                    // AdditionalColumns dictionary is initialized but empty
-                    data = patientData;
                 }
                 catch (OperationCanceledException)
                 {
@@ -409,8 +473,20 @@ namespace Zebl.Api.Controllers
 
                 if (!insuranceDtos.Any())
                 {
+                    var tenantId = _currentContext.TenantId;
+                    var facilityId = _currentContext.FacilityId;
+                    var scopedClaimIds = await _db.Claims
+                        .AsNoTracking()
+                        .Where(c => c.ClaPatFID == id && c.TenantId == tenantId && c.FacilityId == facilityId)
+                        .Select(c => c.ClaID)
+                        .ToListAsync();
+
                     var claimInsRaw = await _db.Claim_Insureds.AsNoTracking()
-                        .Where(ci => ci.ClaInsPatFID == id && ci.ClaInsSequence.HasValue && ci.ClaInsSequence >= 1 && ci.ClaInsSequence <= 5)
+                        .Where(ci =>
+                            scopedClaimIds.Contains(ci.ClaInsClaFID) &&
+                            ci.ClaInsSequence.HasValue &&
+                            ci.ClaInsSequence >= 1 &&
+                            ci.ClaInsSequence <= 5)
                         .Select(ci => new
                         {
                             ci.ClaInsGUID,
@@ -786,6 +862,10 @@ namespace Zebl.Api.Controllers
                     : "Patient information updated from Patient screen.";
 
                 bool changed = false;
+                var previousPrimaryPayerId = patient.Patient_Insureds
+                    .Where(pi => pi.PatInsSequence == 1 && pi.PatInsIns != null)
+                    .Select(pi => (int?)pi.PatInsIns!.InsPayID)
+                    .FirstOrDefault();
 
                 if (request.PatFirstName != null) { patient.PatFirstName = request.PatFirstName; changed = true; }
                 if (request.PatLastName != null) { patient.PatLastName = request.PatLastName; changed = true; }
@@ -864,6 +944,127 @@ namespace Zebl.Api.Controllers
                 }
 
                 await _db.SaveChangesAsync();
+
+                var newPrimaryPayerId = await _db.Patient_Insureds
+                    .AsNoTracking()
+                    .Where(p => p.PatInsPatFID == id && p.PatInsSequence == 1)
+                    .Select(p => (int?)p.PatInsIns.InsPayID)
+                    .FirstOrDefaultAsync();
+
+                if (previousPrimaryPayerId != newPrimaryPayerId && newPrimaryPayerId.HasValue && newPrimaryPayerId.Value > 0)
+                {
+                    var claims = await _db.Claims
+                        .AsNoTracking()
+                        .Where(c =>
+                            c.ClaPatFID == id &&
+                            c.TenantId == _currentContext.TenantId &&
+                            c.FacilityId == _currentContext.FacilityId)
+                        .Select(c => c.ClaID)
+                        .ToListAsync();
+
+                    var affectedClaimCount = claims.Count;
+
+                    await _db.Database.ExecuteSqlInterpolatedAsync($@"
+UPDATE Claim
+SET ClaBillTo = {newPrimaryPayerId.Value}
+WHERE ClaPatFID = {id}
+  AND TenantId = {_currentContext.TenantId}
+  AND FacilityId = {_currentContext.FacilityId};");
+
+                    var updatedServiceLineCount = 0;
+                    foreach (var claimId in claims)
+                    {
+                        var rows = await _db.Database.ExecuteSqlInterpolatedAsync($@"
+UPDATE Service_Line
+SET SrvResponsibleParty = {newPrimaryPayerId.Value}
+WHERE SrvClaFID = {claimId}
+  AND SrvTotalBalanceCC > 0.001;");
+                        updatedServiceLineCount += rows;
+                    }
+
+                    _logger.LogInformation(
+                        "Patient primary payer propagated. patientId={patientId}, oldPayer={oldPayer}, newPayer={newPayer}, affectedClaimCount={affectedClaimCount}, updatedServiceLineCount={updatedServiceLineCount}",
+                        id,
+                        previousPrimaryPayerId,
+                        newPrimaryPayerId.Value,
+                        affectedClaimCount,
+                        updatedServiceLineCount);
+                }
+
+                if (request.UpdateClaims == true)
+                {
+                    var patientPrimary = await _db.Patient_Insureds
+                        .AsNoTracking()
+                        .Where(p => p.PatInsPatFID == id && p.PatInsSequence == 1)
+                        .Select(p => (int?)p.PatInsIns.InsPayID)
+                        .FirstOrDefaultAsync();
+
+                    _logger.LogInformation(
+                        "UpdateClaims requested. patientId={patientId}, payerId={payerId}",
+                        id,
+                        patientPrimary);
+
+                    if (!patientPrimary.HasValue || patientPrimary.Value <= 0)
+                    {
+                        _logger.LogInformation(
+                            "Patient {patientId} requested updateClaims, but no valid primary payer found. Skipping claim payer sync.",
+                            id);
+                    }
+                    else
+                    {
+                        var claimIds = await _db.Claims
+                            .AsNoTracking()
+                            .Where(c =>
+                                c.ClaPatFID == id &&
+                                c.TenantId == _currentContext.TenantId &&
+                                c.FacilityId == _currentContext.FacilityId)
+                            .Select(c => c.ClaID)
+                            .ToListAsync();
+
+                        var claimRowsAffected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
+UPDATE Claim
+SET ClaBillTo = {patientPrimary.Value}
+WHERE ClaPatFID = {id}
+  AND TenantId = {_currentContext.TenantId}
+  AND FacilityId = {_currentContext.FacilityId};");
+
+                        var insuredRowsAffected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
+UPDATE ci
+SET ci.ClaInsPayFID = {patientPrimary.Value}
+FROM Claim_Insured ci
+INNER JOIN Claim c ON c.ClaID = ci.ClaInsClaFID
+WHERE c.ClaPatFID = {id}
+  AND c.TenantId = {_currentContext.TenantId}
+  AND c.FacilityId = {_currentContext.FacilityId}
+  AND ci.ClaInsSequence = 1;");
+
+                        _logger.LogInformation(
+                            "UpdateClaims claim/insured update executed. patientId={patientId}, payerId={payerId}, updatedClaimCount={updatedClaimCount}, updatedInsuredCount={updatedInsuredCount}",
+                            id,
+                            patientPrimary.Value,
+                            claimRowsAffected,
+                            insuredRowsAffected);
+
+                        var updatedServiceLineCount = 0;
+                        foreach (var claimId in claimIds)
+                        {
+                            var rows = await _db.Database.ExecuteSqlInterpolatedAsync($@"
+UPDATE Service_Line
+SET SrvResponsibleParty = {patientPrimary.Value}
+WHERE SrvClaFID = {claimId}
+  AND SrvTotalBalanceCC > 0.001;");
+                            updatedServiceLineCount += rows;
+                        }
+
+                        _logger.LogInformation(
+                            "UpdateClaims payer consistency sync executed. patientId={patientId}, payerId={payerId}, updatedClaimCount={updatedClaimCount}, updatedInsuredCount={updatedInsuredCount}, updatedServiceLineCount={updatedServiceLineCount}",
+                            id,
+                            patientPrimary.Value,
+                            claimRowsAffected,
+                            insuredRowsAffected,
+                            updatedServiceLineCount);
+                    }
+                }
 
                 if (changed)
                 {
@@ -1086,20 +1287,16 @@ namespace Zebl.Api.Controllers
         {
             try
             {
-                // Fast metadata-based row count (works well for large tables)
-                // index_id 0 = heap, 1 = clustered index
-                const string sql =
-@"SELECT CAST(ISNULL(SUM(p.[rows]), 0) AS int) AS [Value]
-  FROM sys.partitions p
-  WHERE p.object_id = OBJECT_ID(N'[dbo].[Patient]')
-    AND p.index_id IN (0, 1)";
-
-                return await _db.Database.SqlQueryRaw<int>(sql).SingleAsync();
+                var tenantId = _currentContext.TenantId;
+                var facilityId = _currentContext.FacilityId;
+                return await _db.Patients
+                    .AsNoTracking()
+                    .Where(p => p.TenantId == tenantId && p.FacilityId == facilityId)
+                    .CountAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to get approximate patient count from metadata, using fallback");
-                // Fallback: if sys.* access is restricted, don't break the endpoint
+                _logger.LogWarning(ex, "Failed to get scoped patient count, using fallback");
                 return 0;
             }
         }

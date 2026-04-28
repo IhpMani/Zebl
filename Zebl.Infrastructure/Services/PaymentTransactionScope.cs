@@ -21,6 +21,24 @@ public class PaymentTransactionScope : ITransactionScope
         var transaction = await _context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         return new PaymentTransaction(transaction);
     }
+
+    public async Task<T> ExecuteInTransactionAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(
+            operation,
+            async (_, op, ct) =>
+            {
+                await using var tx = await _context.Database.BeginTransactionAsync(ct).ConfigureAwait(false);
+                var result = await op(ct).ConfigureAwait(false);
+                await tx.CommitAsync(ct).ConfigureAwait(false);
+                return result;
+            },
+            null,
+            cancellationToken).ConfigureAwait(false);
+    }
 }
 
 internal sealed class PaymentTransaction : IPaymentTransaction

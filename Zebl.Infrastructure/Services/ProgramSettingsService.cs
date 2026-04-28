@@ -29,16 +29,8 @@ public class ProgramSettingsService
 
         if (entity == null)
         {
-            entity = new ProgramSettings
-            {
-                Section = section,
-                SettingsJson = "{}",
-                UpdatedAt = DateTime.UtcNow,
-                UpdatedBy = null
-            };
-
-            _dbContext.ProgramSettings.Add(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            using var doc = JsonDocument.Parse("{}");
+            return doc.RootElement.Clone();
         }
 
         var json = string.IsNullOrWhiteSpace(entity.SettingsJson) ? "{}" : entity.SettingsJson;
@@ -60,7 +52,8 @@ public class ProgramSettingsService
         if (string.IsNullOrWhiteSpace(section))
             throw new ArgumentException("Section is required.", nameof(section));
 
-        var json = JsonSerializer.Serialize(settings);
+        Console.WriteLine(_dbContext.Database.GetDbConnection().ConnectionString);
+        var json = settings.GetRawText();
 
         var entity = await _dbContext.ProgramSettings
             .FirstOrDefaultAsync(x => x.Section == section, cancellationToken);

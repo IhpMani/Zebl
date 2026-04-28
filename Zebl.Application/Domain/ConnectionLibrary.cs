@@ -11,6 +11,16 @@ public class ConnectionLibrary
 
     public string Host { get; set; } = null!;
 
+    /// <summary>
+    /// SFTP: hostname or IP. HTTP/API: full base URL (e.g. https://partner.example.com).
+    /// </summary>
+    public ConnectionType ConnectionType { get; set; } = ConnectionType.Sftp;
+
+    /// <summary>
+    /// For <see cref="ConnectionType.Http"/> or <see cref="ConnectionType.Api"/>: path appended to base URL for inbound report fetch (e.g. /api/get-reports).
+    /// </summary>
+    public string? InboundFetchPath { get; set; }
+
     public int Port { get; set; }
 
     public string Username { get; set; } = null!;

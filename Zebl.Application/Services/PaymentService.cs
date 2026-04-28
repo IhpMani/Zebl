@@ -89,8 +89,7 @@ public class PaymentService : IPaymentService
                 throw new InvalidOperationException($"Service line {app.ServiceLineId}: paid amount ({app.PaymentAmount}) + adjustments ({adjSum}) exceeds remaining balance ({remaining}). Overpayment not allowed.");
         }
 
-        await using var transaction = await _transactionScope.BeginTransactionAsync(CancellationToken.None);
-        try
+        return await _transactionScope.ExecuteInTransactionAsync(async ct =>
         {
             var billingPhysicianId = command.BillingPhysicianId;
 
@@ -204,14 +203,8 @@ public class PaymentService : IPaymentService
                     throw new InvalidOperationException($"Reconciliation failed for claim {claimId}: {recon.ErrorMessage} {recon.Details}");
             }
 
-            await transaction.CommitAsync(CancellationToken.None);
             return paymentId;
-        }
-        catch
-        {
-            // Dispose without commit = rollback
-            throw;
-        }
+        }, CancellationToken.None);
     }
 
     /// <summary>Total adjustment amount that will be applied to the service line (PR bundle = one sum when mismatch).</summary>

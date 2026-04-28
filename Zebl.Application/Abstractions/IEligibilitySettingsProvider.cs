@@ -33,9 +33,8 @@ public interface IEligibilitySettingsProvider
 /// </summary>
 public sealed class EligibilitySettingsForCheckDto
 {
-    public string Source { get; set; } = string.Empty;
     public string? ReceiverId { get; set; }
-    public string ProviderMode { get; set; } = "PatientBillingProvider";
+    public string ProviderMode { get; set; } = "Billing";
     public int? SpecificProviderId { get; set; }
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;

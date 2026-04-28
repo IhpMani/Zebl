@@ -30,4 +30,14 @@ public interface IPaymentRepository
 
     /// <summary>Get payment list with paging and optional patient filter. Returns data and total count.</summary>
     Task<(List<PaymentListItemDto> Data, int TotalCount)> GetPaymentListAsync(int page, int pageSize, int? patientId);
+
+    /// <summary>Ledger-backed claim payments list with filtering for finance operations.</summary>
+    Task<(List<ClaimPaymentLedgerItemDto> Data, int TotalCount)> GetClaimPaymentLedgerAsync(
+        int page,
+        int pageSize,
+        bool? isApplied,
+        DateTime? fromDateUtc,
+        DateTime? toDateUtc,
+        string? payer,
+        string? claimExternalId);
 }

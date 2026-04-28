@@ -10,6 +10,12 @@ namespace Zebl.Application.Dtos.Payers
         
         public DateTime PayDateTimeCreated { get; set; }
         
+        public DateTime PayDateTimeModified { get; set; }
+        
+        public DateTime? CreatedDate { get; set; }
+        
+        public DateTime? ModifiedDate { get; set; }
+        
         public string? PayName { get; set; }
         
         public string? PayClassification { get; set; }

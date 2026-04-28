@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Zebl.Application.Abstractions;
 using Zebl.Application.Domain;
 using Zebl.Application.Dtos.Payments;
@@ -13,12 +14,18 @@ public class ServiceLineRepository : IServiceLineRepository
     private readonly ZeblDbContext _context;
     private readonly ICurrentContext _currentContext;
     private readonly ICurrentUserContext _currentUserContext;
+    private readonly ILogger<ServiceLineRepository> _logger;
 
-    public ServiceLineRepository(ZeblDbContext context, ICurrentContext currentContext, ICurrentUserContext currentUserContext)
+    public ServiceLineRepository(
+        ZeblDbContext context,
+        ICurrentContext currentContext,
+        ICurrentUserContext currentUserContext,
+        ILogger<ServiceLineRepository> logger)
     {
         _context = context;
         _currentContext = currentContext;
         _currentUserContext = currentUserContext;
+        _logger = logger;
     }
 
     public async Task<ServiceLineTotals?> GetTotalsByIdAsync(int serviceLineId)
@@ -103,9 +110,19 @@ public class ServiceLineRepository : IServiceLineRepository
     public Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesByClaimIdAsync(int claimId, int? payerId, bool isPayerSource) =>
         GetPaymentEntryLinesCoreAsync(patientId: null, claimId: claimId, payerId: payerId, isPayerSource: isPayerSource);
 
+    public Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesByPayerIdAsync(int payerId) =>
+        GetPaymentEntryLinesCoreAsync(patientId: null, claimId: null, payerId: payerId, isPayerSource: true);
+
     private async Task<List<PaymentEntryServiceLineDto>> GetPaymentEntryLinesCoreAsync(int? patientId, int? claimId, int? payerId, bool isPayerSource)
     {
         var fid = _currentContext.FacilityId;
+        _logger.LogInformation(
+            "PaymentEntry query start. facilityId={facilityId}, claimId={claimId}, patientId={patientId}, payerId={payerId}, isPayerSource={isPayerSource}",
+            fid,
+            claimId,
+            patientId,
+            payerId,
+            isPayerSource);
         var query = from s in _context.Service_Lines.AsNoTracking()
                     join c in _context.Claims.AsNoTracking() on s.SrvClaFID equals c.ClaID
                     join p in _context.Patients.AsNoTracking() on c.ClaPatFID equals p.PatID
@@ -113,14 +130,28 @@ public class ServiceLineRepository : IServiceLineRepository
                     select new { s, c, p };
 
         if (claimId.HasValue && claimId.Value > 0)
+        {
+            _logger.LogInformation("PaymentEntry query filter applied: claimId={claimId}", claimId.Value);
             query = query.Where(x => x.c.ClaID == claimId.Value);
+        }
         else if (patientId.HasValue && patientId.Value > 0)
+        {
+            _logger.LogInformation("PaymentEntry query filter applied: patientId={patientId}", patientId.Value);
             query = query.Where(x => x.c.ClaPatFID == patientId.Value);
+        }
+        else if (isPayerSource && payerId.HasValue && payerId.Value > 0)
+        {
+            // payer-only flow intentionally allowed
+            _logger.LogInformation("PaymentEntry query filter applied: payer-only flow");
+        }
         else
             return new List<PaymentEntryServiceLineDto>();
 
         if (isPayerSource && payerId.HasValue && payerId.Value > 0)
+        {
+            _logger.LogInformation("PaymentEntry query responsible-party filter applied: payerId={payerId}", payerId.Value);
             query = query.Where(x => x.s.SrvResponsibleParty == payerId.Value);
+        }
 
         var list = await query
             .OrderBy(x => x.c.ClaBillDate)
@@ -156,6 +187,7 @@ public class ServiceLineRepository : IServiceLineRepository
             var balance = x.SrvTotalBalanceCC ?? (x.SrvCharges - appliedTotal - totalAdj);
             return balance > 0.001m;
         }).ToList();
+        _logger.LogInformation("PaymentEntry query post-balance filter count={count}", list.Count);
 
         var responsiblePartyIds = list.Where(x => x.SrvResponsibleParty > 0).Select(x => x.SrvResponsibleParty).Distinct().ToList();
         var payerNames = new Dictionary<int, string?>();
@@ -343,5 +375,24 @@ public class ServiceLineRepository : IServiceLineRepository
             s.SrvDateTimeModified = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<int> UpdateServiceLineResponsibleParty(int claimId, int newPayerId)
+    {
+        _logger.LogInformation(
+            "UpdateServiceLineResponsibleParty called. claimId={claimId}, newPayerId={newPayerId}",
+            claimId,
+            newPayerId);
+
+        if (newPayerId <= 0) return 0;
+
+        var rows = await _context.Database.ExecuteSqlInterpolatedAsync($@"
+UPDATE Service_Line
+SET SrvResponsibleParty = {newPayerId}
+WHERE 
+  SrvClaFID = {claimId};");
+
+        _logger.LogInformation("Rows updated: {rows}", rows);
+        return rows;
     }
 }

@@ -12,6 +12,12 @@ namespace Zebl.Application.Dtos.Services
         
         public DateTime SrvDateTimeCreated { get; set; }
         
+        public DateTime SrvDateTimeModified { get; set; }
+        
+        public DateTime? CreatedDate { get; set; }
+        
+        public DateTime? ModifiedDate { get; set; }
+        
         public DateOnly SrvFromDate { get; set; }
         
         public DateOnly SrvToDate { get; set; }

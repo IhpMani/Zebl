@@ -15,7 +15,6 @@ public partial class ZeblDbContext : DbContext
     private readonly ICurrentContext? _requestScope;
 
     /// <summary>Design-time, <see cref="IDbContextFactory{TContext}"/>, and tests: query filters are disabled.</summary>
-    [ActivatorUtilitiesConstructor]
     public ZeblDbContext(DbContextOptions<ZeblDbContext> options)
         : base(options)
     {
@@ -28,6 +27,7 @@ public partial class ZeblDbContext : DbContext
     /// Do not read <see cref="ICurrentContext.FacilityId"/> in the constructor — DI may create this instance
     /// before facility middleware runs or before optional headers (e.g. login) are present.
     /// </remarks>
+    [ActivatorUtilitiesConstructor]
     public ZeblDbContext(DbContextOptions<ZeblDbContext> options, ICurrentContext scope)
         : base(options)
     {
@@ -80,6 +80,9 @@ public partial class ZeblDbContext : DbContext
     public virtual DbSet<ConnectionLibrary> ConnectionLibraries { get; set; }
 
     public virtual DbSet<EdiReport> EdiReports { get; set; }
+    public virtual DbSet<ClaimPayment> ClaimPayments { get; set; }
+    public virtual DbSet<ClaimCreditBalance> ClaimCreditBalances { get; set; }
+    public virtual DbSet<PaymentBatch> PaymentBatches { get; set; }
 
     public virtual DbSet<EraException> EraExceptions { get; set; }
 
@@ -90,6 +93,10 @@ public partial class ZeblDbContext : DbContext
     public virtual DbSet<ClaimRejection> ClaimRejections { get; set; }
 
     public virtual DbSet<ClaimSubmission> ClaimSubmissions { get; set; }
+
+    public virtual DbSet<ClaimBatch> ClaimBatches { get; set; }
+
+    public virtual DbSet<ClaimBatchItem> ClaimBatchItems { get; set; }
 
     public virtual DbSet<ScrubRule> ScrubRules { get; set; }
 
@@ -105,6 +112,8 @@ public partial class ZeblDbContext : DbContext
     public virtual DbSet<Reason_Code> Reason_Codes { get; set; }
     public virtual DbSet<Remark_Code> Remark_Codes { get; set; }
     public virtual DbSet<ProgramSettings> ProgramSettings { get; set; }
+    public virtual DbSet<SendingClaimsSettings> SendingClaimsSettings { get; set; }
+    public virtual DbSet<ControlNumberSequence> ControlNumberSequences { get; set; }
     public virtual DbSet<Tenant> Tenants { get; set; }
     public virtual DbSet<FacilityScope> FacilityScopes { get; set; }
     public virtual DbSet<InboundIntegration> InboundIntegrations { get; set; }
@@ -194,6 +203,14 @@ public partial class ZeblDbContext : DbContext
             entity.HasKey(e => e.ClaID).HasName("PK__Claim__E8193A9B6764AAF8");
 
             entity.ToTable("Claim");
+            entity.HasIndex(e => e.ClaEdiClaimId)
+                .HasDatabaseName("IX_Claim_ClaEdiClaimId");
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId })
+                .HasDatabaseName("IX_Claim_Tenant_Facility");
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId, e.ClaEdiClaimId })
+                .IsUnique()
+                .HasDatabaseName("UX_Claim_TenantFacility_ClaEdiClaimId")
+                .HasFilter("[ClaEdiClaimId] IS NOT NULL");
 
             entity.Property(e => e.ClaAdmissionHour)
                 .HasMaxLength(4)
@@ -363,6 +380,8 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.ClaExternalFID)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.ClaEdiClaimId)
+                .HasMaxLength(50);
             entity.Property(e => e.ClaHomeboundInd)
                 .HasMaxLength(1)
                 .IsUnicode(false);
@@ -1653,10 +1672,17 @@ public partial class ZeblDbContext : DbContext
         ConfigureReceiverLibrary(modelBuilder);
         ConfigureConnectionLibrary(modelBuilder);
         ConfigureEdiReport(modelBuilder);
+        ConfigureClaimPayment(modelBuilder);
+        ConfigureClaimCreditBalance(modelBuilder);
+        ConfigurePaymentBatch(modelBuilder);
         ConfigureEraException(modelBuilder);
         ConfigureEligibility(modelBuilder);
         ConfigureClaimRejection(modelBuilder);
         ConfigureClaimSubmission(modelBuilder);
+        ConfigureClaimBatch(modelBuilder);
+        ConfigureClaimBatchItem(modelBuilder);
+        ConfigureSendingClaimsSettings(modelBuilder);
+        ConfigureControlNumberSequence(modelBuilder);
         ConfigureScrubRule(modelBuilder);
         ConfigureSecondaryForwardableAdjustmentRules(modelBuilder);
         ConfigureClaimTemplates(modelBuilder);
@@ -1695,6 +1721,13 @@ public partial class ZeblDbContext : DbContext
         modelBuilder.Entity<CustomFieldValue>().HasQueryFilter(x => x.TenantId == ScopedTenantIdForQuery);
         modelBuilder.Entity<ClaimTemplate>().HasQueryFilter(x => x.TenantId == ScopedTenantIdForQuery);
         modelBuilder.Entity<EdiReport>().HasQueryFilter(r => r.TenantId == ScopedTenantIdForQuery);
+        modelBuilder.Entity<ClaimPayment>().HasQueryFilter(p => p.TenantId == ScopedTenantIdForQuery && p.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<ClaimCreditBalance>().HasQueryFilter(c => c.TenantId == ScopedTenantIdForQuery && c.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<PaymentBatch>().HasQueryFilter(b => b.TenantId == ScopedTenantIdForQuery && b.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<EligibilityRequest>().HasQueryFilter(r => r.TenantId == ScopedTenantIdForQuery && r.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<ClaimBatch>().HasQueryFilter(b => b.TenantId == ScopedTenantIdForQuery && b.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<ClaimBatchItem>().HasQueryFilter(i => i.TenantId == ScopedTenantIdForQuery && i.FacilityId == ScopedFacilityIdForQuery);
+        modelBuilder.Entity<SendingClaimsSettings>().HasQueryFilter(s => s.TenantId == ScopedTenantIdForQuery && s.FacilityId == ScopedFacilityIdForQuery);
         modelBuilder.Entity<Procedure_Code>().HasQueryFilter(p => p.TenantId == ScopedTenantIdForQuery && p.FacilityId == ScopedFacilityIdForQuery);
     }
 
@@ -1714,7 +1747,50 @@ public partial class ZeblDbContext : DbContext
 
     private void ApplyAudit()
     {
-        // Intentionally no-op: DbContext does not resolve context services to avoid circular dependencies.
+        var nowUtc = DateTime.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries()
+                     .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified))
+        {
+            // Keep note audit timestamps valid as they are used directly in Claim Notes list.
+            if (entry.Entity is Claim_Audit claimAudit &&
+                entry.State == EntityState.Added &&
+                claimAudit.ActivityDate == default)
+            {
+                claimAudit.ActivityDate = nowUtc;
+            }
+
+            var createdProp = entry.Properties.FirstOrDefault(p =>
+                p.Metadata.Name.EndsWith("DateTimeCreated", StringComparison.OrdinalIgnoreCase) &&
+                (p.Metadata.ClrType == typeof(DateTime) || p.Metadata.ClrType == typeof(DateTime?)));
+            var modifiedProp = entry.Properties.FirstOrDefault(p =>
+                p.Metadata.Name.EndsWith("DateTimeModified", StringComparison.OrdinalIgnoreCase) &&
+                (p.Metadata.ClrType == typeof(DateTime) || p.Metadata.ClrType == typeof(DateTime?)));
+
+            if (entry.State == EntityState.Added)
+            {
+                if (createdProp != null)
+                {
+                    createdProp.CurrentValue = nowUtc;
+                }
+                if (modifiedProp != null)
+                {
+                    modifiedProp.CurrentValue = nowUtc;
+                }
+                continue;
+            }
+
+            // Modified: update only Modified timestamp and preserve original Created timestamp.
+            if (modifiedProp != null)
+            {
+                modifiedProp.CurrentValue = nowUtc;
+                modifiedProp.IsModified = true;
+            }
+            if (createdProp != null)
+            {
+                createdProp.IsModified = false;
+            }
+        }
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
@@ -1852,6 +1928,8 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.LibraryEntryName)
                 .HasMaxLength(255)
                 .IsRequired();
+            entity.Property(e => e.TenantId);
+            entity.Property(e => e.FacilityId);
 
             entity.Property(e => e.ClaimType).HasMaxLength(100);
             entity.Property(e => e.BusinessOrLastName).HasMaxLength(255);
@@ -1891,6 +1969,9 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.IsActive)
                 .HasDefaultValue(true)
                 .IsRequired();
+
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId, e.IsActive })
+                .HasDatabaseName("IX_ReceiverLibrary_TenantFacility_IsActive");
         });
     }
 
@@ -1912,8 +1993,16 @@ public partial class ZeblDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.Host)
-                .HasMaxLength(255)
+                .HasMaxLength(2000)
                 .IsRequired();
+
+            entity.Property(e => e.ConnectionType)
+                .HasConversion<int>()
+                .HasDefaultValue(ConnectionType.Sftp)
+                .IsRequired();
+
+            entity.Property(e => e.InboundFetchPath)
+                .HasMaxLength(500);
 
             entity.Property(e => e.Port)
                 .HasDefaultValue(22)
@@ -1963,11 +2052,15 @@ public partial class ZeblDbContext : DbContext
             entity.Property(e => e.Direction).HasMaxLength(20).IsRequired();
             entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
             entity.Property(e => e.TraceNumber).HasMaxLength(100);
+            entity.Property(e => e.ClaimIdentifier).HasMaxLength(100);
             entity.Property(e => e.PayerName).HasMaxLength(255);
             entity.Property(e => e.PaymentAmount).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Note).HasMaxLength(255);
             entity.Property(e => e.FileSize).IsRequired();
-            entity.Property(e => e.FileContent).HasColumnType("varbinary(max)");
+            entity.Property(e => e.FileStorageKey).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.ContentHashSha256).HasMaxLength(64);
+            entity.Property(e => e.FileHash).HasMaxLength(64);
+            entity.Property(e => e.CorrelationId).HasMaxLength(100).IsRequired();
 
             entity.Property(e => e.Status).HasDefaultValue("Generated");
             entity.Property(e => e.CreatedAt).IsRequired();
@@ -1977,6 +2070,91 @@ public partial class ZeblDbContext : DbContext
 
             entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_EdiReport_CreatedAt");
             entity.HasIndex(e => e.Status).HasDatabaseName("IX_EdiReport_Status");
+            entity.HasIndex(e => new { e.TenantId, e.FileHash })
+                .IsUnique()
+                .HasDatabaseName("IX_EdiReport_FileHash")
+                .HasFilter("[FileHash] IS NOT NULL");
+        });
+    }
+
+    private void ConfigureClaimPayment(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClaimPayment>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ClaimPayment_Id");
+            entity.ToTable("ClaimPayment");
+
+            entity.Property(e => e.ClaimExternalId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.TraceNumber).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.PayerId).HasMaxLength(100);
+            entity.Property(e => e.PayerLevel).HasMaxLength(20);
+            entity.Property(e => e.PaidAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.InsuranceAppliedAmount).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
+            entity.Property(e => e.ChargeAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.TotalCharge).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.AdjustmentAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.TakebackAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.PatientResponsibility).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.StatusCode).HasMaxLength(10);
+            entity.Property(e => e.ServiceLineCode).HasMaxLength(100).IsRequired().HasDefaultValue(string.Empty);
+            entity.Property(e => e.IsApplied).HasDefaultValue(false);
+            entity.Property(e => e.CheckDateUtc);
+            entity.Property(e => e.PostedBy).HasMaxLength(100);
+            entity.Property(e => e.SourceReportId);
+            entity.Property(e => e.ApplyRunId);
+            entity.Property(e => e.PostedAtUtc);
+            entity.Property(e => e.IsReversed).HasDefaultValue(false);
+            entity.Property(e => e.ReversedAtUtc);
+            entity.Property(e => e.PaymentBatchId);
+            entity.Property(e => e.PaymentDateUtc).IsRequired();
+            entity.Property(e => e.CreatedAtUtc).IsRequired();
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
+
+            entity.HasIndex(e => new { e.TraceNumber, e.ClaimExternalId, e.PaidAmount, e.ServiceLineCode })
+                .IsUnique()
+                .HasDatabaseName("IX_ClaimPayment_TransactionDedup");
+            entity.HasIndex(e => new { e.SourceReportId, e.TraceNumber, e.ClaimExternalId, e.PaidAmount, e.ServiceLineCode })
+                .IsUnique()
+                .HasDatabaseName("IX_ClaimPayment_ReportScopedDedup")
+                .HasFilter("[SourceReportId] IS NOT NULL");
+            entity.HasIndex(e => new { e.TraceNumber, e.ClaimExternalId, e.ServiceLineCode })
+                .HasDatabaseName("IX_ClaimPayment_TraceClaimLine");
+        });
+    }
+
+    private void ConfigureClaimCreditBalance(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClaimCreditBalance>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ClaimCreditBalance_Id");
+            entity.ToTable("ClaimCreditBalance");
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
+            entity.Property(e => e.ClaimId).IsRequired();
+            entity.Property(e => e.SourceReportId).IsRequired();
+            entity.Property(e => e.TraceNumber).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.CreditAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CreatedAtUtc).IsRequired();
+        });
+    }
+
+    private void ConfigurePaymentBatch(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PaymentBatch>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_PaymentBatch_Id");
+            entity.ToTable("PaymentBatch");
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
+            entity.Property(e => e.TraceNumber).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CheckDateUtc).IsRequired();
+            entity.Property(e => e.CreatedAtUtc).IsRequired();
+            entity.Property(e => e.ModifiedAtUtc).IsRequired();
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId, e.TraceNumber })
+                .IsUnique()
+                .HasDatabaseName("IX_PaymentBatch_TenantFacilityTrace");
         });
     }
 
@@ -2008,14 +2186,25 @@ public partial class ZeblDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK_EligibilityRequest_Id");
             entity.ToTable("EligibilityRequest");
 
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
             entity.Property(e => e.PatientId).IsRequired();
             entity.Property(e => e.PayerId).IsRequired();
-            entity.Property(e => e.PolicyNumber).HasMaxLength(100);
+            entity.Property(e => e.SubscriberId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.ControlNumber).HasMaxLength(20).IsRequired();
             entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.BatchFileName).HasMaxLength(255);
             entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ProviderNpi).HasMaxLength(20);
+            entity.Property(e => e.ProviderMode).HasMaxLength(50);
+            entity.Property(e => e.UsedPayerOverride).IsRequired();
 
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId, e.PatientId }).HasDatabaseName("IX_EligibilityRequest_TenantFacilityPatient");
             entity.HasIndex(e => e.PatientId).HasDatabaseName("IX_EligibilityRequest_PatientId");
             entity.HasIndex(e => e.PayerId).HasDatabaseName("IX_EligibilityRequest_PayerId");
+            entity.HasIndex(e => e.SubscriberId).HasDatabaseName("IX_EligibilityRequest_SubscriberId");
+            entity.HasIndex(e => e.ControlNumber).HasDatabaseName("IX_EligibilityRequest_ControlNumber").IsUnique();
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_EligibilityRequest_Status");
         });
 
         modelBuilder.Entity<EligibilityResponse>(entity =>
@@ -2023,15 +2212,13 @@ public partial class ZeblDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK_EligibilityResponse_Id");
             entity.ToTable("EligibilityResponse");
 
-            entity.Property(e => e.CoverageStatus).HasMaxLength(100);
-            entity.Property(e => e.PlanName).HasMaxLength(255);
-            entity.Property(e => e.DeductibleAmount).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.CopayAmount).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.CoinsurancePercent).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.RequestId).IsRequired();
+            entity.Property(e => e.EligibilityStatus).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
             entity.Property(e => e.Raw271).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
 
-            entity.HasIndex(e => e.EligibilityRequestId).HasDatabaseName("IX_EligibilityResponse_RequestId");
+            entity.HasIndex(e => e.RequestId).HasDatabaseName("IX_EligibilityResponse_RequestId");
         });
     }
 
@@ -2073,6 +2260,103 @@ public partial class ZeblDbContext : DbContext
             entity.HasIndex(e => new { e.BatchId, e.TransactionControlNumber }).IsUnique().HasDatabaseName("IX_ClaimSubmission_BatchId_TransactionControlNumber");
             entity.HasIndex(e => e.ClaimId).HasDatabaseName("IX_ClaimSubmission_ClaimId");
             entity.HasIndex(e => e.BatchId).HasDatabaseName("IX_ClaimSubmission_BatchId");
+            entity.HasIndex(e => new { e.ClaimId, e.SubmissionDate }).HasDatabaseName("IX_ClaimSubmission_ClaimId_SubmissionDate");
+        });
+    }
+
+    private void ConfigureClaimBatch(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClaimBatch>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ClaimBatch_Id");
+            entity.ToTable("ClaimBatch");
+
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.FilePath).HasMaxLength(500);
+            entity.Property(e => e.SentEdiContent).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.IdempotencyKey).HasMaxLength(100);
+            entity.Property(e => e.ConnectionType).HasMaxLength(20);
+            entity.Property(e => e.ConnectionLibraryId);
+            entity.Property(e => e.SubmissionNumber).HasDefaultValue(0);
+            entity.Property(e => e.RowVersion).IsRowVersion().IsConcurrencyToken();
+
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId, e.CreatedAt })
+                .HasDatabaseName("IX_ClaimBatch_TenantFacility_CreatedAt");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_ClaimBatch_Status");
+            entity.HasIndex(e => e.SubmitterReceiverId).HasDatabaseName("IX_ClaimBatch_SubmitterReceiverId");
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId, e.IdempotencyKey })
+                .HasDatabaseName("IX_ClaimBatch_TenantFacility_IdempotencyKey")
+                .IsUnique()
+                .HasFilter("[IdempotencyKey] IS NOT NULL");
+        });
+    }
+
+    private void ConfigureSendingClaimsSettings(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SendingClaimsSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_SendingClaimsSettings_Id");
+            entity.ToTable("SendingClaimsSettings");
+
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
+            entity.Property(e => e.ShowBillToPatientClaims).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.PatientControlNumberMode)
+                .HasMaxLength(30)
+                .IsUnicode(false)
+                .HasDefaultValue("ClaimId")
+                .IsRequired();
+            entity.Property(e => e.NextSubmissionNumber).HasDefaultValue(1).IsRequired();
+
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId })
+                .IsUnique()
+                .HasDatabaseName("IX_SendingClaimsSettings_Tenant_Facility");
+        });
+    }
+
+    private void ConfigureControlNumberSequence(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ControlNumberSequence>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ControlNumberSequence_Id");
+            entity.ToTable("ControlNumberSequence");
+
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.FacilityId).IsRequired();
+            entity.Property(e => e.LastInterchangeNumber).HasDefaultValue(0L).IsRequired();
+            entity.Property(e => e.LastGroupNumber).HasDefaultValue(0L).IsRequired();
+            entity.Property(e => e.LastTransactionNumber).HasDefaultValue(0L).IsRequired();
+
+            entity.HasIndex(e => new { e.TenantId, e.FacilityId })
+                .IsUnique()
+                .HasDatabaseName("IX_ControlNumberSequence_Tenant_Facility");
+        });
+    }
+
+    private void ConfigureClaimBatchItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ClaimBatchItem>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_ClaimBatchItem_Id");
+            entity.ToTable("ClaimBatchItem");
+
+            entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.RowVersion).IsRowVersion().IsConcurrencyToken();
+
+            entity.HasOne(e => e.Batch)
+                .WithMany(b => b.Items)
+                .HasForeignKey(e => e.BatchId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_ClaimBatchItem_ClaimBatch");
+
+            entity.HasIndex(e => e.BatchId).HasDatabaseName("IX_ClaimBatchItem_BatchId");
+            entity.HasIndex(e => new { e.BatchId, e.ClaimId }).HasDatabaseName("IX_ClaimBatchItem_BatchId_ClaimId");
+            entity.HasIndex(e => e.ClaimId).HasDatabaseName("IX_ClaimBatchItem_ClaimId");
+            entity.HasIndex(e => e.Status).HasDatabaseName("IX_ClaimBatchItem_Status");
         });
     }
 

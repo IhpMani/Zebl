@@ -44,6 +44,7 @@ public class ClaimExportDataProvider : IClaimExportDataProvider
         var result = new Claim837ExportData
         {
             ClaimId = claim.ClaID,
+            ClaEdiClaimId = claim.ClaEdiClaimId,
             ClaInsuranceTypeCodeOverride = claim.ClaInsuranceTypeCodeOverride,
             ClaBillDate = claim.ClaBillDate,
             ClaStatementCoversFromOverride = claim.ClaStatementCoversFromOverride,
@@ -69,6 +70,8 @@ public class ClaimExportDataProvider : IClaimExportDataProvider
             },
             Patient = claim.ClaPatF == null ? null : new PatientExportDto
             {
+                PatId = claim.ClaPatF.PatID,
+                PatAccountNo = claim.ClaPatF.PatAccountNo,
                 PatFirstName = claim.ClaPatF.PatFirstName,
                 PatLastName = claim.ClaPatF.PatLastName,
                 PatMI = claim.ClaPatF.PatMI,

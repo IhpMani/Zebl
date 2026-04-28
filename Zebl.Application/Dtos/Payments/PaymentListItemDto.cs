@@ -12,6 +12,8 @@ namespace Zebl.Application.Dtos.Payments
         public int PmtID { get; set; }
         public DateTime PmtDateTimeCreated { get; set; }
         public DateTime PmtDateTimeModified { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? ModifiedDate { get; set; }
         public string? PmtCreatedUserName { get; set; }
         public string? PmtLastUserName { get; set; }
         public DateOnly PmtDate { get; set; }

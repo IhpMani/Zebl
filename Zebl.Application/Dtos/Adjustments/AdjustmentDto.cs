@@ -1,4 +1,4 @@
-﻿namespace Zebl.Application.Dtos.Adjustments
+namespace Zebl.Application.Dtos.Adjustments
 {
     public class AdjustmentDto
     {
@@ -7,5 +7,7 @@
         public string? AdjReasonCode { get; set; }
         public decimal? AdjReasonAmount { get; set; }
         public string? AdjNote { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? ModifiedDate { get; set; }
     }
 }

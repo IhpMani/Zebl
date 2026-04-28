@@ -1,4 +1,4 @@
-﻿namespace Zebl.Application.Dtos.Payments
+namespace Zebl.Application.Dtos.Payments
 {
     public class PaymentDto
     {
@@ -8,5 +8,7 @@
         public string? PmtMethod { get; set; }
         public decimal? PmtRemainingCC { get; set; }
         public string? PmtNote { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? ModifiedDate { get; set; }
     }
 }

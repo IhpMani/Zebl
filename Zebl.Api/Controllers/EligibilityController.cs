@@ -1,13 +1,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Zebl.Application.Domain;
 using Zebl.Application.Services;
-using Zebl.Infrastructure.Persistence.Context;
 
 namespace Zebl.Api.Controllers;
 
@@ -17,85 +14,82 @@ namespace Zebl.Api.Controllers;
 public class EligibilityController : ControllerBase
 {
     private readonly IEligibilityService _eligibilityService;
-    private readonly ZeblDbContext _dbContext;
     private readonly ILogger<EligibilityController> _logger;
 
     public EligibilityController(
         IEligibilityService eligibilityService,
-        ZeblDbContext dbContext,
         ILogger<EligibilityController> logger)
     {
         _eligibilityService = eligibilityService;
-        _dbContext = dbContext;
         _logger = logger;
     }
 
-    public sealed class CheckEligibilityRequest
+    public sealed class EligibilityRequestBody
     {
         public int PatientId { get; set; }
     }
 
-    [HttpPost("check")]
-    public async Task<IActionResult> Check([FromBody] CheckEligibilityRequest request, CancellationToken cancellationToken)
+    public sealed class EligibilityPreflightBody
+    {
+        public int? PatientId { get; set; }
+    }
+
+    [HttpPost("preflight")]
+    public async Task<IActionResult> Preflight([FromBody] EligibilityPreflightBody? body, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _eligibilityService.PreflightAsync(
+                new EligibilityPreflightRequestDto { PatientId = body?.PatientId },
+                cancellationToken);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Eligibility preflight failed.");
+            return StatusCode(500, new { error = "Preflight validation failed." });
+        }
+    }
+
+    [HttpPost("request")]
+    public async Task<IActionResult> RequestEligibility([FromBody] EligibilityRequestBody request, CancellationToken cancellationToken)
     {
         if (request == null || request.PatientId <= 0)
             return BadRequest(new { error = "PatientId is required." });
 
         try
         {
-            var result = await _eligibilityService.CheckEligibilityAsync(request.PatientId, cancellationToken);
-            if (!result.Success)
-            {
-                _logger.LogWarning(
-                    "Eligibility check failed for patient {PatientId}: {Message}",
-                    request.PatientId,
-                    result.Message);
-                return BadRequest(result);
-            }
-
+            var result = await _eligibilityService.RequestEligibilityAsync(
+                new EligibilityRequestCreateDto { PatientId = request.PatientId },
+                cancellationToken);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error running eligibility for patient {PatientId}", request.PatientId);
-            return StatusCode(500, new { error = "Failed to run eligibility check." });
+            _logger.LogError(ex, "Error requesting eligibility for patient {PatientId}", request.PatientId);
+            return StatusCode(500, new { error = ex.Message });
         }
     }
 
-    [HttpGet("history/{patientId:int}")]
-    public async Task<IActionResult> GetHistory([FromRoute] int patientId, CancellationToken cancellationToken)
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById([FromRoute] int id, [FromQuery] bool includeRaw271 = false, CancellationToken cancellationToken = default)
     {
-        if (patientId <= 0)
-            return BadRequest(new { error = "PatientId is required." });
-
         try
         {
-            var items = await _eligibilityService.GetHistoryAsync(patientId, cancellationToken);
-            return Ok(items);
+            var item = await _eligibilityService.GetEligibilityStatusAsync(id, cancellationToken);
+            if (item == null)
+                return NotFound();
+
+            if (!includeRaw271)
+                item.Raw271 = null;
+
+            return Ok(item);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading eligibility history for patient {PatientId}", patientId);
-            return StatusCode(500, new { error = "Failed to load eligibility history." });
+            _logger.LogError(ex, "Error loading eligibility status for request {RequestId}", id);
+            return StatusCode(500, new { error = "Failed to load eligibility status." });
         }
-    }
-
-    [HttpGet("{requestId:int}/raw")]
-    public async Task<IActionResult> GetRawResponse([FromRoute] int requestId, CancellationToken cancellationToken)
-    {
-        var response = await _dbContext.EligibilityResponses
-            .Where(r => r.EligibilityRequestId == requestId)
-            .OrderByDescending(r => r.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (response == null)
-            return NotFound();
-
-        return Ok(new
-        {
-            requestId,
-            raw271 = response.Raw271
-        });
     }
 }
 

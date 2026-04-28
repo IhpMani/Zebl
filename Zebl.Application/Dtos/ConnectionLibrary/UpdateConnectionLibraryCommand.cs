@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Zebl.Application.Domain;
 
 namespace Zebl.Application.Dtos.ConnectionLibrary;
 
@@ -9,8 +10,13 @@ public class UpdateConnectionLibraryCommand
     public string Name { get; set; } = null!;
 
     [Required(ErrorMessage = "Host is required")]
-    [MaxLength(255)]
+    [MaxLength(2000)]
     public string Host { get; set; } = null!;
+
+    public ConnectionType ConnectionType { get; set; } = ConnectionType.Sftp;
+
+    [MaxLength(500)]
+    public string? InboundFetchPath { get; set; }
 
     [Range(1, 65535, ErrorMessage = "Port must be between 1 and 65535")]
     public int Port { get; set; } = 22;

@@ -9,6 +9,7 @@ namespace Zebl.Application.Dtos.Claims;
 public class Claim837ExportData
 {
     public int ClaimId { get; set; }
+    public string? ClaEdiClaimId { get; set; }
     public string? ClaInsuranceTypeCodeOverride { get; set; }
     public DateOnly? ClaBillDate { get; set; }
     public DateOnly? ClaStatementCoversFromOverride { get; set; }
@@ -75,6 +76,8 @@ public class ClaimInsuredExportDto
 
 public class PatientExportDto
 {
+    public int? PatId { get; set; }
+    public string? PatAccountNo { get; set; }
     public string? PatFirstName { get; set; }
     public string? PatLastName { get; set; }
     public string? PatMI { get; set; }

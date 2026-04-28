@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using Zebl.Application.Abstractions;
 
 namespace Zebl.Api.Services;
 
 /// <summary>
-/// Request-scoped tenant (from <c>X-Tenant-Key</c> via <see cref="ITenantContext"/>) and facility (from <c>X-Facility-Id</c>).
+/// Request-scoped tenant from <see cref="ITenantContext"/> and facility from authenticated user claims/session (header fallback for compatibility).
 /// </summary>
 public sealed class HeaderCurrentContext : ICurrentContext
 {
@@ -24,8 +25,15 @@ public sealed class HeaderCurrentContext : ICurrentContext
     {
         get
         {
-            var http = _httpContextAccessor.HttpContext;
-            var headers = http?.Request?.Headers;
+            var http = _httpContextAccessor.HttpContext
+                ?? throw new InvalidOperationException("Facility context is unavailable for this request.");
+
+            if (TryParsePositiveInt(http.User.FindFirst("facilityId")?.Value, out var claimFacility))
+                return claimFacility;
+            if (TryParsePositiveInt(http.User.FindFirst("FacilityId")?.Value, out claimFacility))
+                return claimFacility;
+
+            var headers = http.Request?.Headers;
             if (headers == null)
                 throw new InvalidOperationException("Facility context is unavailable for this request.");
 
@@ -39,5 +47,11 @@ public sealed class HeaderCurrentContext : ICurrentContext
 
             throw new InvalidOperationException("X-Facility-Id header is required.");
         }
+    }
+
+    private static bool TryParsePositiveInt(string? raw, out int value)
+    {
+        value = 0;
+        return int.TryParse(raw, out value) && value > 0;
     }
 }

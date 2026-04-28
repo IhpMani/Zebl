@@ -10,6 +10,12 @@ namespace Zebl.Application.Dtos.Adjustments
         
         public DateTime AdjDateTimeCreated { get; set; }
         
+        public DateTime AdjDateTimeModified { get; set; }
+        
+        public DateTime? CreatedDate { get; set; }
+        
+        public DateTime? ModifiedDate { get; set; }
+        
         public DateOnly? AdjDate { get; set; }
         
         public decimal AdjAmount { get; set; }

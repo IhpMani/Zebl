@@ -158,6 +158,7 @@ public class Hl7ImportController : ControllerBase
                 newPatients = importResult.NewPatientsCount,
                 updatedPatients = importResult.UpdatedPatientsCount,
                 newClaims = importResult.NewClaimsCount,
+                duplicateClaims = importResult.DuplicateClaimsCount,
                 newServiceLines = importResult.NewServiceLinesCount
             });
         }
@@ -226,12 +227,13 @@ public class Hl7ImportController : ControllerBase
             int updatedPatientsCount = 0;
             int duplicatePatientsCount = 0;
             int newClaimsCount = 0;
+            int duplicateClaimsCount = 0;
             decimal totalAmount = 0m;
 
             // Track unique MRNs to detect duplicates within the file
             var seenMrns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var mrnsToCheck = new List<string>();
-            var messageData = new List<(string mrn, DateOnly? serviceDate, string? visitNumber, decimal amount)>();
+            var messageData = new List<(string mrn, DateOnly? serviceDate, string? visitNorm, decimal amount)>();
 
             // First pass: extract all MRNs and message data
             foreach (var message in messages)
@@ -267,9 +269,10 @@ public class Hl7ImportController : ControllerBase
                     firstServiceDate = _parser.ParseHl7Date(transactionDateStr);
                 }
 
-                var visitNumber = !string.IsNullOrWhiteSpace(message.Pv1Segment)
+                var visitRaw = !string.IsNullOrWhiteSpace(message.Pv1Segment)
                     ? _parser.NormalizeString(_parser.GetFieldValue(message.Pv1Segment, 19), maxLength: 50)
                     : null;
+                var visitNorm = NormalizeHl7VisitForReview(visitRaw);
 
                 // Calculate total amount from FT1 segments
                 decimal messageAmount = 0m;
@@ -281,7 +284,7 @@ public class Hl7ImportController : ControllerBase
                 }
                 totalAmount += messageAmount;
 
-                messageData.Add((normalizedMrn, firstServiceDate, visitNumber, messageAmount));
+                messageData.Add((normalizedMrn, firstServiceDate, visitNorm, messageAmount));
             }
 
             // Batch query: get all existing patients in one query
@@ -310,13 +313,16 @@ public class Hl7ImportController : ControllerBase
                 {
                     if (claim.ClaFirstDateTRIG.HasValue)
                     {
-                        existingClaims.Add((claim.ClaPatFID, claim.ClaFirstDateTRIG.Value, claim.ClaMedicalRecordNumber));
+                        existingClaims.Add((
+                            claim.ClaPatFID,
+                            claim.ClaFirstDateTRIG.Value,
+                            NormalizeHl7VisitForReview(claim.ClaMedicalRecordNumber)));
                     }
                 }
             }
 
             // Second pass: analyze using batch-loaded data
-            foreach (var (mrn, serviceDate, visitNumber, amount) in messageData)
+            foreach (var (mrn, serviceDate, visitNorm, amount) in messageData)
             {
                 if (patientLookup.TryGetValue(mrn, out var patientId))
                 {
@@ -332,9 +338,10 @@ public class Hl7ImportController : ControllerBase
                 bool isNewClaim = true;
                 if (patientId > 0 && serviceDate.HasValue)
                 {
-                    if (existingClaims.Contains((patientId, serviceDate.Value, visitNumber)))
+                    if (existingClaims.Contains((patientId, serviceDate.Value, visitNorm)))
                     {
                         isNewClaim = false;
+                        duplicateClaimsCount++;
                     }
                 }
 
@@ -351,6 +358,7 @@ public class Hl7ImportController : ControllerBase
                 newPatientsCount = newPatientsCount,
                 updatedPatientsCount = updatedPatientsCount,
                 duplicatePatientsCount = duplicatePatientsCount,
+                duplicateClaimsCount = duplicateClaimsCount,
                 newClaimsCount = newClaimsCount,
                 totalAmount = totalAmount
             });
@@ -394,4 +402,8 @@ public class Hl7ImportController : ControllerBase
             return StatusCode(500, new { error = $"Error retrieving import history: {ex.Message}" });
         }
     }
+
+    /// <summary>Align visit/account key with HL7 import dedupe (null vs empty string).</summary>
+    private static string? NormalizeHl7VisitForReview(string? v) =>
+        string.IsNullOrWhiteSpace(v) ? null : v.Trim();
 }

@@ -27,6 +27,9 @@ public class SftpTransportService
     /// </summary>
     public async Task<bool> TestConnectionAsync(ConnectionLibrary connection)
     {
+        if (connection.ConnectionType != ConnectionType.Sftp)
+            throw new InvalidOperationException("SFTP transport requires ConnectionType SFTP.");
+
         if (string.IsNullOrEmpty(connection.EncryptedPassword))
         {
             _logger.LogWarning("Connection {Id} has no password set", connection.Id);
@@ -72,6 +75,9 @@ public class SftpTransportService
     /// </summary>
     public async Task UploadFileAsync(ConnectionLibrary connection, string fileName, string content)
     {
+        if (connection.ConnectionType != ConnectionType.Sftp)
+            throw new InvalidOperationException("SFTP transport requires ConnectionType SFTP.");
+
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("FileName is required", nameof(fileName));
         if (content == null)
@@ -102,15 +108,83 @@ public class SftpTransportService
         });
     }
 
-    /// <summary>
-    /// Downloads files from the SFTP server matching the download pattern. Returns file name and content for each file.
-    /// </summary>
-    public async Task<List<(string FileName, string Content)>> DownloadFilesAsync(ConnectionLibrary connection)
+    public async Task UploadFileAsync(ConnectionLibrary connection, string fileName, Stream contentStream, CancellationToken cancellationToken = default)
     {
+        if (connection.ConnectionType != ConnectionType.Sftp)
+            throw new InvalidOperationException("SFTP transport requires ConnectionType SFTP.");
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("FileName is required", nameof(fileName));
+        if (contentStream == null)
+            throw new ArgumentNullException(nameof(contentStream));
         if (string.IsNullOrEmpty(connection.EncryptedPassword))
             throw new InvalidOperationException("Connection has no password set.");
 
-        var result = new List<(string FileName, string Content)>();
+        var decryptedPassword = _encryptionService.Decrypt(connection.EncryptedPassword);
+        using var client = new Renci.SshNet.SftpClient(connection.Host, connection.Port, connection.Username, decryptedPassword);
+        await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            client.Connect();
+            if (!client.IsConnected)
+                throw new InvalidOperationException("Failed to connect to SFTP server.");
+            var uploadPath = string.IsNullOrWhiteSpace(connection.UploadDirectory)
+                ? fileName
+                : $"{connection.UploadDirectory.TrimEnd('/')}/{fileName}";
+            if (contentStream.CanSeek)
+                contentStream.Position = 0;
+            client.UploadFile(contentStream, uploadPath, true);
+            client.Disconnect();
+        }, cancellationToken);
+    }
+
+    public async Task UploadFileAsync(
+        string host,
+        int port,
+        string username,
+        string password,
+        string? uploadDirectory,
+        string fileName,
+        Stream contentStream,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("FileName is required", nameof(fileName));
+        if (contentStream == null)
+            throw new ArgumentNullException(nameof(contentStream));
+
+        using var client = new Renci.SshNet.SftpClient(host, port, username, password);
+        await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            client.Connect();
+
+            if (!client.IsConnected)
+                throw new InvalidOperationException("Failed to connect to SFTP server.");
+
+            var uploadPath = string.IsNullOrWhiteSpace(uploadDirectory)
+                ? fileName
+                : $"{uploadDirectory.TrimEnd('/')}/{fileName}";
+
+            if (contentStream.CanSeek)
+                contentStream.Position = 0;
+            client.UploadFile(contentStream, uploadPath, true);
+
+            client.Disconnect();
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Downloads files from the SFTP server matching the download pattern. Returns file name, remote path, and content for each file.
+    /// </summary>
+    public async Task<List<SftpInboundFile>> DownloadFilesAsync(ConnectionLibrary connection)
+    {
+        if (connection.ConnectionType != ConnectionType.Sftp)
+            throw new InvalidOperationException("SFTP transport requires ConnectionType SFTP.");
+
+        if (string.IsNullOrEmpty(connection.EncryptedPassword))
+            throw new InvalidOperationException("Connection has no password set.");
+
+        var result = new List<SftpInboundFile>();
 
         var decryptedPassword = _encryptionService.Decrypt(connection.EncryptedPassword);
 
@@ -140,10 +214,7 @@ public class SftpTransportService
             {
                 using var stream = new MemoryStream();
                 client.DownloadFile(file.FullName, stream);
-                stream.Position = 0;
-                using var reader = new StreamReader(stream);
-                var content = reader.ReadToEnd();
-                result.Add((file.Name, content));
+                result.Add(new SftpInboundFile(file.Name, file.FullName, stream.ToArray()));
             }
 
             client.Disconnect();
@@ -151,4 +222,56 @@ public class SftpTransportService
 
         return result;
     }
+
+    public async Task MoveInboundFileAsync(ConnectionLibrary connection, string sourceFullPath, InboundLifecycleTarget target, CancellationToken cancellationToken = default)
+    {
+        if (connection.ConnectionType != ConnectionType.Sftp)
+            throw new InvalidOperationException("SFTP transport requires ConnectionType SFTP.");
+        if (string.IsNullOrWhiteSpace(sourceFullPath))
+            throw new ArgumentException("Source path is required.", nameof(sourceFullPath));
+        if (string.IsNullOrEmpty(connection.EncryptedPassword))
+            throw new InvalidOperationException("Connection has no password set.");
+
+        var decryptedPassword = _encryptionService.Decrypt(connection.EncryptedPassword);
+        using var client = new Renci.SshNet.SftpClient(connection.Host, connection.Port, connection.Username, decryptedPassword);
+        await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            client.Connect();
+            if (!client.IsConnected)
+                throw new InvalidOperationException("Failed to connect to SFTP server.");
+
+            var root = string.IsNullOrWhiteSpace(connection.DownloadDirectory) ? "/" : connection.DownloadDirectory!.TrimEnd('/');
+            var folder = target == InboundLifecycleTarget.Processed ? "processed" : "failed";
+            var destinationDirectory = $"{root}/{folder}";
+            EnsureDirectory(client, destinationDirectory);
+
+            var fileName = sourceFullPath.Split('/').Last();
+            var destinationPath = $"{destinationDirectory.TrimEnd('/')}/{fileName}";
+            if (client.Exists(destinationPath))
+                client.DeleteFile(destinationPath);
+
+            client.RenameFile(sourceFullPath, destinationPath);
+            client.Disconnect();
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static void EnsureDirectory(Renci.SshNet.SftpClient client, string fullPath)
+    {
+        var parts = fullPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var current = "/";
+        foreach (var part in parts)
+        {
+            current = current.EndsWith("/") ? current + part : current + "/" + part;
+            if (!client.Exists(current))
+                client.CreateDirectory(current);
+        }
+    }
+}
+
+public sealed record SftpInboundFile(string FileName, string FullPath, byte[] Content);
+public enum InboundLifecycleTarget
+{
+    Processed,
+    Failed
 }

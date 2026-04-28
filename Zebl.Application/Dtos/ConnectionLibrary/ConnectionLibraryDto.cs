@@ -1,3 +1,5 @@
+using Zebl.Application.Domain;
+
 namespace Zebl.Application.Dtos.ConnectionLibrary;
 
 public class ConnectionLibraryDto
@@ -5,6 +7,11 @@ public class ConnectionLibraryDto
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
     public string Host { get; set; } = null!;
+    public ConnectionType ConnectionType { get; set; } = ConnectionType.Sftp;
+
+    /// <summary>Relative path for HTTP/API inbound fetch (e.g. /api/get-reports).</summary>
+    public string? InboundFetchPath { get; set; }
+
     public int Port { get; set; }
     public string Username { get; set; } = null!;
     

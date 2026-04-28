@@ -1,6 +1,7 @@
 using Zebl.Application.Domain;
 using Zebl.Application.Dtos.ReceiverLibrary;
 using Zebl.Application.Repositories;
+using Zebl.Application.Abstractions;
 
 namespace Zebl.Application.Services;
 
@@ -11,10 +12,12 @@ namespace Zebl.Application.Services;
 public class ReceiverLibraryService
 {
     private readonly IReceiverLibraryRepository _repository;
+    private readonly ICurrentContext _currentContext;
 
-    public ReceiverLibraryService(IReceiverLibraryRepository repository)
+    public ReceiverLibraryService(IReceiverLibraryRepository repository, ICurrentContext currentContext)
     {
         _repository = repository;
+        _currentContext = currentContext;
     }
 
     public async Task<ReceiverLibraryDto?> GetByIdAsync(Guid id)
@@ -23,9 +26,16 @@ public class ReceiverLibraryService
         return entity == null ? null : MapToDto(entity);
     }
 
-    public async Task<List<ReceiverLibraryDto>> GetAllAsync()
+    public async Task<List<ReceiverLibraryDto>> GetAllAsync(string? type = null)
     {
         var entities = await _repository.GetAllAsync();
+        if (string.Equals(type, "eligibility", StringComparison.OrdinalIgnoreCase))
+        {
+            entities = entities
+                .Where(e => e.ExportFormat == ExportFormat.Eligibility270)
+                .ToList();
+        }
+
         return entities.Select(MapToDto).ToList();
     }
 
@@ -40,6 +50,8 @@ public class ReceiverLibraryService
         // Business rule: Default IsActive = true (already set in command, but ensure it)
         var entity = new ReceiverLibrary(command.LibraryEntryName, command.ExportFormat)
         {
+            TenantId = _currentContext.TenantId > 0 ? _currentContext.TenantId : null,
+            FacilityId = _currentContext.FacilityId > 0 ? _currentContext.FacilityId : null,
             ClaimType = command.ClaimType,
             SubmitterType = command.SubmitterType,
             BusinessOrLastName = command.BusinessOrLastName,
@@ -167,6 +179,8 @@ public class ReceiverLibraryService
         return new ReceiverLibraryDto
         {
             Id = entity.Id,
+            TenantId = entity.TenantId,
+            FacilityId = entity.FacilityId,
             LibraryEntryName = entity.LibraryEntryName,
             ExportFormat = entity.ExportFormat,
             ClaimType = entity.ClaimType,

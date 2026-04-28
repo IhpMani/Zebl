@@ -93,6 +93,11 @@ public class ProcedureCodeFacilityScope : Migration
             principalTable: "FacilityScope",
             principalColumn: "FacilityId",
             onDelete: ReferentialAction.Restrict);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Procedure_Code_FacilityId",
+            table: "Procedure_Code",
+            column: "FacilityId");
     }
 
     /// <inheritdoc />
@@ -100,6 +105,10 @@ public class ProcedureCodeFacilityScope : Migration
     {
         migrationBuilder.DropForeignKey(
             name: "FK_Procedure_Code_FacilityScope",
+            table: "Procedure_Code");
+
+        migrationBuilder.DropIndex(
+            name: "IX_Procedure_Code_FacilityId",
             table: "Procedure_Code");
 
         migrationBuilder.DropIndex(

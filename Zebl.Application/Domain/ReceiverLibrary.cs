@@ -6,6 +6,8 @@ namespace Zebl.Application.Domain;
 public class ReceiverLibrary
 {
     public Guid Id { get; set; }
+    public int? TenantId { get; set; }
+    public int? FacilityId { get; set; }
 
     public string LibraryEntryName { get; set; } = null!;
 

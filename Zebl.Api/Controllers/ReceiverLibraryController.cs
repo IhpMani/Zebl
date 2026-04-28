@@ -24,11 +24,11 @@ public class ReceiverLibraryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] string? type = null)
     {
         try
         {
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllAsync(type);
             return Ok(new ApiResponse<List<ReceiverLibraryDto>>
             {
                 Data = result

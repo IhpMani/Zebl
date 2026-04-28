@@ -181,6 +181,8 @@ public partial class Claim : ITenantEntity, ITenantFacilityEntity
 
     public string? ClaExternalFID { get; set; }
 
+    public string? ClaEdiClaimId { get; set; }
+
     public int ClaFacilityPhyFID { get; set; }
 
     public DateOnly? ClaFirstDateTRIG { get; set; }

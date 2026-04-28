@@ -7,7 +7,7 @@ using Zebl.Infrastructure.Persistence.Context;
 namespace Zebl.Api.Services;
 
 /// <summary>
-/// Tenant id comes from JWT (<c>tenantId</c>) for normal users; <c>X-Tenant-Key</c> must match JWT <c>tenantKey</c> (or DB key for that tenant).
+/// Tenant id comes from JWT (<c>tenantId</c>) for normal users; <c>X-Tenant-Key</c> is optional and only validated if supplied.
 /// Platform super-admins resolve tenant from <c>X-Facility-Id</c> or <c>facilityId</c> query (not from header key alone).
 /// </summary>
 public sealed class JwtValidatedTenantContext : ITenantContext
@@ -74,27 +74,27 @@ public sealed class JwtValidatedTenantContext : ITenantContext
         if (!int.TryParse(user.FindFirst("tenantId")?.Value, out var jwtTenantId) || jwtTenantId <= 0)
             throw new TenantSecurityException("TENANT_REQUIRED", "JWT must include a valid tenantId claim.");
 
-        if (!http.Request.Headers.TryGetValue(TenantKeyHeader, out var rawHeader) ||
-            string.IsNullOrWhiteSpace(rawHeader))
-            throw new TenantSecurityException("TENANT_HEADER_REQUIRED", "X-Tenant-Key header is required.");
-
-        var headerKey = rawHeader.ToString().Trim().ToLowerInvariant();
-        var claimKey = user.FindFirst("tenantKey")?.Value?.Trim().ToLowerInvariant();
-
-        if (string.IsNullOrEmpty(claimKey))
+        if (http.Request.Headers.TryGetValue(TenantKeyHeader, out var rawHeader) &&
+            !string.IsNullOrWhiteSpace(rawHeader))
         {
-            using var db = _dbFactory.CreateDbContext();
-            claimKey = db.Tenants.AsNoTracking()
-                .Where(t => t.TenantId == jwtTenantId && t.IsActive)
-                .Select(t => t.TenantKey)
-                .FirstOrDefault();
-        }
+            var headerKey = rawHeader.ToString().Trim().ToLowerInvariant();
+            var claimKey = user.FindFirst("tenantKey")?.Value?.Trim().ToLowerInvariant();
 
-        if (string.IsNullOrEmpty(claimKey) || headerKey != claimKey)
-        {
-            throw new TenantSecurityException(
-                "TENANT_MISMATCH",
-                "X-Tenant-Key does not match the signed-in user's tenant. Header spoofing is not allowed.");
+            if (string.IsNullOrEmpty(claimKey))
+            {
+                using var db = _dbFactory.CreateDbContext();
+                claimKey = db.Tenants.AsNoTracking()
+                    .Where(t => t.TenantId == jwtTenantId && t.IsActive)
+                    .Select(t => t.TenantKey)
+                    .FirstOrDefault();
+            }
+
+            if (string.IsNullOrEmpty(claimKey) || headerKey != claimKey)
+            {
+                throw new TenantSecurityException(
+                    "TENANT_MISMATCH",
+                    "X-Tenant-Key does not match the signed-in user's tenant. Header spoofing is not allowed.");
+            }
         }
 
         _resolvedTenantId = jwtTenantId;

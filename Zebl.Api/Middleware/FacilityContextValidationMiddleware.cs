@@ -132,17 +132,15 @@ public sealed class FacilityContextValidationMiddleware
             return;
         }
 
-        if (!context.Request.Headers.TryGetValue(FacilityHeader, out var headerValues))
+        int facilityId;
+        if (TryResolveFacilityId(context, out facilityId))
         {
-            await WriteError(context, StatusCodes.Status400BadRequest, "INVALID_FACILITY",
-                "X-Facility-Id header is required.");
-            return;
+            // resolved from authenticated context or optional header
         }
-
-        if (!int.TryParse(headerValues.ToString(), out var facilityId) || facilityId <= 0)
+        else
         {
             await WriteError(context, StatusCodes.Status400BadRequest, "INVALID_FACILITY",
-                "X-Facility-Id must be a positive integer.");
+                "Facility context is required.");
             return;
         }
 
@@ -229,6 +227,25 @@ public sealed class FacilityContextValidationMiddleware
         }
 
         await _next(context);
+    }
+
+    private static bool TryResolveFacilityId(HttpContext context, out int facilityId)
+    {
+        facilityId = 0;
+        var user = context.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            var claimValue = user.FindFirst("facilityId")?.Value ?? user.FindFirst("FacilityId")?.Value;
+            if (int.TryParse(claimValue, out facilityId) && facilityId > 0)
+                return true;
+        }
+
+        if (context.Request.Headers.TryGetValue(FacilityHeader, out var headerValues) &&
+            int.TryParse(headerValues.ToString(), out facilityId) &&
+            facilityId > 0)
+            return true;
+
+        return false;
     }
 
     private static bool OperationalContextWithoutFacility(string path, string method) =>
